@@ -1,0 +1,97 @@
+# ignore all files matching these patterns
+
+syntax: glob
+
+# Typical temporary or generated files
+*.o
+*.so
+*.d
+*_dict.cc
+*_dict.h
+*_rdict.pcm
+*_dict.cxx
+*.rootmap
+*.swp
+*~
+*.pyc
+*.bak
+*.root
+*.wrl
+*.a
+*.dat
+*.make
+*.cmake
+*.gz
+*.csv
+
+# build items from josh's work
+*Dict_rdict.pcm
+*LibDict.cxx
+SVSCLibs/*/*LibLinkDef.h
+SVSCLibs/Includes/*
+
+# build items from jason's work
+jasonCode/exp/build
+jasonCode/exp/CMakeLists.txt
+jasonCode/sirt/build
+
+# Steve Jobs
+.DS_Store
+
+# DETECT2000?
+FATES*
+pmt.dat
+
+# cmake
+./cmake/*
+
+# Don't reposit binary files
+*.root # If you are thinking about changing this, talk to Aaron first
+
+# build directories
+build/
+analysisbuild/
+
+# Trying to match emacs temporary files. Note "#" needs to be escaped as "\#".
+\#*\#
+
+# Plots
+/analysis/plots
+/plots
+
+# Images (but need these in documents dirs so un-ignore them there)
+*.gif
+!doc/**/*.gif
+*.png
+!doc/**/*.png
+*.pdf
+!doc/**/*.pdf
+# Un-un-ignore converted pdfs...
+*-eps-converted-to.pdf
+
+# Logs from screen
+*.0
+
+# Might be a problem, but usually only use txt files for gnuplot stuff
+# CMakelists.txt are important? Maybe using -f is fine
+*.txt
+
+# latex files (main tex file is already repo'd)
+/doc/2016_ConceptPaper/SVSCConceptPaper.*
+/doc/2016_SVSC_SANDReport/2016_SVSC_SANDReport.*
+/doc/2018_SORMA_SinglePhotonStudies_abstract/2018_SORMA_SinglePhotonStudies_abstract.*
+/doc/2018_FWA_Development_And_Testing_Paper/2018_FWA_Development_And_Testing_Paper.*
+/doc/2018_IEEENSS_SVSCOverview_abstract/2018_IEEENSS_SVSCOverview_abstract.*
+/doc/2018IEEEPulseShapeSummary/2018IEEEPulseShapeSummary.*
+/doc/2018_OSSingleBarPaper/OSCINE.*
+/doc/2018_SORMA_SinglePhotonStudies_proceedings/2018_SORMA_SinglePhotonStudies_proceedings.*
+/doc/2019LAPPDCharacterization/LAPPDCharacterization.*
+/doc/2019_LAPPD_Paper/2019_LAPPD_Paper.*
+/doc/2019_IEEENSS_SVSCOverview_abstract/2019_IEEENSS_SVSCOverview_abstract.*
+comment.cut
+
+
+doc/2016_ConceptPaper/2016_ConceptPaper.zip
+
+# Micah's retroreflector laser image data
+micahCode/retroref_exp/**/*.csv
