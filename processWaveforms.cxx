@@ -36,6 +36,7 @@ int main(void)
    //Nombre de mi archivo de salida
    outputFile.open("processedWaveforms.dat",std::ios::out | std::ios::trunc);
 // std::cout<<var_sig<<std::endl;
+// Estimando la carga mediante una sumatoria
   do
   {
    tiempo=1;
@@ -48,7 +49,7 @@ int main(void)
    voltaje_min=1000; 
    for( i=it; i<it+No_muestras; i++ )
    {
-     fscanf( fichero, "%f\t%f\n", &x1, &x2);
+     fscanf( fichero, "%f,%f\n", &x1, &x2);
      if (i<it+bin_inicial-1)
      {
        ruido1=ruido1+x2;
