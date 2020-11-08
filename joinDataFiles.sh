@@ -1,7 +1,7 @@
 #! /bin/bash
 #This file transforms all the data files from the folder (scope data) into one single data file.
 
-cd /home/aline/Documents/DataAnalysis/procrastinando_conChava/SPE
+cd ./SPE
 
 for file in *
 do
