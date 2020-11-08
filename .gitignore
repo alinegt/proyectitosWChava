@@ -25,7 +25,11 @@ syntax: glob
 *.csv
 
 
+#data
+SPE/*
 
+#Ignore vscode settings
+settings.json
 
 # cmake
 ./cmake/*
@@ -60,3 +64,6 @@ build/
 # CMakelists.txt are important? Maybe using -f is fine
 *.txt
 
+.vscode/launch.json
+.vscode/tasks.json
+processWaveforms
