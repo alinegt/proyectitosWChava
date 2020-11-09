@@ -25,10 +25,10 @@ int main(void)
 
 /************************************************************************************************/
 /****************************************VARIABLES MENU******************************************/
-   unsigned int bin_inicial=100; //Dónde comienza a hacer el proceso
+   unsigned int bin_inicial=95; //Dónde comienza a hacer el proceso
    unsigned int ancho=25;        //Ancho del pulso aproximado
    float No_muestras=200;        //Dato puesto durante la adquisición, en nanosegundos
-   float No_eventos=999;       //Dato puesto durante la adquisición, cantidad de eventos tomados
+   float No_eventos=10989;       //Dato puesto durante la adquisición, cantidad de eventos tomados
 
 /************************************************************************************************/
 
