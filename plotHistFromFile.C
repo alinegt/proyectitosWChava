@@ -6,7 +6,7 @@ void plotHistFromFile(void){
 
 TTree *Tcharge = new TTree("Tcharge","Tcharge");
 Tcharge->ReadFile("processedWaveforms.dat","lineNumber:charge");
-Tcharge->Draw("-charge");
+Tcharge->Draw("-charge/(1e-12)");
 Tcharge->Print();
 }
 
