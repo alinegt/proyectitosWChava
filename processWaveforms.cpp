@@ -19,26 +19,37 @@ int string_to_int(string _string){
    return number;
 }
 
+
 int main(int argc, char **argv)
 {
-   std::string inFile = argv[1];
-   std::string binInicial =  argv[2];
-   //string inFile = a_inputFile;
-
-
-
-
+   std::string inFile =      argv[1];     // Nombre del archivo
+   std::string binInicial =  argv[2]; //Donde comienza a hacer el proceso
+   std::string anchoPulso =  argv[3]; //Ancho del pulso aproximado
+   std::string noMuestras =  argv[4]; // No. puntos en el pulso
+   std::string noEventos =   argv[5]; // No. de eventos
+   std::string deltaTiempo = argv[6]; // delta tiempo en s 
+   std::string outDatFile = argv[7]; // delta tiempo en s 
+   
+/************************************************************************************************/
+/****************************************VARIABLES MENU******************************************/
+   float bin_inicial= std::stof(binInicial); 
+   unsigned int ancho=std::stof(anchoPulso);
+   float No_muestras= std::stof(noMuestras);       
+   float No_eventos= std::stof(noEventos);      
+   float delta_t= std::stof(deltaTiempo) ;           
+   float R=50.0; // Resistencia en Ohms
+/************************************************************************************************//************************************************************************************************/
 
    FILE *fichero;
    FILE *fichero2;
    unsigned int i,iprima,i2=1; 
-   float x1=0, x2=0, x3=0, ch2=0, ch3, ch4;
+   float x1=0, x2=0;//, x3=0, ch2=0, ch3, ch4;
    float carga=0, it=1;
    int voltaje_max=0, voltaje_min=0;
    float prom_max=0, prom_min=0;
    float t10=0, t50=0, t90=0, ct10=0, ct50=0, ct90=0;
    float Carga_actual=0, Carga_anterior=0, tiempo=1;
-   char c1[10],c2[10],c3[10],c4[10],c5[10];
+  // char c1[10],c2[10],c3[10],c4[10],c5[10];
    float sum_ruido1; // Sumatoria en primer parte de la waveform
    float sum_ruido2; // Sumatoria en segunda parte de la waveform despues del pulso
    float sum_volt;   // Sumatoria en el rango del pulso
@@ -47,21 +58,11 @@ int main(int argc, char **argv)
    float avg_ruido2; // Sumatoria del ruido despues de pulso dividida por el no. de muestras en ese rango
    fichero = fopen( inFile.c_str(), "r" );
    fichero2 = fopen( inFile.c_str(), "r" );
-
-/************************************************************************************************/
-/****************************************VARIABLES MENU******************************************/
-   unsigned int bin_inicial=string_to_int(binInicial.c_str()); //Dónde comienza a hacer el proceso
-   unsigned int ancho=40;        //Ancho del pulso aproximado
-   float No_muestras=200;        //Dato puesto durante la adquisición, en nanosegundos
-   float No_eventos=10989;       //Dato puesto durante la adquisición, cantidad de eventos tomados
-   float delta_t= 0.5e-9 ;             // delta de tiempo en s
-   float R=50.0; // Resistencia en Ohms
-
-/************************************************************************************************/
-
+   float picoScale = 1e-12; //  factor to scale to picoCoulombs
+   float flipConstant = -1;  // Negative pulses flipped by this constant
    std::fstream outputFile;
    //Nombre de mi archivo de salida
-   outputFile.open("processedWaveforms.dat",std::ios::out | std::ios::trunc);
+   outputFile.open(outDatFile,std::ios::out | std::ios::trunc);
 // Estimando la carga mediante una sumatoria
   do
   {
@@ -117,7 +118,7 @@ int main(int argc, char **argv)
   }
   else
   {
-     carga= (delta_t*(sum_volt-(ancho*avg_ruido1)))/R;
+     carga= flipConstant*(delta_t*sum_volt)/(R*picoScale);
      voltaje_max=voltaje_max-avg_ruido1;
      voltaje_min=voltaje_min-avg_ruido1;
   }
@@ -144,7 +145,7 @@ int main(int argc, char **argv)
         tiempo=tiempo+1;
      }
      }
-  outputFile <<i2<<"	"<<carga<<"	"<<voltaje_min<<"	"<<voltaje_max<<"	"<<t50-t10<<"	"<<t90-t10<<std::endl;
+  outputFile <<i2<<"	"<<carga<<std::endl;//"	"<<voltaje_min<<"	"<<voltaje_max<<"	"<<t50-t10<<"	"<<t90-t10<<std::endl;
   printf( "....................%u\n", i2);
   i2=i2+1;
   it=x1;
