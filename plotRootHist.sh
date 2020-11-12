@@ -12,11 +12,11 @@
 # processedWaveforms.dat  (charge data)
 # processWaveforms  (executable)
 rm merge.dat
-rm processWaveforms
-cd ./data/3650mV_17ns
+
+cd /home/salvador/Documents/WPT/data/3650mV_17ns_2_coils_2nd_level
+#cd /home/salvador/Documents/WPT/data/3650mV_17ns_2
 #cd ./data/SPE
 rm *.dat
-
 
 for file in *
 do
@@ -28,11 +28,12 @@ tail -n 200 $file >> $dataFileName
 
 #echo $file $nameOnly $dataFileName
 done 
-cat *.dat > ../../merge.dat
-cd ../../
-g++ processWaveforms.cxx -o processWaveforms
-./processWaveforms
-root plotHistFromFile.C
+cat *.dat > /home/salvador/github/proyectitosWChava/merge.dat
+
+cd /home/salvador/github/proyectitosWChava/
+
+./processWaveforms merge.dat 90 40 200 10989 5e-10 processedWaveforms_coil.dat
+#root plotHistFromFile.C
 
 exit
 
