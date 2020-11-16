@@ -9,10 +9,13 @@ GetTimeCFD::~GetTimeCFD() {}
 ///*********************************************************************
 int main(int argc, char **argv) {
 std::string inputFile = argv[1];
+std::string outputFile = argv[2];
 
 GetTimeCFD time;
 time.loadDataFile(inputFile);
 cout<<"The tree has: "<<time.getNumberOfEntries()<<" events"<<endl;
+
+time.saveFile(outputFile);
 time.forLoop();
 }
 ///*********************************************************************
@@ -25,8 +28,15 @@ void GetTimeCFD::forLoop()
         //m_inputTree->GetEntry(0);
         //cout<<"time CFD: "<<getCFDtime(m_ch1)<<endl;
         h_timeDiff->Fill(getCFDtime(m_ch1)-getCFDtime(m_ch2));
+        m_timeDifference = getCFDtime(m_ch1) - getCFDtime(m_ch2);
+
+        m_outputTree->Fill();
     }
+    m_outputFile->Write();
     saveHistogram(h_timeDiff);
+    std::cout<<"File written"<<std::endl;
+    m_outputFile->Close();
+
 }
 
 
@@ -140,4 +150,13 @@ Long64_t GetTimeCFD::getNumberOfEntries()
     return a_entries;
 }
 ///======================================
+/// Save Tree root in a output file
+void GetTimeCFD::saveFile(const std::string & a_outputFile){
 
+    string outFile = a_outputFile;
+    m_outputFile = new TFile(outFile.c_str(), "RECREATE");
+    m_outputTree = new TTree("Tree", "Difference time info");
+    m_outputTree -> Branch("timeDifference",&m_timeDifference);
+
+    return;
+}
