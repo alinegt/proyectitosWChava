@@ -43,6 +43,8 @@ private:
     TFile* m_outputFile;
     std::vector<float> *m_ch1=0;
     std::vector<float> *m_ch2=0;
+    std::vector<float> m_delaySignal;
+    std::vector<float> m_resultSignal;
     bool m_fileLoaded;
     float m_timeDifference;
     //parameters of the histogram must be changed in order to set a proper range

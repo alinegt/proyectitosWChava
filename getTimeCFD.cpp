@@ -22,20 +22,28 @@ time.forLoop();
 ///======================================
 void GetTimeCFD::forLoop()
 {
+    float timeCh1{}, timeCh2{};
     for (int a_index=0 ; a_index<getNumberOfEntries() ; a_index++)
     {
         m_inputTree->GetEntry(a_index);
         //m_inputTree->GetEntry(0);
         //cout<<"time CFD: "<<getCFDtime(m_ch1)<<endl;
-        h_timeDiff->Fill(getCFDtime(m_ch1)-getCFDtime(m_ch2));
-        m_timeDifference = getCFDtime(m_ch1) - getCFDtime(m_ch2);
+        timeCh1=getCFDtime(m_ch1);
+        timeCh2=getCFDtime(m_ch2);
+
+
+        h_timeDiff->Fill(timeCh1-timeCh2);
+        m_timeDifference = timeCh1-timeCh2;
 
         m_outputTree->Fill();
+        m_resultSignal.clear();
+        m_delaySignal.clear();
     }
     m_outputFile->Write();
     saveHistogram(h_timeDiff);
     std::cout<<"File written"<<std::endl;
     m_outputFile->Close();
+
 
 }
 
@@ -73,8 +81,6 @@ void GetTimeCFD::saveHistogram(TH1F *a_histogram){
 float GetTimeCFD::getCFDtime(std::vector<float> *a_signal){
     bool a_flag = false;
     float a_x1{},a_x2{},a_y1{},a_y2{};
-    std::vector <float> a_delaySignal;
-    std::vector <float> a_resultSignal;
     int a_delayIndex = 5; //25 samples of delay
     float a_fraction = 0.7;
     float a_timeCFD{};
@@ -82,30 +88,30 @@ float GetTimeCFD::getCFDtime(std::vector<float> *a_signal){
     ///Negative and delayed signal
     for (long unsigned int a_index=0 ; a_index<a_signal->size()-a_delayIndex;a_index++)
     {
-        a_delaySignal.push_back(-a_signal->at(a_index+a_delayIndex));
+        m_delaySignal.push_back(-a_signal->at(a_index+a_delayIndex));
 
     }
 
-    //cout<<"a_delay size: "<<a_delaySignal.size();
+    //cout<<"a_delay size: "<<m_delaySignal.size();
     ///Sum of the signals
     for (long unsigned int a_index=0 ; a_index<a_signal->size()-a_delayIndex;a_index++)
     {
         //cout<<a_index<<" "<<a_signal->at(a_index)<<" "<<-a_signal->at(a_index+a_delayIndex)<<endl;
-        a_resultSignal.push_back(a_fraction *a_signal->at(a_index)+a_delaySignal.at(a_index));
+        m_resultSignal.push_back(a_fraction *a_signal->at(a_index)+m_delaySignal.at(a_index));
     }
 
 
 
-    for(long unsigned int a_index=0 ; a_index<a_resultSignal.size();a_index++)
+    for(long unsigned int a_index=0 ; a_index<m_resultSignal.size();a_index++)
     {
-        if ((a_resultSignal.at(a_index)<-100.)&&(a_flag==false))
+        if ((m_resultSignal.at(a_index)<-100.)&&(a_flag==false))
         {a_flag = true;}
-        if ((a_resultSignal.at(a_index)>0)&&(a_flag==true)){
-            //cout<<a_index<<" "<<a_resultSignal.at(a_index)<<endl;
+        if ((m_resultSignal.at(a_index)>0)&&(a_flag==true)){
+            //cout<<a_index<<" "<<m_resultSignal.at(a_index)<<endl;
                 a_x1 = (float)a_index-1;
                 a_x2 = (float)a_index;
-                a_y1 = a_resultSignal.at(a_index-1);
-                a_y2 = a_resultSignal.at(a_index);
+                a_y1 = m_resultSignal.at(a_index-1);
+                a_y2 = m_resultSignal.at(a_index);
                 a_flag = false;
 
                 a_timeCFD = getInterpolationX(a_x1,a_x2,a_y1,a_y2);
@@ -113,7 +119,7 @@ float GetTimeCFD::getCFDtime(std::vector<float> *a_signal){
         }
 
 
-        //cout<<a_index<<" "<<a_resultSignal.at(a_index)<<endl;
+        //cout<<a_index<<" "<<m_resultSignal.at(a_index)<<endl;
     }
     //cout<<"time CFD: "<<a_timeCFD<<endl;
     return a_timeCFD;
@@ -157,6 +163,11 @@ void GetTimeCFD::saveFile(const std::string & a_outputFile){
     m_outputFile = new TFile(outFile.c_str(), "RECREATE");
     m_outputTree = new TTree("Tree", "Difference time info");
     m_outputTree -> Branch("timeDifference",&m_timeDifference);
+    m_outputTree -> Branch("resultSignal",&m_resultSignal);
+    m_outputTree -> Branch("delaySignal",&m_delaySignal);
+    m_outputTree -> Branch("ch1",&m_ch1);
+    m_outputTree -> Branch("ch2",&m_ch2);
+
 
     return;
 }
