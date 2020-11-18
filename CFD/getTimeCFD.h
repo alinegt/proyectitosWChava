@@ -32,7 +32,7 @@ public:
     bool loadDataFile(const std::string & a_inputFile);
     Long64_t getNumberOfEntries();
     void forLoop();
-    float getCFDtime(std::vector<float> *a_signal);
+    float getCFDtime(std::vector<float> *a_signal, float a_fraction, float a_delay);
     float getInterpolationX(float a_x1, float a_x2, float a_y1, float a_y2);
     void saveHistogram(TH1F *a_histogram);
     void saveFile(const std::string & a_outputFile);

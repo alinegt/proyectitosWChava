@@ -28,8 +28,10 @@ void GetTimeCFD::forLoop()
         m_inputTree->GetEntry(a_index);
         //m_inputTree->GetEntry(0);
         //cout<<"time CFD: "<<getCFDtime(m_ch1)<<endl;
-        timeCh1=getCFDtime(m_ch1);
-        timeCh2=getCFDtime(m_ch2);
+        timeCh1=getCFDtime(m_ch1, 7.5, 5);
+        //  m_resultSignal.clear();
+        // m_delaySignal.clear();
+        timeCh2=getCFDtime(m_ch2, 8, 5);
 
 
         h_timeDiff->Fill(timeCh1-timeCh2);
@@ -78,29 +80,31 @@ void GetTimeCFD::saveHistogram(TH1F *a_histogram){
 
 }
 ///======================================
-float GetTimeCFD::getCFDtime(std::vector<float> *a_signal){
+float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, float a_delay){
     bool a_flag = false;
     float a_x1{},a_x2{},a_y1{},a_y2{};
-    int a_delayIndex = 5; //25 samples of delay
-    float a_fraction = 0.7;
     float a_timeCFD{};
     //cout<<"signal size: "<<a_signal->size();
     ///Negative and delayed signal
-    for (long unsigned int a_index=0 ; a_index<a_signal->size()-a_delayIndex;a_index++)
+    for (long unsigned int a_index=0 ; a_index<a_signal->size();a_index++)
     {
-        m_delaySignal.push_back(-a_signal->at(a_index+a_delayIndex));
+        m_delaySignal.push_back(a_signal->at(a_index)*(-1));
 
     }
+    if (a_delay>0){
+    std::rotate(m_delaySignal.begin(), m_delaySignal.begin()+a_delay,m_delaySignal.end());
+    }
+    else{
+    std::rotate(m_delaySignal.begin(), m_delaySignal.begin()+ m_delaySignal.size()+a_delay,m_delaySignal.end());
 
+    }
     //cout<<"a_delay size: "<<m_delaySignal.size();
     ///Sum of the signals
-    for (long unsigned int a_index=0 ; a_index<a_signal->size()-a_delayIndex;a_index++)
+    for (long unsigned int a_index=0 ; a_index<a_signal->size();a_index++)
     {
-        //cout<<a_index<<" "<<a_signal->at(a_index)<<" "<<-a_signal->at(a_index+a_delayIndex)<<endl;
         m_resultSignal.push_back(a_fraction *a_signal->at(a_index)+m_delaySignal.at(a_index));
     }
-
-
+    // std::rotate(m_delaySignal.begin(), m_delaySignal.begin()+a_fraction,m_delaySignal.end())
 
     for(long unsigned int a_index=0 ; a_index<m_resultSignal.size();a_index++)
     {
