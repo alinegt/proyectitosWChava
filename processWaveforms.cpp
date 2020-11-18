@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 /************************************************************************************************/
 /****************************************VARIABLES MENU******************************************/
    float bin_inicial= std::stof(binInicial); 
-   unsigned int ancho=std::stof(anchoPulso);
+   float ancho=std::stof(anchoPulso);
    float No_muestras= std::stof(noMuestras);       
    float No_eventos= std::stof(noEventos);      
    float delta_t= std::stof(deltaTiempo) ;           
@@ -118,7 +118,8 @@ int main(int argc, char **argv)
   }
   else
   {
-     carga= flipConstant*(delta_t*sum_volt)/(R*picoScale);
+     //carga= sum_volt-(ancho*avg_ruido1);
+    carga= flipConstant*(delta_t*(sum_volt-(avg_ruido1*ancho)))/(R*picoScale);
      voltaje_max=voltaje_max-avg_ruido1;
      voltaje_min=voltaje_min-avg_ruido1;
   }
