@@ -10,7 +10,7 @@ CXXFLAGS   += $(ROOTCFLAGS)
 LIBS        = $(ROOTLIBS) $(SYSLIBS)
 
 ### Targets
-TARGS = processWaveforms createTree getTimeCFD
+TARGS = processWaveforms #createTree getTimeCFD
 
 all: $(TARGS)
 
