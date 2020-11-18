@@ -19,6 +19,7 @@
  
 mergePath=/home/salvador/github/proyectitosWChava/SPE/data/merge/
 processedPath=/home/salvador/github/proyectitosWChava/SPE/data/processed/
+scriptsPath=//home/salvador/github/proyectitosWChava/SPE/
 
 dirName="${path##*/}"
 mergeName="${dirName}""_merge.dat"
@@ -43,7 +44,7 @@ done
 
 cat *.dat > $mergePath$mergeName
 
-# cd /home/salvador/github/proyectitosWChava/SPE/data/processed
+cd $scriptsPath
 
 ./processWaveforms $mergePath$mergeName 80 60 200 10989 5e-10 $processedPath$processedName
 #root plotHistFromFile.C
