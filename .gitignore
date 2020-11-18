@@ -67,3 +67,6 @@ build/
 .vscode/launch.json
 .vscode/tasks.json
 processWaveforms
+CFD/getTimeCFD
+CFD/createTree
+testBash.sh
