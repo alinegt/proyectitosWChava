@@ -11,11 +11,22 @@
 # merge.dat
 # processedWaveforms.dat  (charge data)
 # processWaveforms  (executable)
-rm merge.dat
 
-cd /home/salvador/Documents/WPT/data/3650mV_17ns_2_coils_2nd_level
-#cd /home/salvador/Documents/WPT/data/3650mV_17ns_2
-#cd ./data/SPE
+#path=/home/salvador/Documents/WPT/data/noCoil
+# path=/home/salvador/Documents/WPT/data/noCoil2
+# path=/home/salvador/Documents/WPT/data/coils_X0_Y0_2nd
+ path=/home/salvador/Documents/WPT/data/coils_X0_Y0_box
+
+
+
+dirName="${path##*/}"
+mergeName="${dirName}""_merge.dat"
+processedName="${dirName}""_charge.dat"
+
+echo $dirName
+cd $path
+rm $mergeName
+
 rm *.dat
 
 for file in *
@@ -28,12 +39,13 @@ tail -n 200 $file >> $dataFileName
 
 #echo $file $nameOnly $dataFileName
 done 
-cat *.dat > /home/salvador/github/proyectitosWChava/merge.dat
+
+cat *.dat > /home/salvador/github/proyectitosWChava/$mergeName
 
 cd /home/salvador/github/proyectitosWChava/
 
-./processWaveforms merge.dat 90 40 200 10989 5e-10 processedWaveforms_coil.dat
+./processWaveforms $mergeName 80 60 200 10989 5e-10 $processedName
 #root plotHistFromFile.C
-
+echo $dirName
 exit
 
