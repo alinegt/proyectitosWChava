@@ -32,7 +32,7 @@ public:
     bool loadDataFile(const std::string & a_inputFile);
     Long64_t getNumberOfEntries();
     void forLoop();
-    float getCFDtime(std::vector<float> *a_signal, float a_fraction, float a_delay);
+    float getCFDtime(std::vector<float> *a_signal, float a_fraction, float a_delay, int ch);
     float getInterpolationX(float a_x1, float a_x2, float a_y1, float a_y2);
     void saveHistogram(TH1F *a_histogram);
     void saveFile(const std::string & a_outputFile);
@@ -43,8 +43,13 @@ private:
     TFile* m_outputFile;
     std::vector<float> *m_ch1=0;
     std::vector<float> *m_ch2=0;
-    std::vector<float> m_delaySignal;
-    std::vector<float> m_resultSignal;
+    std::vector<float> m_delaySignal_ch1;
+    std::vector<float> m_resultSignal_ch1;
+    std::vector<float> m_delaySignal_ch2;
+    std::vector<float> m_resultSignal_ch2;
+    float m_timeCh1;
+    float m_timeCh2;
+
     bool m_fileLoaded;
     float m_timeDifference;
     //parameters of the histogram must be changed in order to set a proper range

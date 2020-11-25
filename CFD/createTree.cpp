@@ -25,7 +25,7 @@ void CreateTree::createtree( char* a_inFileName, char* a_outFileName ) {
  //m_vNames.push_back("getTriggerCell");
  //m_vNames.push_back("timeStamp");
  //m_vNames.push_back("Temperature");
-for(int i = 0 ; i < 70; i++){
+for(int i = 0 ; i < 90; i++){
  m_vNames.push_back("signal"+IntToString(i));
 }
   m_var.resize(m_vNames.size(), 0);

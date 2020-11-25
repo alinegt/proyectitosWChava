@@ -1,2 +1,2 @@
 # proyectitosWChava
-This is a personal collaboration for very very very old and ugly code
+Single Photoelectron spectrum plots using data from oscilloscope

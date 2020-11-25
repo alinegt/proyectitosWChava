@@ -22,24 +22,29 @@ time.forLoop();
 ///======================================
 void GetTimeCFD::forLoop()
 {
-    float timeCh1{}, timeCh2{};
+    float a_timeCh1{}, a_timeCh2{};
     for (int a_index=0 ; a_index<getNumberOfEntries() ; a_index++)
     {
         m_inputTree->GetEntry(a_index);
         //m_inputTree->GetEntry(0);
         //cout<<"time CFD: "<<getCFDtime(m_ch1)<<endl;
-        timeCh1=getCFDtime(m_ch1, 7.5, 5);
+        a_timeCh1=getCFDtime(m_ch1, .8, 18,1);
         //  m_resultSignal.clear();
-        // m_delaySignal.clear();
-        timeCh2=getCFDtime(m_ch2, 8, 5);
+        // m_delaySignal.clear();getInterpolationX
+        a_timeCh2=getCFDtime(m_ch2, .8, 18, 2);
 
 
-        h_timeDiff->Fill(timeCh1-timeCh2);
-        m_timeDifference = timeCh1-timeCh2;
+        h_timeDiff->Fill(a_timeCh1-a_timeCh2);
+        m_timeDifference = a_timeCh1-a_timeCh2;
+        m_timeCh1=a_timeCh1;
+        m_timeCh2=a_timeCh2;
 
         m_outputTree->Fill();
-        m_resultSignal.clear();
-        m_delaySignal.clear();
+        m_resultSignal_ch1.clear();
+        m_delaySignal_ch1.clear();
+        m_resultSignal_ch2.clear();
+        m_delaySignal_ch2.clear();
+
     }
     m_outputFile->Write();
     saveHistogram(h_timeDiff);
@@ -80,7 +85,9 @@ void GetTimeCFD::saveHistogram(TH1F *a_histogram){
 
 }
 ///======================================
-float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, float a_delay){
+float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, float a_delay, int ch){
+    std::vector <float> a_delaySignal;
+    std::vector <float> a_resultSignal;    
     bool a_flag = false;
     float a_x1{},a_x2{},a_y1{},a_y2{};
     float a_timeCFD{};
@@ -88,34 +95,34 @@ float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, flo
     ///Negative and delayed signal
     for (long unsigned int a_index=0 ; a_index<a_signal->size();a_index++)
     {
-        m_delaySignal.push_back(a_signal->at(a_index)*(-1));
+        a_delaySignal.push_back(a_signal->at(a_index)*(-1));
 
     }
     if (a_delay>0){
-    std::rotate(m_delaySignal.begin(), m_delaySignal.begin()+a_delay,m_delaySignal.end());
+    std::rotate(a_delaySignal.begin(), a_delaySignal.begin()+a_delay,a_delaySignal.end());
     }
     else{
-    std::rotate(m_delaySignal.begin(), m_delaySignal.begin()+ m_delaySignal.size()+a_delay,m_delaySignal.end());
+    std::rotate(a_delaySignal.begin(), a_delaySignal.begin()+ a_delaySignal.size()+a_delay,a_delaySignal.end());
 
     }
-    //cout<<"a_delay size: "<<m_delaySignal.size();
+    //cout<<"a_delay size: "<<a_delaySignal.size();
     ///Sum of the signals
     for (long unsigned int a_index=0 ; a_index<a_signal->size();a_index++)
     {
-        m_resultSignal.push_back(a_fraction *a_signal->at(a_index)+m_delaySignal.at(a_index));
+        a_resultSignal.push_back(a_fraction *a_signal->at(a_index)+a_delaySignal.at(a_index));
     }
-    // std::rotate(m_delaySignal.begin(), m_delaySignal.begin()+a_fraction,m_delaySignal.end())
+    // std::rotate(a_delaySignal.begin(), a_delaySignal.begin()+a_fraction,a_delaySignal.end())
 
-    for(long unsigned int a_index=0 ; a_index<m_resultSignal.size();a_index++)
+    for(long unsigned int a_index=0 ; a_index<a_resultSignal.size();a_index++)
     {
-        if ((m_resultSignal.at(a_index)<-100.)&&(a_flag==false))
+        if ((a_resultSignal.at(a_index)<-100.)&&(a_flag==false))
         {a_flag = true;}
-        if ((m_resultSignal.at(a_index)>0)&&(a_flag==true)){
-            //cout<<a_index<<" "<<m_resultSignal.at(a_index)<<endl;
+        if ((a_resultSignal.at(a_index)>0)&&(a_flag==true)){
+            //cout<<a_index<<" "<<a_resultSignal.at(a_index)<<endl;
                 a_x1 = (float)a_index-1;
                 a_x2 = (float)a_index;
-                a_y1 = m_resultSignal.at(a_index-1);
-                a_y2 = m_resultSignal.at(a_index);
+                a_y1 = a_resultSignal.at(a_index-1);
+                a_y2 = a_resultSignal.at(a_index);
                 a_flag = false;
 
                 a_timeCFD = getInterpolationX(a_x1,a_x2,a_y1,a_y2);
@@ -125,6 +132,16 @@ float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, flo
 
         //cout<<a_index<<" "<<m_resultSignal.at(a_index)<<endl;
     }
+    if (ch==1) {
+        m_resultSignal_ch1= a_resultSignal;
+        m_delaySignal_ch1=a_delaySignal;
+    } else
+    {
+        m_resultSignal_ch2=a_resultSignal;
+        m_delaySignal_ch2=a_delaySignal;
+    }
+    
+    
     //cout<<"time CFD: "<<a_timeCFD<<endl;
     return a_timeCFD;
 }
@@ -167,10 +184,14 @@ void GetTimeCFD::saveFile(const std::string & a_outputFile){
     m_outputFile = new TFile(outFile.c_str(), "RECREATE");
     m_outputTree = new TTree("Tree", "Difference time info");
     m_outputTree -> Branch("timeDifference",&m_timeDifference);
-    m_outputTree -> Branch("resultSignal",&m_resultSignal);
-    m_outputTree -> Branch("delaySignal",&m_delaySignal);
+    m_outputTree -> Branch("resultSignal_ch1",&m_resultSignal_ch1);
+    m_outputTree -> Branch("resultSignal_ch2",&m_resultSignal_ch2);
+    m_outputTree -> Branch("delaySignal_ch1",&m_delaySignal_ch1);
+    m_outputTree -> Branch("delaySignal_ch2",&m_delaySignal_ch2);
     m_outputTree -> Branch("ch1",&m_ch1);
     m_outputTree -> Branch("ch2",&m_ch2);
+    m_outputTree -> Branch("timech1",&m_timeCh1);
+    m_outputTree -> Branch("timech2",&m_timeCh2);
 
 
     return;
