@@ -4,7 +4,7 @@
 #include "TH1F.h"
 #include "TLegend.h"
 
-
+// Function to load the histogram from dat file
 TH1F *loadHistFromFile(const char *file){
 TTree *Tcharge = new TTree("Tcharge","Tcharge");
 Tcharge->ReadFile(file,"lineNumber:charge");
@@ -29,9 +29,9 @@ return h2;
 
 
 void plotHistFromFile(){
- TH1F *a_histogram1= loadHistFromFile("noCoil_charge.dat");
+  //TH1F *a_histogram1= loadHistFromFile("noCoil_charge.dat");
 // TH1F *a_histogram2= loadHistFromFile("processedWaveforms_coil.dat");
-TH1F *a_histogram2= loadHistFromFile("coils_X0_Y0_box_charge.dat");
+TH1F *a_histogram1= loadHistFromFile("./data/processed/coils_X0_Y0_box_charge.dat");
  TCanvas *c = new TCanvas ("c","A3",1000,700);
     TPad *pad1 = new TPad("pad1","",0,0,1,1);
     TPad *pad2 = new TPad("pad2","",0,0,1,1);
@@ -44,11 +44,11 @@ TH1F *a_histogram2= loadHistFromFile("coils_X0_Y0_box_charge.dat");
     // const char* a_nameFile = a_nameFileStr.c_str();
 
     a_histogram1->Draw();
-    a_histogram2->Draw("sames");
+    //a_histogram2->Draw("sames");
     pad1->SetLogy();   
     pad1->SetGrid();
-    a_histogram1->Fit("gaus", "V","E1", 0.30, 0.65);
-    a_histogram2->Fit("gaus", "V","E1", 0.30, 0.65);
+    a_histogram1->Fit("gaus", "V","E1", 0.20, 0.65);
+    //a_histogram2->Fit("gaus", "V","E1", 0.30, 0.65);
     a_histogram1->GetFunction("gaus")->SetLineColor(kBlue);
     a_histogram1->SetLineWidth(3);
     a_histogram1->SetTitle("; Charge [pC] ;Counts");
@@ -57,27 +57,26 @@ TH1F *a_histogram2= loadHistFromFile("coils_X0_Y0_box_charge.dat");
     a_histogram1->GetYaxis()->SetTitleOffset(0.7);
     a_histogram1->GetXaxis()->SetTitleOffset(0.7);
 
-    a_histogram2->GetFunction("gaus")->SetLineColor(kRed);
+   // a_histogram2->GetFunction("gaus")->SetLineColor(kRed);
     c->Update();
     TPaveStats *ps1 = (TPaveStats*)a_histogram1->GetListOfFunctions()->FindObject("stats");
     ps1->SetX1NDC(0.7); ps1->SetX2NDC(0.9);
     ps1->SetTextColor(kBlue);
     ps1->Draw();
     pad1->Modified();
-    a_histogram2->SetLineColor(kRed);
-    a_histogram2->SetLineColor(kRed);
+   // a_histogram2->SetLineColor(kRed);
  
     c->Update();
-    TPaveStats *ps2 = (TPaveStats*)a_histogram2->GetListOfFunctions()->FindObject("stats");
+   // TPaveStats *ps2 = (TPaveStats*)a_histogram2->GetListOfFunctions()->FindObject("stats");
     gStyle->SetOptFit(100);
  //   gStyle->SetLabelSize(.6, "XY");
-    ps2->SetX1NDC(0.4); ps2->SetX2NDC(0.6);
-    ps2->SetTextColor(kRed);
-    ps2->Draw();
+   // ps2->SetX1NDC(0.4); ps2->SetX2NDC(0.6);
+   // ps2->SetTextColor(kRed);
+   // ps2->Draw();
     TLegend *leg =  new TLegend(0.65,0.45,0.9,0.55);
     //leg->SetHeader("");
     leg->AddEntry(a_histogram1,"No coil");
-    leg->AddEntry(a_histogram2,"With Coil");
+   // leg->AddEntry(a_histogram2,"With Coil");
     leg->Draw();
 
   //  c->Update();
