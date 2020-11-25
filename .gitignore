@@ -70,6 +70,6 @@ processWaveforms
 CFD/getTimeCFD
 CFD/createTree
 testBash.sh
-CFD/createTree
-CFD/getTimeCFD
+SPE/createTree
+SPE/getTimeCFD
 data
