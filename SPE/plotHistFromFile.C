@@ -22,7 +22,7 @@ for (ULong64_t j = 0 ; j < nentries ; j++){
 }
 Tcharge->ResetBranchAddresses();
 
-TCanvas *c1 = new TCanvas();
+//TCanvas *c1 = new TCanvas();
 //h2->Draw();
 return h2;
 }
@@ -30,12 +30,16 @@ return h2;
 
 void plotHistFromFile(){
   //TH1F *a_histogram1= loadHistFromFile("noCoil_charge.dat");
-// TH1F *a_histogram2= loadHistFromFile("processedWaveforms_coil.dat");
+ //TH1F *a_histogram1= loadHistFromFile("./data/processed/noCoil_charge.dat");
+//TH1F *a_histogram1= loadHistFromFile("./data/processed/noCoil2_charge.dat");
+//TH1F *a_histogram1= loadHistFromFile("./data/processed/coils_X0_Y0_2nd_charge.dat");
 TH1F *a_histogram1= loadHistFromFile("./data/processed/coils_X0_Y0_box_charge.dat");
+
+
  TCanvas *c = new TCanvas ("c","A3",1000,700);
     TPad *pad1 = new TPad("pad1","",0,0,1,1);
-    TPad *pad2 = new TPad("pad2","",0,0,1,1);
-    pad2->SetFillStyle(4000);
+    //TPad *pad2 = new TPad("pad2","",0,0,1,1);
+    //pad2->SetFillStyle(4000);
     pad1->Draw();
     pad1->cd();
     // const char* a_textFileName = a_histogram1->GetName();
@@ -47,7 +51,7 @@ TH1F *a_histogram1= loadHistFromFile("./data/processed/coils_X0_Y0_box_charge.da
     //a_histogram2->Draw("sames");
     pad1->SetLogy();   
     pad1->SetGrid();
-    a_histogram1->Fit("gaus", "V","E1", 0.20, 0.65);
+    a_histogram1->Fit("gaus", "V","E1", 0.16, 0.65);
     //a_histogram2->Fit("gaus", "V","E1", 0.30, 0.65);
     a_histogram1->GetFunction("gaus")->SetLineColor(kBlue);
     a_histogram1->SetLineWidth(3);
