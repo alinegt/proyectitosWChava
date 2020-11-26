@@ -14,7 +14,7 @@
 
 #path=/home/salvador/Documents/WPT/data/noCoil
 # path=/home/salvador/Documents/WPT/data/noCoil2
-# path=/home/salvador/Documents/WPT/data/coils_X0_Y0_2nd
+#path=/home/salvador/Documents/WPT/data/coils_X0_Y0_2nd
  path=/home/salvador/Documents/WPT/data/coils_X0_Y0_box
  
 mergePath=/home/salvador/github/proyectitosWChava/SPE/data/merge/
@@ -23,7 +23,7 @@ scriptsPath=//home/salvador/github/proyectitosWChava/SPE/
 
 dirName="${path##*/}"
 mergeName="${dirName}""_merge.dat"
-processedName="${dirName}""_charge.dat"
+processedName="${dirName}"".dat"
 
 echo $dirName
 cd $path
@@ -46,7 +46,7 @@ cat *.dat > $mergePath$mergeName
 
 cd $scriptsPath
 
-./processWaveforms $mergePath$mergeName 80 60 200 10989 5e-10 $processedPath$processedName
+./processWaveforms $mergePath$mergeName 100 40 200 10989 5e-10 $processedPath$processedName
 #root plotHistFromFile.C
 echo $dirName
 exit
