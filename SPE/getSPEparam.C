@@ -5,6 +5,9 @@
 #include "TLegend.h"
 #include <stdlib.h>
 #include "TMath.h"
+#include <fstream>
+#include <sstream>
+#include <iostream>
 std::string base_name(std::string const & path)
 {
   std::string base_filename= path.substr(path.find_last_of("/\\") + 1);
@@ -60,7 +63,7 @@ return h2;
 
 
 
-void plotHistFromFile(char *argc){
+Double_t GetPeakToValley(char *argc){
  
 TH1F *a_histogram1= loadHistFromFile(argc);
 
@@ -75,7 +78,7 @@ TH1F *a_histogram1= loadHistFromFile(argc);
     a_histogram1->Draw();
     pad1->SetLogy();   
     pad1->SetGrid();
-    a_histogram1->Fit("pol4", "SV","E1", xliminf, xlimsup);
+    a_histogram1->Fit("pol4", "SVM","E1", xliminf, xlimsup);
    // a_histogram1->GetFunction("gaus")->SetLineColor(kBlue);
     a_histogram1->SetLineWidth(3);
     a_histogram1->SetTitle("; Charge [pC] ;Counts");
@@ -90,7 +93,8 @@ TH1F *a_histogram1= loadHistFromFile(argc);
     func->Print();
     TSpectrum *s = new TSpectrum(2);
     TH1 *funcHist = func->GetHistogram();
-    Int_t nfound = s->Search(funcHist,2,"SAME",1);
+    Int_t nfound = s->Search(funcHist,2,"goff",1);
+
     s->Print();
     printf("Found %d candidate peaks to fit\n",nfound);
 
@@ -99,7 +103,7 @@ TH1F *a_histogram1= loadHistFromFile(argc);
     // The slope will be negative for the first part
     // of the fitted curve, so finding the sign change
     // from negative to positive as an approximation of the minimum
-    for (xx=xliminf;xx<xlimsup;xx+=0.01){
+    for (xx=xliminf;xx<xlimsup;xx+=0.001){
       inflectionPoint=func->Derivative(xx);
       if ( inflectionPoint>0 ){
     //        std::cout << xx << std::endl;
@@ -107,17 +111,46 @@ TH1F *a_histogram1= loadHistFromFile(argc);
 
       }
     }
+    Double_t xx2=0;
+   for (xx2=xx;xx2<xlimsup;xx2+=0.001){
+      inflectionPoint=func->Derivative(xx2);
+      if ( inflectionPoint<0 ){
+    //        std::cout << xx << std::endl;
+            break;
+
+      }
+    }
     std::cout << func->Eval(xx) << std::endl;
     Double_t minimo= func->Eval(xx);
-    Double_t *Peaks = s->GetPositionY();
-    Double_t firstPeak = Peaks[0]; 
-    Double_t peak2Valley = firstPeak/minimo;
-    std::cout << firstPeak << std::endl;
+    Double_t maximo= func->Eval(xx2);
+    Double_t *PeaksY = s->GetPositionY();
+    Double_t *PeaksX = s->GetPositionX();
+
+    Double_t firstPeakY = PeaksY[0]; 
+    Double_t peak2Valley = firstPeakY/minimo;
+    std::cout << firstPeakY << std::endl;
         std::cout << peak2Valley << std::endl;
+
+    TMarker *mx = new TMarker(PeaksX[0],PeaksY[0],22);
+    mx-> SetMarkerSize(2);
+    mx-> SetMarkerColor(4);
+ //   mx->Draw("SAME");
+ 
+  TMarker *mn = new TMarker(xx,minimo,22);
+    mn-> SetMarkerSize(2);
+    mn-> SetMarkerColor(1);
+    mn->Draw("SAME");
+  
+  TMarker *mx2 = new TMarker(xx2,maximo,22);
+    mx2-> SetMarkerSize(2);
+    mx2-> SetMarkerColor(3);
+    mx2->Draw("SAME");
+
 
     c->Update();
     TPaveStats *ps1 = (TPaveStats*)a_histogram1->GetListOfFunctions()->FindObject("stats");
     ps1->SetX1NDC(0.7); ps1->SetX2NDC(0.9);
+    ps1->AddText("They are added to the pave using the AddText method.");
     ps1->SetTextColor(kBlue);
     ps1->Draw();
     pad1->Modified();
@@ -130,10 +163,31 @@ TH1F *a_histogram1= loadHistFromFile(argc);
     filename_arr = &filename[0];
     TLegend *leg =  new TLegend(0.65,0.45,0.9,0.55);
     leg->AddEntry(a_histogram1,filename_arr);
+    //leg->AddEntry(a_histogram1, ;
+
+
     leg->Draw();
     c->cd();
-    std::cout << base_name(filepath) << std::endl;
+    std::string outPath = "./data/plots/";
 
+    c->Print( (outPath+filename+".png").c_str() );
+    c->Close();
+    std::cout << base_name(filepath) << std::endl;
+    return peak2Valley;
 }
 
 
+void peakToValley(char *argc, const char* a_textFileName){
+
+Double_t peak2valley= GetPeakToValley(argc);
+std::cout << peak2valley << std::endl;
+std::string a_nameFileString = a_textFileName;
+
+a_nameFileString = "./data/peak2valley/"+a_nameFileString+".dat";
+const char* a_nameFile = a_nameFileString.c_str();
+ofstream a_file;
+a_file.open(a_nameFile,std::ios::out | std::fstream::app);
+a_file<< base_name(argc)<<" "<<peak2valley<<" "<<endl;
+a_file.close();
+ 
+}
