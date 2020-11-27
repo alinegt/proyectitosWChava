@@ -7,6 +7,8 @@
 #include "TMarker.h"
 #include "TStyle.h"
 #include "TPaveStats.h"
+#include "TLatex.h"
+#include "TString.h"
 
 #include <stdlib.h>
 #include "TMath.h"
@@ -171,13 +173,15 @@ TH1F *a_histogram1= loadHistFromFile(argc);
     std:: string filename= base_name(filepath);
     char* filename_arr;
     filename_arr = &filename[0];
+    // LEGEND
     TLegend *leg =  new TLegend(0.65,0.45,0.9,0.55);
     leg->AddEntry(a_histogram1,filename_arr);
     //leg->AddEntry(a_histogram1, ;
-
-
     leg->Draw();
     c->cd();
+
+    TLatex t(0.4,0.7,Form("Peak to valley ratio:%g",peak2Valley));
+    t.Draw();
     std::string outPath = "./data/plots/";
 
     c->Print( (outPath+filename+".png").c_str() );
