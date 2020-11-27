@@ -3,11 +3,21 @@
 #include "TTree.h"
 #include "TH1F.h"
 #include "TLegend.h"
+#include "TSpectrum.h"
+#include "TMarker.h"
+#include "TStyle.h"
+#include "TPaveStats.h"
+
 #include <stdlib.h>
 #include "TMath.h"
-#include <fstream>
-#include <sstream>
+#include "TF1.h"
 #include <iostream>
+#include <string>
+#include <sstream>
+#include <fstream>
+#include <stdio.h>
+#include <iomanip>
+#include <stdlib.h>
 std::string base_name(std::string const & path)
 {
   std::string base_filename= path.substr(path.find_last_of("/\\") + 1);
@@ -177,17 +187,17 @@ TH1F *a_histogram1= loadHistFromFile(argc);
 }
 
 
-void peakToValley(char *argc, const char* a_textFileName){
+int main(int argc, char **argv){
 
-Double_t peak2valley= GetPeakToValley(argc);
+std::string inFile =      argv[1];     // Nombre del archivo
+std::string outFile =  argv[2]; 
+Double_t peak2valley= GetPeakToValley(argv[1]);
 std::cout << peak2valley << std::endl;
-std::string a_nameFileString = a_textFileName;
-
-a_nameFileString = "./data/peak2valley/"+a_nameFileString+".dat";
-const char* a_nameFile = a_nameFileString.c_str();
-ofstream a_file;
-a_file.open(a_nameFile,std::ios::out | std::fstream::app);
-a_file<< base_name(argc)<<" "<<peak2valley<<" "<<endl;
+std::string outFilePath = "/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/"+outFile+".dat";
+std::ofstream a_file;
+a_file.open(outFilePath,std::ios::out | std::fstream::app);
+a_file<< base_name(argv[1])<<" "<<peak2valley<<" "<<std::endl;
 a_file.close();
+return 0;
  
 }
