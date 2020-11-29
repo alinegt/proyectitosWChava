@@ -33,7 +33,7 @@ TTree *Tcharge = new TTree("Tcharge","Tcharge");
 Tcharge->ReadFile(file,"lineNumber:charge");
 Tcharge->Print();
 
-TH1F *h2 = new TH1F("h2", "No Coil", 200, -0.3, 1);
+TH1F *PeakToValleyFit = new TH1F("PeakToValleyFit", "No Coil", 200, -0.3, 1);
 float charge_noCoil;
 ULong64_t nentries = (Int_t)Tcharge->GetEntries();
 
@@ -41,13 +41,13 @@ Tcharge->SetBranchAddress("charge", &charge_noCoil);
 
 for (ULong64_t j = 0 ; j < nentries ; j++){
     Tcharge->GetEntry(j);
-    h2->Fill(charge_noCoil);
+    PeakToValleyFit->Fill(charge_noCoil);
 }
 Tcharge->ResetBranchAddresses();
 
 //TCanvas *c1 = new TCanvas();
-//h2->Draw();
-return h2;
+//PeakToValleyFit->Draw();
+return PeakToValleyFit;
 }
 
   Double_t fitf(Double_t *x,Double_t *par) {
@@ -78,7 +78,11 @@ return h2;
 Double_t GetPeakToValley(char *argc){
  
 TH1F *a_histogram1= loadHistFromFile(argc);
-
+std::string filepath = argc;
+std:: string filename= base_name(filepath);
+char* filename_arr;
+filename_arr = &filename[0];
+   
 
  TCanvas *c = new TCanvas ("c","A3",1000,700);
     TPad *pad1 = new TPad("pad1","",0,0,1,1);
@@ -91,14 +95,17 @@ TH1F *a_histogram1= loadHistFromFile(argc);
     pad1->SetLogy();   
     pad1->SetGrid();
     a_histogram1->Fit("pol4", "SVM","E1", xliminf, xlimsup);
+    
    // a_histogram1->GetFunction("gaus")->SetLineColor(kBlue);
     a_histogram1->SetLineWidth(3);
-    a_histogram1->SetTitle("; Charge [pC] ;Counts");
+    a_histogram1->SetTitle(Form("%s; Charge [pC] ;Counts",filename_arr));
     a_histogram1->GetXaxis()->SetTitleSize(.05);
     a_histogram1->GetYaxis()->SetTitleSize(.05);
     a_histogram1->GetYaxis()->SetTitleOffset(0.7);
     a_histogram1->GetXaxis()->SetTitleOffset(0.7);
-    
+    a_histogram1->GetFunction("pol4")->SetLineWidth(5);
+
+
     TF1 *par = (TF1*) a_histogram1-> GetListOfFunctions()->FindObject("pol4");
     TF1 *func = new TF1("funcfit","pol4", xliminf, xlimsup);
     func-> SetParameters(par->GetParameter(0),par->GetParameter(1),par->GetParameter(2),par->GetParameter(3),par->GetParameter(4));
@@ -143,7 +150,37 @@ TH1F *a_histogram1= loadHistFromFile(argc);
     std::cout << firstPeakY << std::endl;
         std::cout << peak2Valley << std::endl;
 
-    TMarker *mx = new TMarker(PeaksX[0],PeaksY[0],22);
+ 
+// FIT Pedestal
+   // TF1 *f1 = new TF1("f1", "gaus", -0.3, .2);
+    TH1F *PedestalFit = (TH1F*)a_histogram1->Clone("PedestalFit");
+    PedestalFit->Fit("gaus","","sames",-0.1,0.08);
+    PedestalFit->GetFunction("gaus")->SetLineColor(kBlack);
+    PedestalFit->GetFunction("gaus")->SetLineWidth(3);
+
+
+    c->Update();
+    TPaveStats *ps1 = (TPaveStats*)a_histogram1->GetListOfFunctions()->FindObject("stats");
+    ps1->SetX1NDC(0.5); ps1->SetX2NDC(0.9);
+    ps1->SetY1NDC(0.75); ps1->SetY2NDC(0.9);
+    ps1->SetTextSize(.04);
+    ps1->SetTextColor(kBlue);
+    //ps1->SetOptStat(110);
+    ps1->SetOptFit(100);
+
+    ps1->Draw();
+    pad1->Modified();
+    TPaveStats *ps2 = (TPaveStats*)PedestalFit->GetListOfFunctions()->FindObject("stats");
+    ps2->SetX1NDC(0.5); ps2->SetX2NDC(0.9);
+    ps2->SetY1NDC(0.55); ps2->SetY2NDC(0.75);
+    ps2->SetTextSize(.04);
+    ps2->SetTextColor(kBlack);
+    ps2->SetOptStat(1000000001);
+    ps2->SetOptFit(0001);
+    ps2->Draw();
+    pad1->Modified(); 
+
+   TMarker *mx = new TMarker(PeaksX[0],PeaksY[0],22);
     mx-> SetMarkerSize(2);
     mx-> SetMarkerColor(4);
  //   mx->Draw("SAME");
@@ -157,30 +194,16 @@ TH1F *a_histogram1= loadHistFromFile(argc);
     mx2-> SetMarkerSize(2);
     mx2-> SetMarkerColor(3);
     mx2->Draw("SAME");
-
-
     c->Update();
-    TPaveStats *ps1 = (TPaveStats*)a_histogram1->GetListOfFunctions()->FindObject("stats");
-    ps1->SetX1NDC(0.7); ps1->SetX2NDC(0.9);
-    ps1->AddText("They are added to the pave using the AddText method.");
-    ps1->SetTextColor(kBlue);
-    ps1->Draw();
-    pad1->Modified();
- 
-    c->Update();
-    gStyle->SetOptFit(100);
-    std::string filepath = argc;
-    std:: string filename= base_name(filepath);
-    char* filename_arr;
-    filename_arr = &filename[0];
+    //gStyle->SetOptFit(101);
     // LEGEND
     TLegend *leg =  new TLegend(0.65,0.45,0.9,0.55);
     leg->AddEntry(a_histogram1,filename_arr);
-    //leg->AddEntry(a_histogram1, ;
-    leg->Draw();
+   // leg->AddEntry(a_histogram1, );
+  //  leg->Draw();
     c->cd();
 
-    TLatex t(0.4,0.7,Form("Peak to valley ratio:%g",peak2Valley));
+    TLatex t(0.3,0.2,Form("Peak/valley:%g",peak2Valley));
     t.Draw();
     std::string outPath = "./data/plots/";
 
