@@ -8,7 +8,7 @@
 
 # The output are the plots and a file with the extracted SPE parameters
 # using the getSPEparam.C root macro.
-
+make
 execPath=/home/salvador/github/proyectitosWChava/SPE
 inputPath=/home/salvador/github/proyectitosWChava/SPE/data/processed/
 outputFileName=SPEparams

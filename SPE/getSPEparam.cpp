@@ -52,7 +52,7 @@ return PeakToValleyFit;
 
   Double_t fitf(Double_t *x,Double_t *par) {
       Double_t arg = 0;
-      Double_t arg1 =0;
+   //   Double_t arg1 =0;
       Double_t arg2 =0;
       Double_t arg3 =0;
       Double_t arg4_1 = 0;
@@ -75,9 +75,9 @@ return PeakToValleyFit;
 
 
 
-Double_t GetPeakToValley(char *argc){
+Double_t GetPeakToValley(char *argc, double_t *peak2Valley, double_t *sigma_fit){
  
-TH1F *a_histogram1= loadHistFromFile(argc);
+TH1F *h_peakToValley= loadHistFromFile(argc);
 std::string filepath = argc;
 std:: string filename= base_name(filepath);
 char* filename_arr;
@@ -91,76 +91,103 @@ filename_arr = &filename[0];
     pad1->cd();
     Double_t xliminf=0.07;
     Double_t xlimsup=0.4;
-    a_histogram1->Draw();
+    h_peakToValley->Draw();
     pad1->SetLogy();   
     pad1->SetGrid();
-    a_histogram1->Fit("pol4", "SVM","E1", xliminf, xlimsup);
+///////////////////////////////////////////////////////////////////////
+    // Fit polynomial to find peak and valley values
+///////////////////////////////////////////////////////////////////////
+    h_peakToValley->Fit("pol4", "SM","E1", xliminf, xlimsup);
+   // h_peakToValley->GetFunction("gaus")->SetLineColor(kBlue);
+    h_peakToValley->SetLineWidth(3);
+    h_peakToValley->SetTitle(Form("%s; Charge [pC] ;Counts",filename_arr));
+    h_peakToValley->GetXaxis()->SetTitleSize(.05);
+    h_peakToValley->GetYaxis()->SetTitleSize(.05);
+    h_peakToValley->GetYaxis()->SetTitleOffset(0.7);
+    h_peakToValley->GetXaxis()->SetTitleOffset(0.7);
+    h_peakToValley->GetFunction("pol4")->SetLineWidth(5);
+    // Extracting function from fitting
     
-   // a_histogram1->GetFunction("gaus")->SetLineColor(kBlue);
-    a_histogram1->SetLineWidth(3);
-    a_histogram1->SetTitle(Form("%s; Charge [pC] ;Counts",filename_arr));
-    a_histogram1->GetXaxis()->SetTitleSize(.05);
-    a_histogram1->GetYaxis()->SetTitleSize(.05);
-    a_histogram1->GetYaxis()->SetTitleOffset(0.7);
-    a_histogram1->GetXaxis()->SetTitleOffset(0.7);
-    a_histogram1->GetFunction("pol4")->SetLineWidth(5);
 
-
-    TF1 *par = (TF1*) a_histogram1-> GetListOfFunctions()->FindObject("pol4");
+///////////////////////////////////////////////////////////////////////  
+   // New function to get the data from the fit
+///////////////////////////////////////////////////////////////////////
+    TF1 *par = (TF1*) h_peakToValley-> GetListOfFunctions()->FindObject("pol4");
+    
     TF1 *func = new TF1("funcfit","pol4", xliminf, xlimsup);
-    func-> SetParameters(par->GetParameter(0),par->GetParameter(1),par->GetParameter(2),par->GetParameter(3),par->GetParameter(4));
-    func->Print();
-    TSpectrum *s = new TSpectrum(2);
-    TH1 *funcHist = func->GetHistogram();
-    Int_t nfound = s->Search(funcHist,2,"goff",1);
+    Double_t parameters[5];
+    par->GetParameters(&parameters[0]);
+    std::cout << parameters << std::endl;
+    func->SetParameters(parameters);
+    const  Double_t errors[5]= {par->GetParError(0),par->GetParError(1),par->GetParError(2),par->GetParError(3),par->GetParError(4)};
+    func-> SetParErrors(errors);
+    //func->SetLineColor(kViolet);
+    func->Draw("SAME");
 
-    s->Print();
-    printf("Found %d candidate peaks to fit\n",nfound);
-
+    //func->Print();
     Double_t inflectionPoint =0;
     Double_t xx=0;
     // The slope will be negative for the first part
     // of the fitted curve, so finding the sign change
-    // from negative to positive as an approximation of the minimum
+    // from negative to positive as an approximation fo the minimum which would be the valley
     for (xx=xliminf;xx<xlimsup;xx+=0.001){
       inflectionPoint=func->Derivative(xx);
       if ( inflectionPoint>0 ){
-    //        std::cout << xx << std::endl;
             break;
 
       }
     }
+///////////////////////////////////////////////////////////////////////
+    // Once the valley was found, the next sign change would be
+    // a maximum, the peak of the SPE 
+///////////////////////////////////////////////////////////////////////
     Double_t xx2=0;
    for (xx2=xx;xx2<xlimsup;xx2+=0.001){
       inflectionPoint=func->Derivative(xx2);
       if ( inflectionPoint<0 ){
-    //        std::cout << xx << std::endl;
             break;
 
       }
     }
-    std::cout << func->Eval(xx) << std::endl;
-    Double_t minimo= func->Eval(xx);
-    Double_t maximo= func->Eval(xx2);
-    Double_t *PeaksY = s->GetPositionY();
-    Double_t *PeaksX = s->GetPositionX();
+///////////////////////////////////////////////////////////////////////
+// Estimating peak/valley 
+///////////////////////////////////////////////////////////////////////
+    Double_t valley= func->Eval(xx);
+    Double_t peak= func->Eval(xx2);
+    *peak2Valley = peak/valley;
+    std::cout << peak2Valley << std::endl;
 
-    Double_t firstPeakY = PeaksY[0]; 
-    Double_t peak2Valley = firstPeakY/minimo;
-    std::cout << firstPeakY << std::endl;
-        std::cout << peak2Valley << std::endl;
+///////////////////////////////////////////////////////////////////////
+   // Alternative method to find the peaks using TSpectrum function
+///////////////////////////////////////////////////////////////////////
 
- 
-// FIT Pedestal
+//    TSpectrum *s = new TSpectrum(2);
+//    TH1 *funcHist = func->GetHistogram();
+//    Int_t nfound = s->Search(funcHist,2,"goff",1);
+//    Double_t *PeaksY = s->GetPositionY();
+//    Double_t *PeaksX = s->GetPositionX();
+ //   Double_t firstPeakY = PeaksY[0]; 
+    //s->Print();
+    //printf("Found %d candidate peaks to fit\n",nfound);
+
+
+
+/////////////////////////////////////////////////////////////////////// 
+////// FIT Pedestal
+///////////////////////////////////////////////////////////////////////
+
    // TF1 *f1 = new TF1("f1", "gaus", -0.3, .2);
-    TH1F *PedestalFit = (TH1F*)a_histogram1->Clone("PedestalFit");
-    PedestalFit->Fit("gaus","","sames",-0.1,0.08);
-    PedestalFit->GetFunction("gaus")->SetLineColor(kBlack);
-    PedestalFit->GetFunction("gaus")->SetLineWidth(3);
+    TH1F *h_pedestalFit = (TH1F*)h_peakToValley->Clone("h_pedestalFit");
+    h_pedestalFit->Fit("gaus","","sames",-0.1,0.08);
+    h_pedestalFit->GetFunction("gaus")->SetLineColor(kBlack);
+    h_pedestalFit->GetFunction("gaus")->SetLineWidth(3);
+    TF1 *parGaus = (TF1*) h_pedestalFit-> GetListOfFunctions()->FindObject("gaus");
+
+    *sigma_fit = parGaus->GetParameter(2);
 
 
     c->Update();
-    TPaveStats *ps1 = (TPaveStats*)a_histogram1->GetListOfFunctions()->FindObject("stats");
+    TPaveStats *ps1 = (TPaveStats*)h_peakToValley->GetListOfFunctions()->FindObject("stats");
     ps1->SetX1NDC(0.5); ps1->SetX2NDC(0.9);
     ps1->SetY1NDC(0.75); ps1->SetY2NDC(0.9);
     ps1->SetTextSize(.04);
@@ -170,7 +197,7 @@ filename_arr = &filename[0];
 
     ps1->Draw();
     pad1->Modified();
-    TPaveStats *ps2 = (TPaveStats*)PedestalFit->GetListOfFunctions()->FindObject("stats");
+    TPaveStats *ps2 = (TPaveStats*)h_pedestalFit->GetListOfFunctions()->FindObject("stats");
     ps2->SetX1NDC(0.5); ps2->SetX2NDC(0.9);
     ps2->SetY1NDC(0.55); ps2->SetY2NDC(0.75);
     ps2->SetTextSize(.04);
@@ -180,50 +207,65 @@ filename_arr = &filename[0];
     ps2->Draw();
     pad1->Modified(); 
 
-   TMarker *mx = new TMarker(PeaksX[0],PeaksY[0],22);
-    mx-> SetMarkerSize(2);
-    mx-> SetMarkerColor(4);
- //   mx->Draw("SAME");
- 
-  TMarker *mn = new TMarker(xx,minimo,22);
-    mn-> SetMarkerSize(2);
-    mn-> SetMarkerColor(1);
-    mn->Draw("SAME");
   
-  TMarker *mx2 = new TMarker(xx2,maximo,22);
-    mx2-> SetMarkerSize(2);
-    mx2-> SetMarkerColor(3);
-    mx2->Draw("SAME");
-    c->Update();
-    //gStyle->SetOptFit(101);
-    // LEGEND
+ ///////////////////////////////////////////////////////////////////////
+    // LEGENDS
+///////////////////////////////////////////////////////////////////////
     TLegend *leg =  new TLegend(0.65,0.45,0.9,0.55);
-    leg->AddEntry(a_histogram1,filename_arr);
+    leg->AddEntry(h_peakToValley,filename_arr);
    // leg->AddEntry(a_histogram1, );
   //  leg->Draw();
-    c->cd();
+///////////////////////////////////////////////////////////////////////
+/////// Markers for minimum and maximum from fitted polynomial ////////
+///////////////////////////////////////////////////////////////////////
 
-    TLatex t(0.3,0.2,Form("Peak/valley:%g",peak2Valley));
+//    TMarker *mx = new TMarker(PeaksX[0],PeaksY[0],22);
+//     mx-> SetMarkerSize(2);
+//     mx-> SetMarkerColor(4);
+//  //   mx->Draw("SAME");
+ 
+  TMarker *mn = new TMarker(xx,valley,22);
+    mn-> SetMarkerSize(2.5);
+    mn-> SetMarkerColor(kGreen);
+    mn->Draw("SAME");
+  
+  TMarker *mx2 = new TMarker(xx2,peak,22);
+    mx2-> SetMarkerSize(2.5);
+    mx2-> SetMarkerColor(kGreen);
+    mx2->Draw("SAME");
+  
+  c->Update();
+
+
+
+
+    c->cd();
+///////////////////////////////////////////////////////////////////////
+///// Text box
+///////////////////////////////////////////////////////////////////////
+    TLatex t(0.3,0.2,Form("Peak/valley:%g",*peak2Valley));
     t.Draw();
     std::string outPath = "./data/plots/";
-
     c->Print( (outPath+filename+".png").c_str() );
     c->Close();
     std::cout << base_name(filepath) << std::endl;
-    return peak2Valley;
+
+
+    return 0;
+
 }
 
 
 int main(int argc, char **argv){
-
+Double_t peaktovalley, sigma_fit;
 std::string inFile =      argv[1];     // Nombre del archivo
 std::string outFile =  argv[2]; 
-Double_t peak2valley= GetPeakToValley(argv[1]);
-std::cout << peak2valley << std::endl;
+GetPeakToValley(argv[1], &peaktovalley, &sigma_fit );
+std::cout << peaktovalley << std::endl;
 std::string outFilePath = "/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/"+outFile+".dat";
 std::ofstream a_file;
 a_file.open(outFilePath,std::ios::out | std::fstream::app);
-a_file<< base_name(argv[1])<<" "<<peak2valley<<" "<<std::endl;
+a_file<< base_name(argv[1])<<" "<< peaktovalley <<" "<< sigma_fit<<" "<< std::endl;
 a_file.close();
 return 0;
  
