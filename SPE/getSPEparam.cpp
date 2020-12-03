@@ -33,7 +33,7 @@ TTree *Tcharge = new TTree("Tcharge","Tcharge");
 Tcharge->ReadFile(file,"lineNumber:charge");
 Tcharge->Print();
 
-TH1F *PeakToValleyFit = new TH1F("PeakToValleyFit", "No Coil", 200, -0.3, 1);
+TH1F *PeakToValleyFit = new TH1F("PeakToValleyFit", "No Coil",200, -2, 40);
 float charge_noCoil;
 ULong64_t nentries = (Int_t)Tcharge->GetEntries();
 
@@ -57,25 +57,32 @@ return PeakToValleyFit;
       Double_t arg3 =0;
       Double_t arg4_1 = 0;
       Double_t arg4 = 0;
-       // par[0]= a
-       // par[1]= b
-       // par[2] = Npe
-       // par[3] = sigma
-       // par[4] = C
-      arg = (par[0] * TMath::Exp (-par[1]*x[0]));
-      arg2= par[2]*TMath::Exp(-par[2]);
-      arg3 =  TMath::Sqrt(2*3.14159*1*TMath::Power( par[3],2 ));
-      arg4_1=x[0]-par[4];
-      arg4 = TMath::Exp( - (TMath::Power( arg4_1 , 2) )/ (  2*1*TMath::Power(par[3],2))  )      ;
-      Double_t fitval = arg+arg2*arg3*arg4;
-     //Double_t fitval = x[0]*par[0]+par[1] + par[2]+par[3]+ par[4];
+      Double_t summing=0;
+      int n=0;
+      Double_t a= par[0];
+      Double_t b= par[1];
+      Double_t Npe=par[2];
+      Double_t sigma=par[3];
+      Double_t C =par[4];
+      arg = (a * TMath::Exp (-b*x[0]));
+      for (n=0;n<2; n++){
+            arg2= ((TMath::Power (Npe, n)) *TMath::Exp(Npe))/TMath::Factorial(n);
+            arg3 =  TMath::Sqrt(2*3.14159*n*TMath::Power( sigma,2 ));
+            arg4_1=x[0]-n*C;
+            arg4 = TMath::Exp( - (TMath::Power( arg4_1 , 2) )/ (  2*n*TMath::Power(sigma,2))  )      ;
+            summing+= arg2*arg3*arg4;
+      }
+      
+     Double_t fitval = arg+ summing;
+     summing=0;
+    // Double_t fitval = x[0]*par[0]+par[1] + par[2]+par[3]+ par[4];
       return fitval;
    } 
 
 
 
 
-Double_t GetPeakToValley(char *argc, double_t *peak2Valley, double_t *sigma_fit){
+Double_t GetParams(char *argc, double_t *peak2Valley, double_t *sigma_fit){
  
 TH1F *h_peakToValley= loadHistFromFile(argc);
 std::string filepath = argc;
@@ -89,15 +96,15 @@ filename_arr = &filename[0];
 
     pad1->Draw();
     pad1->cd();
-    Double_t xliminf=0.07;
-    Double_t xlimsup=0.4;
+    Double_t xlimFitPed[2]={-1.5,1.5};
+    Double_t xlimFitPeak2Valley[2]={1,25};
     h_peakToValley->Draw();
     pad1->SetLogy();   
     pad1->SetGrid();
 ///////////////////////////////////////////////////////////////////////
     // Fit polynomial to find peak and valley values
 ///////////////////////////////////////////////////////////////////////
-    h_peakToValley->Fit("pol4", "SM","E1", xliminf, xlimsup);
+    h_peakToValley->Fit("pol4", "SM","E1", xlimFitPeak2Valley[0], xlimFitPeak2Valley[1]);
    // h_peakToValley->GetFunction("gaus")->SetLineColor(kBlue);
     h_peakToValley->SetLineWidth(3);
     h_peakToValley->SetTitle(Form("%s; Charge [pC] ;Counts",filename_arr));
@@ -105,16 +112,17 @@ filename_arr = &filename[0];
     h_peakToValley->GetYaxis()->SetTitleSize(.05);
     h_peakToValley->GetYaxis()->SetTitleOffset(0.7);
     h_peakToValley->GetXaxis()->SetTitleOffset(0.7);
-    h_peakToValley->GetFunction("pol4")->SetLineWidth(5);
+    h_peakToValley->GetFunction("pol4")->SetLineWidth(1);
+    h_peakToValley->GetFunction("pol4")->SetLineColor(0);
+
     // Extracting function from fitting
     
 
 ///////////////////////////////////////////////////////////////////////  
-   // New function to get the data from the fit
+   // New function to get results from the fit
 ///////////////////////////////////////////////////////////////////////
     TF1 *par = (TF1*) h_peakToValley-> GetListOfFunctions()->FindObject("pol4");
-    
-    TF1 *func = new TF1("funcfit","pol4", xliminf, xlimsup);
+    TF1 *func = new TF1("funcfit","pol4", xlimFitPeak2Valley[0], xlimFitPeak2Valley[1]);
     Double_t parameters[5];
     par->GetParameters(&parameters[0]);
     std::cout << parameters << std::endl;
@@ -122,7 +130,7 @@ filename_arr = &filename[0];
     const  Double_t errors[5]= {par->GetParError(0),par->GetParError(1),par->GetParError(2),par->GetParError(3),par->GetParError(4)};
     func-> SetParErrors(errors);
     //func->SetLineColor(kViolet);
-    func->Draw("SAME");
+    //func->Draw("SAME");
 
     //func->Print();
     Double_t inflectionPoint =0;
@@ -130,7 +138,7 @@ filename_arr = &filename[0];
     // The slope will be negative for the first part
     // of the fitted curve, so finding the sign change
     // from negative to positive as an approximation fo the minimum which would be the valley
-    for (xx=xliminf;xx<xlimsup;xx+=0.001){
+    for (xx=xlimFitPeak2Valley[0];xx<xlimFitPeak2Valley[1];xx+=0.001){
       inflectionPoint=func->Derivative(xx);
       if ( inflectionPoint>0 ){
             break;
@@ -142,7 +150,7 @@ filename_arr = &filename[0];
     // a maximum, the peak of the SPE 
 ///////////////////////////////////////////////////////////////////////
     Double_t xx2=0;
-   for (xx2=xx;xx2<xlimsup;xx2+=0.001){
+   for (xx2=xx;xx2<xlimFitPeak2Valley[1];xx2+=0.001){
       inflectionPoint=func->Derivative(xx2);
       if ( inflectionPoint<0 ){
             break;
@@ -178,18 +186,60 @@ filename_arr = &filename[0];
 
    // TF1 *f1 = new TF1("f1", "gaus", -0.3, .2);
     TH1F *h_pedestalFit = (TH1F*)h_peakToValley->Clone("h_pedestalFit");
-    h_pedestalFit->Fit("gaus","","sames",-0.1,0.08);
+    h_pedestalFit->Fit("gaus","","sames",xlimFitPed[0],xlimFitPed[1]);
     h_pedestalFit->GetFunction("gaus")->SetLineColor(kBlack);
-    h_pedestalFit->GetFunction("gaus")->SetLineWidth(3);
+    h_pedestalFit->GetFunction("gaus")->SetLineWidth(1);
     TF1 *parGaus = (TF1*) h_pedestalFit-> GetListOfFunctions()->FindObject("gaus");
 
     *sigma_fit = parGaus->GetParameter(2);
+/////////////////////////////////////////////////////////////////////// 
+////// FIT multiphotoelectron
+///////////////////////////////////////////////////////////////////////
+    // Create a TF1 object using the function defined above.
+      // The last three parameters specify the number of parameters
+      // for the function.
+      TH1F *h_multiph = (TH1F*)h_peakToValley->Clone("MultiphotoelectronFit");
+
+      TF1 *funcMulti = new TF1("fitf",fitf, 1,40,5);
+      // set the parameters to the mean and RMS of the histogram
+      funcMulti->SetParameters(445,-2,3,10,18);
+      // a
+      funcMulti->SetParLimits(0,10,1000000);
+      // b
+      funcMulti->SetParLimits(1,0,10);
+      // Npe
+      funcMulti->SetParLimits(2,0,3);
+      // Sigma
+      funcMulti->SetParLimits(3,0,50);
+      //C
+      funcMulti->SetParLimits(4,12,18);
+      // give the parameters meaningful names
+      funcMulti->SetParNames ("a","b","Npe","sigma","C");
+      // // call TH1::Fit with the name of the TF1 object
+      h_multiph->Fit("fitf","Br","sames");
+    h_multiph->GetFunction("fitf")->SetLineColor(kBlack);
+    h_multiph->GetFunction("fitf")->SetLineWidth(4);
+
+/////////////////////////////////////////////////////////////////////// 
+////// FIT SPE 0
+///////////////////////////////////////////////////////////////////////
+      TH1F *h_spe = (TH1F*)h_peakToValley->Clone("SPE 0");
+//      TF1 *funcMulti = new TF1("gaus",xx,25);
+      h_spe->Fit("gaus","r","sames",xx,25);
 
 
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////// 
+////// Stats boxes
+///////////////////////////////////////////////////////////////////////
     c->Update();
     TPaveStats *ps1 = (TPaveStats*)h_peakToValley->GetListOfFunctions()->FindObject("stats");
     ps1->SetX1NDC(0.5); ps1->SetX2NDC(0.9);
-    ps1->SetY1NDC(0.75); ps1->SetY2NDC(0.9);
+    ps1->SetY1NDC(0.75); ps1->SetY2NDC(0.8);
     ps1->SetTextSize(.04);
     ps1->SetTextColor(kBlue);
     //ps1->SetOptStat(110);
@@ -199,12 +249,40 @@ filename_arr = &filename[0];
     pad1->Modified();
     TPaveStats *ps2 = (TPaveStats*)h_pedestalFit->GetListOfFunctions()->FindObject("stats");
     ps2->SetX1NDC(0.5); ps2->SetX2NDC(0.9);
-    ps2->SetY1NDC(0.55); ps2->SetY2NDC(0.75);
+    ps2->SetY1NDC(0.75); ps2->SetY2NDC(0.8);
     ps2->SetTextSize(.04);
     ps2->SetTextColor(kBlack);
     ps2->SetOptStat(1000000001);
     ps2->SetOptFit(0001);
     ps2->Draw();
+    
+    TPaveStats *ps3 = (TPaveStats*)h_multiph->GetListOfFunctions()->FindObject("stats");
+    ps3->SetX1NDC(0.5); ps3->SetX2NDC(0.9);
+    ps3->SetY1NDC(0.6); ps3->SetY2NDC(0.9);
+    ps3->SetTextSize(.04);
+    ps3->SetTextColor(kBlack);
+    ps3->SetOptStat(1000000001);
+    ps3->SetOptFit(0001);
+    ps3->Draw();
+    
+        TPaveStats *ps4 = (TPaveStats*)h_spe->GetListOfFunctions()->FindObject("stats");
+    ps4->SetX1NDC(0.5); ps4->SetX2NDC(0.9);
+    ps4->SetY1NDC(0.4); ps4->SetY2NDC(0.6);
+    ps4->SetTextSize(.04);
+    ps4->SetTextColor(kBlack);
+    ps4->SetOptStat(1000000001);
+    ps4->SetOptFit(0001);
+    ps4->Draw();
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     pad1->Modified(); 
 
   
@@ -260,7 +338,7 @@ int main(int argc, char **argv){
 Double_t peaktovalley, sigma_fit;
 std::string inFile =      argv[1];     // Nombre del archivo
 std::string outFile =  argv[2]; 
-GetPeakToValley(argv[1], &peaktovalley, &sigma_fit );
+GetParams(argv[1], &peaktovalley, &sigma_fit );
 std::cout << peaktovalley << std::endl;
 std::string outFilePath = "/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/"+outFile+".dat";
 std::ofstream a_file;
