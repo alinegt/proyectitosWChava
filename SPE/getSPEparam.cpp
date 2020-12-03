@@ -28,12 +28,12 @@ std::string baseName(std::string const & path)
 }
 
 // Function to load the histogram from dat file
-TH1F *loadHistFromFile(const char *file){
+TH1F *loadHistFromFile(char *argc, double_t limInfBin, double_t limSupBin, double_t numberBin){
 TTree *Tcharge = new TTree("Tcharge","Tcharge");
-Tcharge->ReadFile(file,"lineNumber:charge");
+Tcharge->ReadFile(argc,"lineNumber:charge");
 Tcharge->Print();
 
-TH1F *PeakToValleyFit = new TH1F("PeakToValleyFit", "No Coil",200, -2, 40);
+TH1F *PeakToValleyFit = new TH1F("PeakToValleyFit", "No Coil",numberBin, limInfBin, limSupBin);
 float charge_noCoil;
 ULong64_t nentries = (Int_t)Tcharge->GetEntries();
 
@@ -83,8 +83,12 @@ return PeakToValleyFit;
 
 
 Double_t getParams(char *argc, double_t *peak2Valley, double_t *sigma_fit){
- 
-TH1F *h_peakToValley= loadHistFromFile(argc);
+ Double_t limInfBin= -2;
+Double_t limSupBin= 40;
+Double_t numberBin = 100;
+Double_t adcResolution= (limSupBin-limInfBin)/numberBin;
+
+TH1F *h_peakToValley= loadHistFromFile(argc,limInfBin,limSupBin, numberBin);
 std::string filepath = argc;
 std:: string filename= baseName(filepath);
 char* filename_arr;
@@ -225,13 +229,7 @@ filename_arr = &filename[0];
 ///////////////////////////////////////////////////////////////////////
       TH1F *h_spe = (TH1F*)h_peakToValley->Clone("SPE 0");
 //      TF1 *funcMulti = new TF1("gaus",xx,25);
-      h_spe->Fit("gaus","r","sames",xx,25);
-
-
-
-
-
-
+      h_spe->Fit("gaus","r","sames",xx,30);
 
 /////////////////////////////////////////////////////////////////////// 
 ////// Stats boxes
@@ -259,30 +257,21 @@ filename_arr = &filename[0];
     TPaveStats *ps3 = (TPaveStats*)h_multiph->GetListOfFunctions()->FindObject("stats");
     ps3->SetX1NDC(0.5); ps3->SetX2NDC(0.9);
     ps3->SetY1NDC(0.6); ps3->SetY2NDC(0.9);
-    ps3->SetTextSize(.04);
+    ps3->SetTextSize(.035);
     ps3->SetTextColor(kBlack);
-    ps3->SetOptStat(1000000001);
+    ps3->SetOptStat(1000000011);
     ps3->SetOptFit(0001);
     ps3->Draw();
     
         TPaveStats *ps4 = (TPaveStats*)h_spe->GetListOfFunctions()->FindObject("stats");
     ps4->SetX1NDC(0.5); ps4->SetX2NDC(0.9);
-    ps4->SetY1NDC(0.4); ps4->SetY2NDC(0.6);
-    ps4->SetTextSize(.04);
+    ps4->SetY1NDC(0.45); ps4->SetY2NDC(0.6);
+    ps4->SetTextSize(.035);
     ps4->SetTextColor(kBlack);
     ps4->SetOptStat(1000000001);
     ps4->SetOptFit(0001);
     ps4->Draw();
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     pad1->Modified(); 
 
   
@@ -314,15 +303,14 @@ filename_arr = &filename[0];
   
   c->Update();
 
-
-
-
     c->cd();
 ///////////////////////////////////////////////////////////////////////
 ///// Text box
 ///////////////////////////////////////////////////////////////////////
     TLatex t(0.3,0.2,Form("Peak/valley:%g",*peak2Valley));
+    TLatex t2(0.3,0.15,Form("Resolution:%g pC/bin",adcResolution));
     t.Draw();
+    t2.Draw();
     std::string outPath = "./data/plots/";
     c->Print( (outPath+filename+".png").c_str() );
     c->Close();
