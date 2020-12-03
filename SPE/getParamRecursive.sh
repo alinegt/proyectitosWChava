@@ -12,16 +12,24 @@ make
 execPath=/home/salvador/github/proyectitosWChava/SPE
 inputPath=/home/salvador/github/proyectitosWChava/SPE/data/processed/
 outputFileName=SPEparams
+mergePath=/home/salvador/github/proyectitosWChava/SPE/data/merge/
+
 rm /home/salvador/github/proyectitosWChava/SPE/data/SPEparam/SPEparams.dat
 cd $inputPath
 for file in *
 do
-mergePath="${inputPath}""${file}"
-echo $mergePath
+processedPath="${inputPath}""${file}"
+mergeFile="${mergePath}""${file%.*}""_merge.dat"
+echo $mergeFile
+echo $processedPath
 cd $execPath
-./getSPEparam $mergePath $outputFileName
+./getSPEparam $processedPath $outputFileName $mergeFile
 cd $inputPath
 done
 cd /home/salvador/github/proyectitosWChava/SPE/data/plots/
-rm montage.png
-montage -geometry +2+2 *.png montage.png
+rm SPEmontage.png
+montage -geometry +2+2 *.png SPEmontage.png
+
+cd /home/salvador/github/proyectitosWChava/SPE/data/timePlots/
+rm Timemontage.png
+montage -geometry +2+2 *.png Timemontage.png

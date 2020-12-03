@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <iomanip>
 #include <stdlib.h>
-std::string base_name(std::string const & path)
+std::string baseName(std::string const & path)
 {
   std::string base_filename= path.substr(path.find_last_of("/\\") + 1);
   std::string::size_type const p(base_filename.find_last_of('.'));
@@ -82,11 +82,11 @@ return PeakToValleyFit;
 
 
 
-Double_t GetParams(char *argc, double_t *peak2Valley, double_t *sigma_fit){
+Double_t getParams(char *argc, double_t *peak2Valley, double_t *sigma_fit){
  
 TH1F *h_peakToValley= loadHistFromFile(argc);
 std::string filepath = argc;
-std:: string filename= base_name(filepath);
+std:: string filename= baseName(filepath);
 char* filename_arr;
 filename_arr = &filename[0];
    
@@ -206,7 +206,7 @@ filename_arr = &filename[0];
       // a
       funcMulti->SetParLimits(0,10,1000000);
       // b
-      funcMulti->SetParLimits(1,0,10);
+      funcMulti->SetParLimits(1,0,3);
       // Npe
       funcMulti->SetParLimits(2,0,3);
       // Sigma
@@ -326,7 +326,7 @@ filename_arr = &filename[0];
     std::string outPath = "./data/plots/";
     c->Print( (outPath+filename+".png").c_str() );
     c->Close();
-    std::cout << base_name(filepath) << std::endl;
+    std::cout << baseName(filepath) << std::endl;
 
 
     return 0;
@@ -334,17 +334,49 @@ filename_arr = &filename[0];
 }
 
 
+void getTimePlot(char *argc){
+ 
+std::string filepath = argc;
+std:: string filename= baseName(filepath);
+char* filename_arr;
+filename_arr = &filename[0];
+TTree *T = new TTree("T","elarbol");
+T->ReadFile(argc,"x:y",',');
+//T->Draw("x:y");
+TCanvas *c = new TCanvas ("c","A3",1000,700);
+std::cout << "Plotting histogram" << std::endl;
+T->Draw("y:x");
+auto htemp = (TH1F*)gPad->GetPrimitive("htemp"); 
+ htemp->SetTitle(Form("%s; Time [s] ; Amplitude [V]",filename_arr));
+  htemp->GetXaxis()->SetTitleSize(.05);
+  htemp->GetYaxis()->SetTitleSize(.05);
+  htemp->GetYaxis()->SetTitleOffset(0.8);
+  htemp->GetXaxis()->SetTitleOffset(0.7);
+c->SetGrid();
+c->cd();
+c->Update();
+std::string outPath = "./data/timePlots/";
+std::string baseNamePlot = baseName(filepath);
+c->Print( (outPath+baseNamePlot+".png").c_str() );
+c->Close();
+}
+
+
 int main(int argc, char **argv){
 Double_t peaktovalley, sigma_fit;
 std::string inFile =      argv[1];     // Nombre del archivo
 std::string outFile =  argv[2]; 
-GetParams(argv[1], &peaktovalley, &sigma_fit );
+std::string mergeFile =  argv[3]; 
+
+getParams(argv[1], &peaktovalley, &sigma_fit );
 std::cout << peaktovalley << std::endl;
 std::string outFilePath = "/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/"+outFile+".dat";
 std::ofstream a_file;
 a_file.open(outFilePath,std::ios::out | std::fstream::app);
-a_file<< base_name(argv[1])<<" "<< peaktovalley <<" "<< sigma_fit<<" "<< std::endl;
+a_file<< baseName(argv[1])<<" "<< peaktovalley <<" "<< sigma_fit<<" "<< std::endl;
 a_file.close();
+
+getTimePlot(argv[3]);
 return 0;
  
 }
