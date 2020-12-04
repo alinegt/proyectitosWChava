@@ -49,7 +49,9 @@ Tcharge->ResetBranchAddresses();
 //PeakToValleyFit->Draw();
 return PeakToValleyFit;
 }
-
+///////////////////////
+/// SPE fit function
+//////////////////
   Double_t fitf(Double_t *x,Double_t *par) {
       Double_t arg = 0;
    //   Double_t arg1 =0;
@@ -83,12 +85,16 @@ return PeakToValleyFit;
 
 
 Double_t getParams(char *argc, double_t *peak2Valley, double_t *sigma_fit){
- Double_t limInfBin= -2;
-Double_t limSupBin= 40;
-Double_t numberBin = 100;
+ Double_t limInfBin= -1;
+Double_t limSupBin= 6;
+Double_t numberBin = 275;
 Double_t adcResolution= (limSupBin-limInfBin)/numberBin;
 
 TH1F *h_peakToValley= loadHistFromFile(argc,limInfBin,limSupBin, numberBin);
+h_peakToValley->SetMaximum(10e4);
+//h_peakToValley->SetMinimum(0.0);
+
+
 std::string filepath = argc;
 std:: string filename= baseName(filepath);
 char* filename_arr;
@@ -100,8 +106,8 @@ filename_arr = &filename[0];
 
     pad1->Draw();
     pad1->cd();
-    Double_t xlimFitPed[2]={-1.5,1.5};
-    Double_t xlimFitPeak2Valley[2]={1,25};
+    Double_t xlimFitPed[2]={-.125,.125};
+    Double_t xlimFitPeak2Valley[2]={0.1,2.5};
     h_peakToValley->Draw();
     pad1->SetLogy();   
     pad1->SetGrid();
@@ -204,19 +210,19 @@ filename_arr = &filename[0];
       // for the function.
       TH1F *h_multiph = (TH1F*)h_peakToValley->Clone("MultiphotoelectronFit");
 
-      TF1 *funcMulti = new TF1("fitf",fitf, 1,40,5);
+      TF1 *funcMulti = new TF1("fitf",fitf, .2,5,5);
       // set the parameters to the mean and RMS of the histogram
-      funcMulti->SetParameters(445,-2,3,10,18);
+      funcMulti->SetParameters(445,0,3,1,1.8);
       // a
       funcMulti->SetParLimits(0,10,1000000);
       // b
-      funcMulti->SetParLimits(1,0,3);
+      funcMulti->SetParLimits(1,0,100);
       // Npe
       funcMulti->SetParLimits(2,0,3);
       // Sigma
-      funcMulti->SetParLimits(3,0,50);
+      funcMulti->SetParLimits(3,0,5);
       //C
-      funcMulti->SetParLimits(4,12,18);
+      funcMulti->SetParLimits(4,1.2,1.8);
       // give the parameters meaningful names
       funcMulti->SetParNames ("a","b","Npe","sigma","C");
       // // call TH1::Fit with the name of the TF1 object
@@ -305,12 +311,32 @@ filename_arr = &filename[0];
 
     c->cd();
 ///////////////////////////////////////////////////////////////////////
+///// Bin content
+///////////////////////////////////////////////////////////////////////
+  TAxis *xaxis = h_multiph->GetXaxis();
+//  TAxis *yaxis = h_multiph->GetYaxis();
+  Int_t binxInf = xaxis->FindBin(xx);
+  Int_t binxSup =xaxis->FindBin(limSupBin);
+  Double_t binSum =0;
+  Int_t j=0;
+for (j=binxInf;j<binxSup;j++ ){
+     binSum+=h_multiph->GetBinContent(j);
+}
+Double_t occupancy= 100* ( binSum/ ( h_multiph->GetEntries() ) );
+
+///////////////////////////////////////////////////////////////////////
 ///// Text box
 ///////////////////////////////////////////////////////////////////////
-    TLatex t(0.3,0.2,Form("Peak/valley:%g",*peak2Valley));
-    TLatex t2(0.3,0.15,Form("Resolution:%g pC/bin",adcResolution));
+    TLatex t(0.15,0.85,Form("Peak/valley:%g",*peak2Valley));
+    t.SetTextSize(0.04);
+    TLatex t2(0.15,0.8,Form("Resolution:%g pC/bin",adcResolution));
+    t2.SetTextSize(0.04);
+    TLatex t3(0.15,0.75,Form("Ocuppancy:%g%%",occupancy));
+    t3.SetTextSize(0.04);
+
     t.Draw();
     t2.Draw();
+    t3.Draw();
     std::string outPath = "./data/plots/";
     c->Print( (outPath+filename+".png").c_str() );
     c->Close();
@@ -364,7 +390,7 @@ a_file.open(outFilePath,std::ios::out | std::fstream::app);
 a_file<< baseName(argv[1])<<" "<< peaktovalley <<" "<< sigma_fit<<" "<< std::endl;
 a_file.close();
 
-getTimePlot(argv[3]);
+//getTimePlot(argv[3]);
 return 0;
  
 }

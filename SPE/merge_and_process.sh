@@ -15,7 +15,7 @@
 #path=/home/salvador/Documents/WPT/data/noCoil
 # path=/home/salvador/Documents/WPT/data/noCoil2
 #path=/home/salvador/Documents/WPT/data/coils_X0_Y0_2nd
-dataPath=/home/salvador/Documents/WPT/data_dec_02/
+dataPath=/home/salvador/Documents/WPT/data_dec_03/
 #dataPath=/home/salvador/Documents/WPT/data 
 mergePath=/home/salvador/github/proyectitosWChava/SPE/data/merge/
 processedPath=/home/salvador/github/proyectitosWChava/SPE/data/processed/
@@ -55,7 +55,7 @@ cat *.dat > $mergePath$mergeName
 
 cd $scriptsPath
 
-./processWaveforms $mergePath$mergeName 100 40 200 19980 5e-10 $processedPath$processedName
+./processWaveforms $mergePath$mergeName 100 50 200 19980 5e-10 $processedPath$processedName
 #root plotHistFromFile.C
 # echo $dirName
 cd $dataPath

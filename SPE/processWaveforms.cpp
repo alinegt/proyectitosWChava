@@ -60,6 +60,7 @@ int main(int argc, char **argv)
    fichero2 = fopen( inFile.c_str(), "r" );
    float picoScale = 1e-12; //  factor to scale to picoCoulombs
    float flipConstant = -1;  // Negative pulses flipped by this constant
+   float amplifGain = 10;
    std::fstream outputFile;
    //Nombre de mi archivo de salida
    outputFile.open(outDatFile,std::ios::out | std::ios::trunc);
@@ -83,7 +84,7 @@ int main(int argc, char **argv)
      fscanf( fichero, "%f,%f\n", &x1, &volt);
      if (i<it+bin_inicial-1)
      {
-       sum_ruido1=sum_ruido1+volt;
+       sum_ruido1+=volt;
      }
      if (i>=it+bin_inicial-1 && i<it+(bin_inicial+ancho)-1)
      {
@@ -95,15 +96,17 @@ int main(int argc, char **argv)
        {
          voltaje_min=volt;
        }
-       sum_volt=sum_volt+volt;
+       sum_volt+=volt;
      }
      if (i>=it+(bin_inicial + ancho)-1)
      {
-       sum_ruido2=sum_ruido2+volt;
+       sum_ruido2+=volt;
      }
    }
-  avg_ruido1=sum_ruido1/(bin_inicial-1);
-  avg_ruido2=sum_ruido2/(No_muestras-bin_inicial-ancho+1);
+
+  avg_ruido1= (1/amplifGain) *(sum_ruido1)/(bin_inicial-1);
+  avg_ruido2=(1/amplifGain) *(sum_ruido2)/(No_muestras-bin_inicial-ancho+1);
+  sum_volt=sum_volt*(1/amplifGain);
   
   ct10=carga*0.1;
   ct50=carga*0.5;
