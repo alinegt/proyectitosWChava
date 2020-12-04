@@ -81,7 +81,9 @@ return PeakToValleyFit;
       return fitval;
    } 
 
-
+///////////////////////
+/// Function for getting params
+//////////////////
 
 
 Double_t getParams(char *argc, double_t *peak2Valley, double_t *sigma_fit){
@@ -107,88 +109,19 @@ filename_arr = &filename[0];
     pad1->Draw();
     pad1->cd();
     Double_t xlimFitPed[2]={-.125,.125};
-    Double_t xlimFitPeak2Valley[2]={0.1,2.5};
+//    Double_t xlimFitPeak2Valley[2]={0.1,2.5};
     h_peakToValley->Draw();
-    pad1->SetLogy();   
-    pad1->SetGrid();
-///////////////////////////////////////////////////////////////////////
-    // Fit polynomial to find peak and valley values
-///////////////////////////////////////////////////////////////////////
-    h_peakToValley->Fit("pol4", "SM","E1", xlimFitPeak2Valley[0], xlimFitPeak2Valley[1]);
-   // h_peakToValley->GetFunction("gaus")->SetLineColor(kBlue);
-    h_peakToValley->SetLineWidth(3);
+     h_peakToValley->SetLineWidth(3);
     h_peakToValley->SetTitle(Form("%s; Charge [pC] ;Counts",filename_arr));
     h_peakToValley->GetXaxis()->SetTitleSize(.05);
     h_peakToValley->GetYaxis()->SetTitleSize(.05);
     h_peakToValley->GetYaxis()->SetTitleOffset(0.7);
     h_peakToValley->GetXaxis()->SetTitleOffset(0.7);
-    h_peakToValley->GetFunction("pol4")->SetLineWidth(1);
-    h_peakToValley->GetFunction("pol4")->SetLineColor(0);
+    h_peakToValley->GetXaxis()->SetTicks("+-");
+   // h_peakToValley->GetXaxis()->SetNdivisions(30);
 
-    // Extracting function from fitting
-    
-
-///////////////////////////////////////////////////////////////////////  
-   // New function to get results from the fit
-///////////////////////////////////////////////////////////////////////
-    TF1 *par = (TF1*) h_peakToValley-> GetListOfFunctions()->FindObject("pol4");
-    TF1 *func = new TF1("funcfit","pol4", xlimFitPeak2Valley[0], xlimFitPeak2Valley[1]);
-    Double_t parameters[5];
-    par->GetParameters(&parameters[0]);
-    std::cout << parameters << std::endl;
-    func->SetParameters(parameters);
-    const  Double_t errors[5]= {par->GetParError(0),par->GetParError(1),par->GetParError(2),par->GetParError(3),par->GetParError(4)};
-    func-> SetParErrors(errors);
-    //func->SetLineColor(kViolet);
-    //func->Draw("SAME");
-
-    //func->Print();
-    Double_t inflectionPoint =0;
-    Double_t xx=0;
-    // The slope will be negative for the first part
-    // of the fitted curve, so finding the sign change
-    // from negative to positive as an approximation fo the minimum which would be the valley
-    for (xx=xlimFitPeak2Valley[0];xx<xlimFitPeak2Valley[1];xx+=0.001){
-      inflectionPoint=func->Derivative(xx);
-      if ( inflectionPoint>0 ){
-            break;
-
-      }
-    }
-///////////////////////////////////////////////////////////////////////
-    // Once the valley was found, the next sign change would be
-    // a maximum, the peak of the SPE 
-///////////////////////////////////////////////////////////////////////
-    Double_t xx2=0;
-   for (xx2=xx;xx2<xlimFitPeak2Valley[1];xx2+=0.001){
-      inflectionPoint=func->Derivative(xx2);
-      if ( inflectionPoint<0 ){
-            break;
-
-      }
-    }
-///////////////////////////////////////////////////////////////////////
-// Estimating peak/valley 
-///////////////////////////////////////////////////////////////////////
-    Double_t valley= func->Eval(xx);
-    Double_t peak= func->Eval(xx2);
-    *peak2Valley = peak/valley;
-    std::cout << peak2Valley << std::endl;
-
-///////////////////////////////////////////////////////////////////////
-   // Alternative method to find the peaks using TSpectrum function
-///////////////////////////////////////////////////////////////////////
-
-//    TSpectrum *s = new TSpectrum(2);
-//    TH1 *funcHist = func->GetHistogram();
-//    Int_t nfound = s->Search(funcHist,2,"goff",1);
-//    Double_t *PeaksY = s->GetPositionY();
-//    Double_t *PeaksX = s->GetPositionX();
- //   Double_t firstPeakY = PeaksY[0]; 
-    //s->Print();
-    //printf("Found %d candidate peaks to fit\n",nfound);
-
-
+    pad1->SetLogy();   
+    pad1->SetGrid();
 
 /////////////////////////////////////////////////////////////////////// 
 ////// FIT Pedestal
@@ -208,9 +141,11 @@ filename_arr = &filename[0];
     // Create a TF1 object using the function defined above.
       // The last three parameters specify the number of parameters
       // for the function.
-      TH1F *h_multiph = (TH1F*)h_peakToValley->Clone("MultiphotoelectronFit");
-
-      TF1 *funcMulti = new TF1("fitf",fitf, .2,5,5);
+      TH1F *h_multiph = (TH1F*)h_peakToValley->Clone("h_multiph");
+      Double_t limInfFitf = 0.2;
+      Double_t limSupFitf = 5;
+      Double_t numberOfParams=5;
+      TF1 *funcMulti = new TF1("fitf",fitf, limInfFitf, limSupFitf, numberOfParams);
       // set the parameters to the mean and RMS of the histogram
       funcMulti->SetParameters(445,0,3,1,1.8);
       // a
@@ -229,6 +164,44 @@ filename_arr = &filename[0];
       h_multiph->Fit("fitf","Br","sames");
     h_multiph->GetFunction("fitf")->SetLineColor(kBlack);
     h_multiph->GetFunction("fitf")->SetLineWidth(4);
+
+///////////////////////////////////////////////////////////////////////  
+   //get Peak and valley values
+///////////////////////////////////////////////////////////////////////
+
+    //func->Print();
+    Double_t inflectionPoint =0;
+    Double_t xx=0.5;
+    // The slope will be negative for the first part
+    // of the fitted curve, so finding the sign change
+    // from negative to positive as an approximation fo the minimum which would be the valley
+    for (xx= limInfFitf ;xx<limSupFitf;xx+=0.001){
+      inflectionPoint=funcMulti->Derivative(xx);
+      if ( inflectionPoint>0 ){
+            break;
+
+      }
+    }
+
+// ///////////////////////////////////////////////////////////////////////
+//     // Once the valley was found, the next sign change would be
+//     // a maximum, the peak of the SPE 
+// ///////////////////////////////////////////////////////////////////////
+    Double_t  xx2=2.5;
+   for (xx2=xx;xx2<limSupFitf;xx2+=0.001){
+      inflectionPoint=funcMulti->Derivative(xx2);
+      if ( inflectionPoint<0 ){
+            break;
+
+      }
+    }
+// ///////////////////////////////////////////////////////////////////////
+// // Estimating peak/valley 
+// ///////////////////////////////////////////////////////////////////////
+    Double_t valley= funcMulti->Eval(xx);
+    Double_t peak= funcMulti->Eval(xx2);
+    *peak2Valley = peak/valley;
+    std::cout << peak2Valley << std::endl;
 
 /////////////////////////////////////////////////////////////////////// 
 ////// FIT SPE 0
@@ -316,7 +289,10 @@ filename_arr = &filename[0];
   TAxis *xaxis = h_multiph->GetXaxis();
 //  TAxis *yaxis = h_multiph->GetYaxis();
   Int_t binxInf = xaxis->FindBin(xx);
-  Int_t binxSup =xaxis->FindBin(limSupBin);
+  Int_t binxSup = xaxis->FindBin(limSupBin);
+  c->Update();
+ 
+ 
   Double_t binSum =0;
   Int_t j=0;
 for (j=binxInf;j<binxSup;j++ ){
@@ -337,6 +313,11 @@ Double_t occupancy= 100* ( binSum/ ( h_multiph->GetEntries() ) );
     t.Draw();
     t2.Draw();
     t3.Draw();
+    pad1->SetLogy(1);
+    pad1->Modified(); pad1->Update();
+     TLine *l= new TLine(1.5,1,1.5,100);
+    l->Draw() ;
+    c->Update();
     std::string outPath = "./data/plots/";
     c->Print( (outPath+filename+".png").c_str() );
     c->Close();

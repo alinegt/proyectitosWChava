@@ -31,5 +31,5 @@ rm SPEmontage.png
 montage -geometry +2+2 *.png SPEmontage.png
 
 cd /home/salvador/github/proyectitosWChava/SPE/data/timePlots/
-rm Timemontage.png
-montage -geometry +2+2 *.png Timemontage.png
+#rm Timemontage.png
+#montage -geometry +2+2 *.png Timemontage.png
