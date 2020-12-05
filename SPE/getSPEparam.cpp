@@ -104,24 +104,24 @@ filename_arr = &filename[0];
    
 
  TCanvas *c = new TCanvas ("c","A3",1000,700);
-    TPad *pad1 = new TPad("pad1","",0,0,1,1);
-
+    TPad *pad1 = new TPad("pad1","",0,0.33,1,1);
+  pad1->SetLogy();   
+    pad1->SetGrid();
     pad1->Draw();
     pad1->cd();
     Double_t xlimFitPed[2]={-.125,.125};
 //    Double_t xlimFitPeak2Valley[2]={0.1,2.5};
     h_peakToValley->Draw();
-     h_peakToValley->SetLineWidth(3);
+     h_peakToValley->SetLineWidth(2);
     h_peakToValley->SetTitle(Form("%s; Charge [pC] ;Counts",filename_arr));
     h_peakToValley->GetXaxis()->SetTitleSize(.05);
     h_peakToValley->GetYaxis()->SetTitleSize(.05);
     h_peakToValley->GetYaxis()->SetTitleOffset(0.7);
-    h_peakToValley->GetXaxis()->SetTitleOffset(0.7);
+    h_peakToValley->GetXaxis()->SetTitleOffset(1);
     h_peakToValley->GetXaxis()->SetTicks("+-");
    // h_peakToValley->GetXaxis()->SetNdivisions(30);
 
-    pad1->SetLogy();   
-    pad1->SetGrid();
+  
 
 /////////////////////////////////////////////////////////////////////// 
 ////// FIT Pedestal
@@ -141,7 +141,7 @@ filename_arr = &filename[0];
     // Create a TF1 object using the function defined above.
       // The last three parameters specify the number of parameters
       // for the function.
-      TH1F *h_multiph = (TH1F*)h_peakToValley->Clone("h_multiph");
+      TH1F *h_multiph = (TH1F*)h_peakToValley->Clone("Multi pe Fit");
       Double_t limInfFitf = 0.2;
       Double_t limSupFitf = 5;
       Double_t numberOfParams=5;
@@ -171,7 +171,7 @@ filename_arr = &filename[0];
 
     //func->Print();
     Double_t inflectionPoint =0;
-    Double_t xx=0.5;
+    Double_t xx=0;
     // The slope will be negative for the first part
     // of the fitted curve, so finding the sign change
     // from negative to positive as an approximation fo the minimum which would be the valley
@@ -187,7 +187,7 @@ filename_arr = &filename[0];
 //     // Once the valley was found, the next sign change would be
 //     // a maximum, the peak of the SPE 
 // ///////////////////////////////////////////////////////////////////////
-    Double_t  xx2=2.5;
+    Double_t  xx2=0;
    for (xx2=xx;xx2<limSupFitf;xx2+=0.001){
       inflectionPoint=funcMulti->Derivative(xx2);
       if ( inflectionPoint<0 ){
@@ -206,9 +206,9 @@ filename_arr = &filename[0];
 /////////////////////////////////////////////////////////////////////// 
 ////// FIT SPE 0
 ///////////////////////////////////////////////////////////////////////
-      TH1F *h_spe = (TH1F*)h_peakToValley->Clone("SPE 0");
+      TH1F *h_spe = (TH1F*)h_peakToValley->Clone("SPE 0 Fit");
 //      TF1 *funcMulti = new TF1("gaus",xx,25);
-      h_spe->Fit("gaus","r","sames",xx,30);
+      h_spe->Fit("gaus","r","sames",xx,5);
 
 /////////////////////////////////////////////////////////////////////// 
 ////// Stats boxes
@@ -235,8 +235,8 @@ filename_arr = &filename[0];
     
     TPaveStats *ps3 = (TPaveStats*)h_multiph->GetListOfFunctions()->FindObject("stats");
     ps3->SetX1NDC(0.5); ps3->SetX2NDC(0.9);
-    ps3->SetY1NDC(0.6); ps3->SetY2NDC(0.9);
-    ps3->SetTextSize(.035);
+    ps3->SetY1NDC(0.55); ps3->SetY2NDC(0.9);
+    ps3->SetTextSize(.045);
     ps3->SetTextColor(kBlack);
     ps3->SetOptStat(1000000011);
     ps3->SetOptFit(0001);
@@ -244,8 +244,8 @@ filename_arr = &filename[0];
     
         TPaveStats *ps4 = (TPaveStats*)h_spe->GetListOfFunctions()->FindObject("stats");
     ps4->SetX1NDC(0.5); ps4->SetX2NDC(0.9);
-    ps4->SetY1NDC(0.45); ps4->SetY2NDC(0.6);
-    ps4->SetTextSize(.035);
+    ps4->SetY1NDC(0.35); ps4->SetY2NDC(0.55);
+    ps4->SetTextSize(.045);
     ps4->SetTextColor(kBlack);
     ps4->SetOptStat(1000000001);
     ps4->SetOptFit(0001);
@@ -299,24 +299,111 @@ for (j=binxInf;j<binxSup;j++ ){
      binSum+=h_multiph->GetBinContent(j);
 }
 Double_t occupancy= 100* ( binSum/ ( h_multiph->GetEntries() ) );
-
 ///////////////////////////////////////////////////////////////////////
 ///// Text box
 ///////////////////////////////////////////////////////////////////////
-    TLatex t(0.15,0.85,Form("Peak/valley:%g",*peak2Valley));
-    t.SetTextSize(0.04);
-    TLatex t2(0.15,0.8,Form("Resolution:%g pC/bin",adcResolution));
-    t2.SetTextSize(0.04);
-    TLatex t3(0.15,0.75,Form("Ocuppancy:%g%%",occupancy));
-    t3.SetTextSize(0.04);
+    TLatex t(0.15,0.9,Form("Peak/valley:%g",*peak2Valley));
+    t.SetTextSize(0.025);
+    TLatex t2(0.15,0.875,Form("Resolution:%g pC/bin",adcResolution));
+    t2.SetTextSize(0.025);
+    TLatex t3(0.15,0.85,Form("Occupancy:%g%%",occupancy));
+    t3.SetTextSize(0.025);
 
     t.Draw();
     t2.Draw();
     t3.Draw();
-    pad1->SetLogy(1);
-    pad1->Modified(); pad1->Update();
-     TLine *l= new TLine(1.5,1,1.5,100);
-    l->Draw() ;
+    // pad1->SetLogy(1);
+    // pad1->Modified(); pad1->Update();
+    //  TLine *l= new TLine(1.5,1,1.5,100);
+    // l->Draw() ;
+
+
+///////////////////////////////////////////////////////////////////////
+///// Residuals plot
+///////////////////////////////////////////////////////////////////////
+ TPad *pad2 = new TPad("pad2","pad2",0,0,1,0.3);
+ pad2->Draw();
+ pad2->cd();
+  TF1 *f_SPEGaus = (TF1*) h_spe-> GetListOfFunctions()->FindObject("gaus");
+
+ 
+ TH1F *h_residuals = new TH1F("Residuals SPE0 Fit","Residuals SPE0 Fit",20,-15,20);
+    // pad1->SetBottomMargin(0.00001);
+    // pad1->SetBorderMode(0);
+    // pad1->SetLogy();
+    pad2->SetTopMargin(0.00001);
+    pad2->SetBottomMargin(0.25);
+    pad2->SetBorderMode(0);
+    // pad1->Draw();
+    // pad2->Draw();
+    pad1->cd();
+    h_residuals->SetLineWidth(2);
+    h_residuals->SetTitle(Form("SPE fit Residual; Charge [pC] ;Counts"));
+    h_residuals->GetXaxis()->SetTitleSize(.11);
+    h_residuals->GetYaxis()->SetTitleSize(.11);
+    h_residuals->GetYaxis()->SetTitleOffset(0.3);
+    h_residuals->GetXaxis()->SetTitleOffset(1);
+    h_residuals->GetXaxis()->SetTicks("+-");
+   h_residuals->GetXaxis()->SetLabelFont(63);
+   h_residuals->GetXaxis()->SetLabelSize(16);
+   h_residuals->GetYaxis()->SetLabelFont(63);
+   h_residuals->GetYaxis()->SetLabelSize(16);
+    h_residuals->GetYaxis()->SetRangeUser(0., 60.);
+   pad2->SetGrid();
+   pad2->cd();
+ double_t res;
+  Int_t binxSupGauss = xaxis->FindBin(3.4);
+      std::cout << h_peakToValley->GetNbinsX()<< std::endl;
+      std::cout << binxInf<< std::endl;
+      std::cout << binxSupGauss<< std::endl;
+
+ for (int i =0;i<h_spe->GetNbinsX();i++) {
+
+//  if(i>=binxInf && i<=binxSupGauss){
+
+//   res= h_spe->GetBinContent(i) - f_SPEGaus->Eval(h_spe->GetBinCenter(i)); 
+
+//   } 
+//   else{
+//        res=0;
+//   }
+//   h_residuals->Fill(res);
+//    }
+
+ if(i>=binxInf && i<=binxSupGauss){
+ res= h_spe->GetBinContent(i) - f_SPEGaus->Eval(h_spe->GetBinCenter(i)); 
+  h_residuals->Fill(res);
+  } 
+
+   }
+
+
+//   TAxis *xaxis = h_multiph->GetYaxis();
+// //  TAxis *yaxis = h_multiph->GetYaxis();
+//   Int_t binxInf = yaxis->FindBin(xx);
+//   Int_t binxSup = yaxis->FindBin(limSupBin);
+
+  h_residuals->Draw(); 
+        h_residuals->Fit("gaus","","sames",-15+h_residuals->FindFirstBinAbove(0) ,h_residuals->FindLastBinAbove(0)-1);
+            std::cout << h_residuals->FindFirstBinAbove(0) << std::endl;
+            std::cout << h_residuals->FindLastBinAbove(0) << std::endl;
+
+    c->Update();
+
+  
+        TPaveStats *psRes = (TPaveStats*)h_residuals->GetListOfFunctions()->FindObject("stats");
+     psRes->SetX1NDC(0.6); psRes->SetX2NDC(0.9);
+     psRes->SetY1NDC(0.5); psRes->SetY2NDC(1);
+     psRes->SetTextSize(.1);
+    // psRes->SetTextColor(kBlack);
+     psRes->SetOptStat(1000000001);
+     psRes->SetOptFit(0001);
+     psRes->Draw();
+    // pad2->cd();
+     pad2->Modified(); 
+
+  
+
     c->Update();
     std::string outPath = "./data/plots/";
     c->Print( (outPath+filename+".png").c_str() );
@@ -347,6 +434,8 @@ auto htemp = (TH1F*)gPad->GetPrimitive("htemp");
   htemp->GetYaxis()->SetTitleSize(.05);
   htemp->GetYaxis()->SetTitleOffset(0.8);
   htemp->GetXaxis()->SetTitleOffset(0.7);
+  htemp->GetYaxis()->SetRange(-0.3,0.15);
+
 c->SetGrid();
 c->cd();
 c->Update();
@@ -371,7 +460,7 @@ a_file.open(outFilePath,std::ios::out | std::fstream::app);
 a_file<< baseName(argv[1])<<" "<< peaktovalley <<" "<< sigma_fit<<" "<< std::endl;
 a_file.close();
 
-//getTimePlot(argv[3]);
+getTimePlot(argv[3]);
 return 0;
  
 }
