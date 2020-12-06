@@ -109,7 +109,7 @@ filename_arr = &filename[0];
     pad1->SetGrid();
     pad1->Draw();
     pad1->cd();
-    Double_t xlimFitPed[2]={-.125,.125};
+    Double_t xlimFitPed[2]={-.1,.125};
 //    Double_t xlimFitPeak2Valley[2]={0.1,2.5};
     h_peakToValley->Draw();
      h_peakToValley->SetLineWidth(2);
@@ -131,7 +131,7 @@ filename_arr = &filename[0];
     TH1F *h_pedestalFit = (TH1F*)h_peakToValley->Clone("h_pedestalFit");
     h_pedestalFit->Fit("gaus","","sames",xlimFitPed[0],xlimFitPed[1]);
     h_pedestalFit->GetFunction("gaus")->SetLineColor(kBlack);
-    h_pedestalFit->GetFunction("gaus")->SetLineWidth(1);
+    h_pedestalFit->GetFunction("gaus")->SetLineWidth(2);
     TF1 *parGaus = (TF1*) h_pedestalFit-> GetListOfFunctions()->FindObject("gaus");
 
     *sigma_fit = parGaus->GetParameter(2);
@@ -141,7 +141,7 @@ filename_arr = &filename[0];
     // Create a TF1 object using the function defined above.
       // The last three parameters specify the number of parameters
       // for the function.
-      TH1F *h_multiph = (TH1F*)h_peakToValley->Clone("Multi pe Fit");
+      TH1F *h_multiph = (TH1F*)h_peakToValley->Clone("MultiPE Fit");
       Double_t limInfFitf = 0.2;
       Double_t limSupFitf = 5;
       Double_t numberOfParams=5;
@@ -328,8 +328,8 @@ Double_t occupancy= 100* ( binSum/ ( h_multiph->GetEntries() ) );
 
  
  TH1F *h_residuals = new TH1F("Residuals SPE0 Fit","Residuals SPE0 Fit",20,-15,20);
-    // pad1->SetBottomMargin(0.00001);
-    // pad1->SetBorderMode(0);
+    //pad1->SetBottomMargin(0.01);
+    //pad1->SetBorderMode(0);
     // pad1->SetLogy();
     pad2->SetTopMargin(0.00001);
     pad2->SetBottomMargin(0.25);
@@ -427,15 +427,16 @@ T->ReadFile(argc,"x:y",',');
 //T->Draw("x:y");
 TCanvas *c = new TCanvas ("c","A3",1000,700);
 std::cout << "Plotting histogram" << std::endl;
-T->Draw("y:x");
+T->Draw("y:x");//,"","lego");
 auto htemp = (TH1F*)gPad->GetPrimitive("htemp"); 
+  
  htemp->SetTitle(Form("%s; Time [s] ; Amplitude [V]",filename_arr));
   htemp->GetXaxis()->SetTitleSize(.05);
   htemp->GetYaxis()->SetTitleSize(.05);
   htemp->GetYaxis()->SetTitleOffset(0.8);
   htemp->GetXaxis()->SetTitleOffset(0.7);
   htemp->GetYaxis()->SetRange(-0.3,0.15);
-
+c->SetLogz();
 c->SetGrid();
 c->cd();
 c->Update();
@@ -452,7 +453,7 @@ std::string inFile =      argv[1];     // Nombre del archivo
 std::string outFile =  argv[2]; 
 std::string mergeFile =  argv[3]; 
 
-getParams(argv[1], &peaktovalley, &sigma_fit );
+getParams(argv[1], &peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 );
 std::cout << peaktovalley << std::endl;
 std::string outFilePath = "/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/"+outFile+".dat";
 std::ofstream a_file;
