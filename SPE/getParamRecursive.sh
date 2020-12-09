@@ -28,8 +28,8 @@ cd $inputPath
 done
 cd /home/salvador/github/proyectitosWChava/SPE/data/plots/
 rm SPEmontage.png
-montage -geometry +2+2 *.png SPEmontage.png
+montage -geometry 1000x1000+2+2  *.png SPEmontage.png
 
 cd /home/salvador/github/proyectitosWChava/SPE/data/timePlots/
 rm Timemontage.png
-montage -geometry +2+2 *.png Timemontage.png
+montage -geometry 1000x1000+2+2 *.png Timemontage.png
