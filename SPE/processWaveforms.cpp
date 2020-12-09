@@ -9,6 +9,12 @@
 #include <stdio.h>
 #include <iomanip>
 #include <stdlib.h>
+#include "TCanvas.h"
+#include "TROOT.h"
+#include "TTree.h"
+#include "TH1F.h"
+#include "TH2D.h"
+#include "TFile.h"
 
 using namespace std;
 
@@ -28,7 +34,8 @@ int main(int argc, char **argv)
    std::string noMuestras =  argv[4]; // No. puntos en el pulso
    std::string noEventos =   argv[5]; // No. de eventos
    std::string deltaTiempo = argv[6]; // delta tiempo en s 
-   std::string outDatFile = argv[7]; // delta tiempo en s 
+   std::string outDatFile = argv[7]; // 
+   std::string outRootFile = argv[8]; //
    
 /************************************************************************************************/
 /****************************************VARIABLES MENU******************************************/
@@ -61,9 +68,21 @@ int main(int argc, char **argv)
    float picoScale = 1e-12; //  factor to scale to picoCoulombs
    float flipConstant = -1;  // Negative pulses flipped by this constant
    float amplifGain = 10;
-   std::fstream outputFile;
+   // std::fstream outputFile;
+   /// TREE for charge
+   TFile *f = new TFile(Form("%s",argv[8]),"RECREATE");
+   TTree* Tcharge = new TTree("Tcharge","charge");
+   Tcharge->Branch("index",&i2,"index/I");
+   Tcharge->Branch("charge",&carga,"charge/F");
+
+   TTree* TrawPulses = new TTree("TrawPulses","Raw Pulses");
+   TrawPulses->Branch("time",&x1,"time/F");
+   TrawPulses->Branch("voltage",&volt,"volt/F");
+   // ROOT file name
+   std::cout << outRootFile << std::endl;
+
    //Nombre de mi archivo de salida
-   outputFile.open(outDatFile,std::ios::out | std::ios::trunc);
+ //  outputFile.open(outDatFile,std::ios::out | std::ios::trunc);
 // Estimando la carga mediante una sumatoria
   do
   {
@@ -79,14 +98,16 @@ int main(int argc, char **argv)
    avg_ruido1=0;
    avg_ruido2=0;
    volt=0;
-   for( i=it; i<it+No_muestras; i++ )
+   for( i=0; i<No_muestras; i++ )
    {
+
      fscanf( fichero, "%f,%f\n", &x1, &volt);
-     if (i<it+bin_inicial-1)
+     TrawPulses->Fill();
+     if (i<bin_inicial-1)
      {
        sum_ruido1+=volt;
      }
-     if (i>=it+bin_inicial-1 && i<it+(bin_inicial+ancho)-1)
+     if (i>=bin_inicial-1 && i<(bin_inicial+ancho)-1)
      {
        if (voltaje_max<volt)
        {
@@ -98,7 +119,7 @@ int main(int argc, char **argv)
        }
        sum_volt+=volt;
      }
-     if (i>=it+(bin_inicial + ancho)-1)
+     if (i>=(bin_inicial + ancho)-1)
      {
        sum_ruido2+=volt;
      }
@@ -123,48 +144,59 @@ int main(int argc, char **argv)
   {
      //carga= sum_volt-(ancho*avg_ruido1);
     carga= flipConstant*(delta_t*(sum_volt-(avg_ruido1*ancho)))/(R*picoScale);
-     voltaje_max=voltaje_max-avg_ruido1;
+     voltaje_max=voltaje_max-avg_ruido1;  //printf( "....................%u\n", i2);
+
      voltaje_min=voltaje_min-avg_ruido1;
   }
 
-  for( iprima=it; iprima<it+No_muestras; iprima++ )
-  {
-     fscanf( fichero2,  "%f\t%f\n", &x1, &x2);
-     if (iprima>=it+bin_inicial-1 && iprima<it+(bin_inicial+ancho)-1)
-     {
-        Carga_actual=Carga_actual+x2;
-        if (Carga_actual >= ct10 && Carga_anterior < ct10)
-        {
-           t10=(ct10-Carga_anterior)/(Carga_actual-Carga_anterior)+(tiempo-1);
-        }
-        if (Carga_actual >= ct50 && Carga_anterior < ct50)
-        {
-           t50=(ct50-Carga_anterior)/(Carga_actual-Carga_anterior)+(tiempo-1);
-}
-        if (Carga_actual >= ct90 && Carga_anterior < ct90)
-        {
-           t90=(ct90-Carga_anterior)/(Carga_actual-Carga_anterior)+(tiempo-1);
-        }
-        Carga_anterior=Carga_actual;
-        tiempo=tiempo+1;
-     }
-     }
-  outputFile <<i2<<"	"<<carga<<std::endl;//"	"<<voltaje_min<<"	"<<voltaje_max<<"	"<<t50-t10<<"	"<<t90-t10<<std::endl;
-  printf( "....................%u\n", i2);
+//   for( iprima=it; iprima<it+No_muestras; iprima++ )
+//   {
+//      fscanf( fichero2,  "%f\t%f\n", &x1, &x2);
+//      if (iprima>=it+bin_inicial-1 && iprima<it+(bin_inicial+ancho)-1)
+//      {
+//         Carga_actual=Carga_actual+x2;
+//         if (Carga_actual >= ct10 && Carga_anterior < ct10)
+//         {
+//            t10=(ct10-Carga_anterior)/(Carga_actual-Carga_anterior)+(tiempo-1);
+//         }
+//         if (Carga_actual >= ct50 && Carga_anterior < ct50)
+//         {
+//            t50=(ct50-Carga_anterior)/(Carga_actual-Carga_anterior)+(tiempo-1);
+// }
+//         if (Carga_actual >= ct90 && Carga_anterior < ct90)
+//         {
+//            t90=(ct90-Carga_anterior)/(Carga_actual-Carga_anterior)+(tiempo-1);
+//         }
+//         Carga_anterior=Carga_actual;
+//         tiempo=tiempo+1;
+//      }
+//      }
+  Tcharge->Fill();
+ // outputFile <<i2<<"	"<<carga<<std::endl;//"	"<<voltaje_min<<"	"<<voltaje_max<<"	"<<t50-t10<<"	"<<t90-t10<<std::endl;
+  //  std::cout << it << '\n' ;
+
   i2=i2+1;
-  it=x1;
+  
+//  std::cout << it << '\n' ;
+  
+
   }
   while (i2<=No_eventos);
+
   prom_max=prom_max/No_eventos;
   prom_min=prom_min/No_eventos;
-  outputFile.close();
-  if( !fclose(fichero) && !fclose(fichero2) )
-     printf( "Fichero cerrado\n" );
-  else
-  {
-     printf( "Error: fichero NO CERRADO\n" );
-     return 1;
-  }
+  //outputFile.close();
+  Tcharge->Write();
+  TrawPulses->Write();
+ // f->Write();
+  f->Close();
+  //if( !fclose(fichero) && !fclose(fichero2) )
+  //   printf( "Fichero cerrado\n" );
+  //else
+ // {
+   //  printf( "Error: fichero NO CERRADO\n" );
+   //  return 1;
+ // }
 
   return 0;
 }

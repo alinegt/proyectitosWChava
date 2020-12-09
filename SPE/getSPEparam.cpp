@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include "TMath.h"
 #include "TF1.h"
+#include "TGraph2D.h"
+#include "TFile.h"
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -22,7 +24,6 @@
 #include <stdio.h>
 #include <iomanip>
 #include <stdlib.h>
-#include "TGraph2D.h"
 std::string baseName(std::string const & path)
 {
   std::string base_filename= path.substr(path.find_last_of("/\\") + 1);
@@ -32,19 +33,22 @@ std::string baseName(std::string const & path)
 
 // Function to load the histogram from dat file
 TH1F *loadHistFromFile(char *argc, double_t limInfBin, double_t limSupBin, double_t numberBin){
-TTree *Tcharge = new TTree("Tcharge","Tcharge");
-Tcharge->ReadFile(argc,"lineNumber:charge");
-Tcharge->Print();
+
+TFile *f=new TFile(argc);
+TTree *Tcharge=(TTree*)f->Get("Tcharge");
+//TTree *Tcharge = new TTree("Tcharge","Tcharge");
+//Tcharge->ReadFile(argc,"lineNumber:charge");
+//Tcharge->Print();
 
 TH1F *PeakToValleyFit = new TH1F("PeakToValleyFit", "No Coil",numberBin, limInfBin, limSupBin);
-float charge_noCoil;
+float charge_v;
 ULong64_t nentries = (Int_t)Tcharge->GetEntries();
 
-Tcharge->SetBranchAddress("charge", &charge_noCoil);
+Tcharge->SetBranchAddress("charge", &charge_v);
 
 for (ULong64_t j = 0 ; j < nentries ; j++){
     Tcharge->GetEntry(j);
-    PeakToValleyFit->Fill(charge_noCoil);
+    PeakToValleyFit->Fill(charge_v);
 }
 Tcharge->ResetBranchAddresses();
 
@@ -132,7 +136,7 @@ filename_arr = &filename[0];
 
    // TF1 *f1 = new TF1("f1", "gaus", -0.3, .2);
     TH1F *h_pedestalFit = (TH1F*)h_peakToValley->Clone("h_pedestalFit");
-    h_pedestalFit->Fit("gaus","","sames",xlimFitPed[0],xlimFitPed[1]);
+    h_pedestalFit->Fit("gaus","Q","sames",xlimFitPed[0],xlimFitPed[1]);
     h_pedestalFit->GetFunction("gaus")->SetLineColor(kBlack);
     h_pedestalFit->GetFunction("gaus")->SetLineWidth(2);
     TF1 *parGaus = (TF1*) h_pedestalFit-> GetListOfFunctions()->FindObject("gaus");
@@ -164,7 +168,7 @@ filename_arr = &filename[0];
       // give the parameters meaningful names
       funcMulti->SetParNames ("a","b","Npe","sigma","C");
       // // call TH1::Fit with the name of the TF1 object
-      h_multiph->Fit("fitf","Br","sames");
+      h_multiph->Fit("fitf","BQr","sames");
     h_multiph->GetFunction("fitf")->SetLineColor(kBlack);
     h_multiph->GetFunction("fitf")->SetLineWidth(4);
 
@@ -204,14 +208,14 @@ filename_arr = &filename[0];
     Double_t valley= funcMulti->Eval(xx);
     Double_t peak= funcMulti->Eval(xx2);
     *peak2Valley = peak/valley;
-    std::cout << peak2Valley << std::endl;
+    // std::cout << peak2Valley << std::endl;
 
 /////////////////////////////////////////////////////////////////////// 
 ////// FIT SPE 0
 ///////////////////////////////////////////////////////////////////////
       TH1F *h_spe = (TH1F*)h_peakToValley->Clone("SPE 0 Fit");
 //      TF1 *funcMulti = new TF1("gaus",xx,25);
-      h_spe->Fit("gaus","r","sames",xx,5);
+      h_spe->Fit("gaus","Qr","sames",xx,5);
 
 /////////////////////////////////////////////////////////////////////// 
 ////// Stats boxes
@@ -360,9 +364,9 @@ Double_t occupancy= 100* ( binSum/ ( h_multiph->GetEntries() ) );
   Int_t binxSupGauss = xaxis->FindBin(3.4);
   Int_t binxInfFitf = xaxis->FindBin(limInfFitf);
 
-      std::cout << h_peakToValley->GetNbinsX()<< std::endl;
-      std::cout << binxInf<< std::endl;
-      std::cout << binxSupGauss<< std::endl;
+      // std::cout << h_peakToValley->GetNbinsX()<< std::endl;
+      // std::cout << binxInf<< std::endl;
+      // std::cout << binxSupGauss<< std::endl;
 
  for (int i =0;i<h_multiph->GetNbinsX();i++) {
 
@@ -392,9 +396,9 @@ Double_t occupancy= 100* ( binSum/ ( h_multiph->GetEntries() ) );
 
   h_residuals->Draw(); 
        
-        h_residuals->Fit("gaus","","sames",-17+h_residuals->FindFirstBinAbove(0) ,h_residuals->FindLastBinAbove(0)+3);
-            std::cout << h_residuals->FindFirstBinAbove(0) << std::endl;
-            std::cout << h_residuals->FindLastBinAbove(0) << std::endl;
+        h_residuals->Fit("gaus","Q","sames",-17+h_residuals->FindFirstBinAbove(0) ,h_residuals->FindLastBinAbove(0)+3);
+            // std::cout << h_residuals->FindFirstBinAbove(0) << std::endl;
+            // std::cout << h_residuals->FindLastBinAbove(0) << std::endl;
 
     c->Update();
 
@@ -425,17 +429,23 @@ Double_t occupancy= 100* ( binSum/ ( h_multiph->GetEntries() ) );
 
 
 void getTimePlot(char *argc){
- 
+//  std::cout << "merge File" << std::endl;
+
+//  std::cout << argc << std::endl;
+
 std::string filepath = argc;
 std:: string filename= baseName(filepath);
 char* filename_arr;
 filename_arr = &filename[0];
 TCanvas *c = new TCanvas ("c","A3",1000,700);
-TTree *TrawData = new TTree("time","voltage");
-TrawData->ReadFile(argc,"time:voltage",',');
-TrawData->Print();
-//TrawData->Draw("voltage:time","", "colz");
-c->Update();
+//TTree *TrawData = new TTree();
+//TrawData->ReadFile(argc,"time:voltage",',');
+TFile *f=new TFile(argc);
+TTree *TrawData=(TTree*)f->Get("TrawPulses");
+
+// TrawData->Print();
+// //TrawData->Draw("voltage:time","", "colz");
+ c->Update();
 //  gStyle->SetStatX(0.4);
 //    gStyle->SetStatY(0.3);  /// THIS IS THE WAY TO POSITION THE STAT BOX IN A 2D Histogram
   //   TPad *pad1 = new TPad("pad1","",0,0.33,1,1);
@@ -455,8 +465,8 @@ h2->SetTitle(Form("%s; Time [s] ; Amplitude [V]",filename_arr));
 //       h2->Set( TrawData->voltage->GetEntry(i)   , TrawData->time->GetEntry(i)  );   
 //    c->Update();
 // h2->Draw();
-std::cout << "Primitives" << std::endl;
-h2->Print();
+// std::cout << "Primitives" << std::endl;
+//h2->Print();
 // auto htemp = (TH2*)gPad->GetPrimitive("htemp"); 
 
 // c->GetListOfPrimitives()->Print(); 
@@ -506,17 +516,17 @@ int main(int argc, char **argv){
 Double_t peaktovalley, sigma_fit;
 std::string inFile =      argv[1];     // Nombre del archivo
 std::string outFile =  argv[2]; 
-std::string mergeFile =  argv[3]; 
+//std::string mergeFile =  argv[3]; 
 
 getParams(argv[1], &peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 );
-std::cout << peaktovalley << std::endl;
+// std::cout << peaktovalley << std::endl;
 std::string outFilePath = "/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/"+outFile+".dat";
 std::ofstream a_file;
 a_file.open(outFilePath,std::ios::out | std::fstream::app);
 a_file<< baseName(argv[1])<<" "<< peaktovalley <<" "<< sigma_fit<<" "<< std::endl;
 a_file.close();
 
-getTimePlot(argv[3]);
+getTimePlot(argv[1]);
 return 0;
  
 }

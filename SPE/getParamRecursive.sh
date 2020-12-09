@@ -19,11 +19,11 @@ cd $inputPath
 for file in *
 do
 processedPath="${inputPath}""${file}"
-mergeFile="${mergePath}""${file%.*}""_merge.dat"
+# mergeFile="${mergePath}""${file%.*}""_merge.dat"
 echo $mergeFile
 echo $processedPath
 cd $execPath
-./getSPEparam $processedPath $outputFileName $mergeFile
+./getSPEparam $processedPath $outputFileName 
 cd $inputPath
 done
 cd /home/salvador/github/proyectitosWChava/SPE/data/plots/

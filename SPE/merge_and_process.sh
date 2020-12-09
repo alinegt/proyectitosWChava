@@ -24,7 +24,7 @@ scriptsPath=//home/salvador/github/proyectitosWChava/SPE/
 # dirName="${path##*/}"
 # mergeName="${dirName}""_merge.dat"
 # processedName="${dirName}"".dat"
-
+make
 cd $dataPath
 for dir in */
 do
@@ -32,7 +32,7 @@ do
 dirName="${dir%/}"
 mergeName="${dirName}""_merge.dat"
 processedName="${dirName}"".dat"
-
+outRootFile="${dirName}"".root"
 echo $dirName
 echo $mergeName
 cd $dir
@@ -55,7 +55,7 @@ cat *.dat > $mergePath$mergeName
 
 cd $scriptsPath
 
-./processWaveforms $mergePath$mergeName 100 60 200 19980 5e-10 $processedPath$processedName
+./processWaveforms $mergePath$mergeName 100 60 200 19980 5e-10 $processedPath$processedName $processedPath$outRootFile 
 #root plotHistFromFile.C
 # echo $dirName
 cd $dataPath
