@@ -35,7 +35,7 @@ std::string baseName(std::string const & path)
 TH1F *loadHistFromFile(char *argc, double_t limInfBin, double_t limSupBin, double_t numberBin){
 
 TFile *f=new TFile(argc);
-TTree *Tcharge=(TTree*)f->Get("Tcharge");
+TTree *Tcharge=(TTree*)f->Get("T");
 //TTree *Tcharge = new TTree("Tcharge","Tcharge");
 //Tcharge->ReadFile(argc,"lineNumber:charge");
 //Tcharge->Print();
@@ -441,7 +441,7 @@ TCanvas *c = new TCanvas ("c","A3",1000,700);
 //TTree *TrawData = new TTree();
 //TrawData->ReadFile(argc,"time:voltage",',');
 TFile *f=new TFile(argc);
-TTree *TrawData=(TTree*)f->Get("TrawPulses");
+TTree *TrawData=(TTree*)f->Get("T");
 
 // TrawData->Print();
 // //TrawData->Draw("voltage:time","", "colz");

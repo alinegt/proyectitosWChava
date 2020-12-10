@@ -50,7 +50,7 @@ tail -n 200 $file >> $dataFileName
 
 #echo $file $nameOnly $dataFileName
 done 
-
+ 
 cat *.dat > $mergePath$mergeName
 
 cd $scriptsPath

@@ -68,16 +68,20 @@ int main(int argc, char **argv)
    float picoScale = 1e-12; //  factor to scale to picoCoulombs
    float flipConstant = -1;  // Negative pulses flipped by this constant
    float amplifGain = 10;
+   gROOT->ProcessLine("#include <vector>"); 
+   std::vector<float> v_time;
+   std::vector<float> v_voltage;
+
    // std::fstream outputFile;
    /// TREE for charge
    TFile *f = new TFile(Form("%s",argv[8]),"RECREATE");
-   TTree* Tcharge = new TTree("Tcharge","charge");
-   Tcharge->Branch("index",&i2,"index/I");
-   Tcharge->Branch("charge",&carga,"charge/F");
+   TTree* T = new TTree("T","Main tree for data and results");
+   T->Branch("index",&i2,"index/I");
+   T->Branch("charge",&carga,"charge/F");
 
-   TTree* TrawPulses = new TTree("TrawPulses","Raw Pulses");
-   TrawPulses->Branch("time",&x1,"time/F");
-   TrawPulses->Branch("voltage",&volt,"volt/F");
+   //TTree* TrawPulses = new TTree("TrawPulses","Raw Pulses");
+   T->Branch("time",&v_time);
+   T->Branch("voltage",&v_voltage);
    // ROOT file name
    std::cout << outRootFile << std::endl;
 
@@ -102,7 +106,8 @@ int main(int argc, char **argv)
    {
 
      fscanf( fichero, "%f,%f\n", &x1, &volt);
-     TrawPulses->Fill();
+     v_time.push_back(x1);
+     v_voltage.push_back(volt);
      if (i<bin_inicial-1)
      {
        sum_ruido1+=volt;
@@ -171,7 +176,9 @@ int main(int argc, char **argv)
 //         tiempo=tiempo+1;
 //      }
 //      }
-  Tcharge->Fill();
+  T->Fill();
+  v_time.clear();
+  v_voltage.clear();
  // outputFile <<i2<<"	"<<carga<<std::endl;//"	"<<voltaje_min<<"	"<<voltaje_max<<"	"<<t50-t10<<"	"<<t90-t10<<std::endl;
   //  std::cout << it << '\n' ;
 
@@ -186,8 +193,7 @@ int main(int argc, char **argv)
   prom_max=prom_max/No_eventos;
   prom_min=prom_min/No_eventos;
   //outputFile.close();
-  Tcharge->Write();
-  TrawPulses->Write();
+  T->Write();
  // f->Write();
   f->Close();
   //if( !fclose(fichero) && !fclose(fichero2) )
