@@ -25,6 +25,17 @@ int string_to_int(string _string){
    return number;
 }
 
+float rms(vector <float> &noise){
+
+	double sum = 0;
+	for (int i = 0; i < (int)noise.size(); i++)
+		sum += pow(noise[i], 2);
+	return sqrt(sum / noise.size());
+}
+
+
+
+
 
 int main(int argc, char **argv)
 {
@@ -68,10 +79,11 @@ int main(int argc, char **argv)
    float picoScale = 1e-12; //  factor to scale to picoCoulombs
    float flipConstant = -1;  // Negative pulses flipped by this constant
    float amplifGain = 10;
+   std::vector<float> v_noise;
    gROOT->ProcessLine("#include <vector>"); 
    std::vector<float> v_time;
    std::vector<float> v_voltage;
-
+   float noise_rms;
    // std::fstream outputFile;
    /// TREE for charge
    TFile *f = new TFile(Form("%s",argv[8]),"RECREATE");
@@ -82,6 +94,7 @@ int main(int argc, char **argv)
    //TTree* TrawPulses = new TTree("TrawPulses","Raw Pulses");
    T->Branch("time",&v_time);
    T->Branch("voltage",&v_voltage);
+   T->Branch("noise",&noise_rms);
    // ROOT file name
    std::cout << outRootFile << std::endl;
 
@@ -110,7 +123,9 @@ int main(int argc, char **argv)
      v_voltage.push_back(volt);
      if (i<bin_inicial-1)
      {
+       v_noise.push_back(volt);
        sum_ruido1+=volt;
+
      }
      if (i>=bin_inicial-1 && i<(bin_inicial+ancho)-1)
      {
@@ -154,6 +169,11 @@ int main(int argc, char **argv)
      voltaje_min=voltaje_min-avg_ruido1;
   }
 
+// rms
+  
+noise_rms= 6*rms(v_noise);
+
+
 //   for( iprima=it; iprima<it+No_muestras; iprima++ )
 //   {
 //      fscanf( fichero2,  "%f\t%f\n", &x1, &x2);
@@ -179,6 +199,8 @@ int main(int argc, char **argv)
   T->Fill();
   v_time.clear();
   v_voltage.clear();
+  v_noise.clear();
+  
  // outputFile <<i2<<"	"<<carga<<std::endl;//"	"<<voltaje_min<<"	"<<voltaje_max<<"	"<<t50-t10<<"	"<<t90-t10<<std::endl;
   //  std::cout << it << '\n' ;
 

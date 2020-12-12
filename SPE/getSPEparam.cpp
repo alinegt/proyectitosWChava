@@ -96,7 +96,7 @@ return PeakToValleyFit;
 Double_t getParams(char *argc, double_t *peak2Valley, double_t *sigma_fit){
  Double_t limInfBin= -1;
 Double_t limSupBin= 6;
-Double_t numberBin = 275;
+Double_t numberBin = 200;
 Double_t adcResolution= (limSupBin-limInfBin)/numberBin;
 
 TH1F *h_peakToValley= loadHistFromFile(argc,limInfBin,limSupBin, numberBin);
@@ -320,10 +320,6 @@ Double_t occupancy= 100* ( binSum/ ( h_multiph->GetEntries() ) );
     t.Draw();
     t2.Draw();
     t3.Draw();
-    // pad1->SetLogy(1);
-    // pad1->Modified(); pad1->Update();
-    //  TLine *l= new TLine(1.5,1,1.5,100);
-    // l->Draw() ;
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -370,16 +366,6 @@ Double_t occupancy= 100* ( binSum/ ( h_multiph->GetEntries() ) );
 
  for (int i =0;i<h_multiph->GetNbinsX();i++) {
 
-//  if(i>=binxInfFitf && i<=binxSupGauss){
-
-//   res= h_multiph->GetBinContent(i) - f_SPEGaus->Eval(h_multiph->GetBinCenter(i)); 
-
-//   } 
-//   else{
-//        res=0;
-//   }
-//   h_residuals->SetBinContent(i,res);
-//    }
 
  if(i>=binxInfFitf && i<=binxSupGauss){
  res= h_multiph->GetBinContent(i) - f_SPEGaus->Eval(h_multiph->GetBinCenter(i)); 
@@ -387,12 +373,6 @@ Double_t occupancy= 100* ( binSum/ ( h_multiph->GetEntries() ) );
   } 
 
   }
-
-
-//   TAxis *xaxis = h_multiph->GetYaxis();
-// //  TAxis *yaxis = h_multiph->GetYaxis();
-//   Int_t binxInf = yaxis->FindBin(xx);
-//   Int_t binxSup = yaxis->FindBin(limSupBin);
 
   h_residuals->Draw(); 
        
@@ -429,104 +409,88 @@ Double_t occupancy= 100* ( binSum/ ( h_multiph->GetEntries() ) );
 
 
 void getTimePlot(char *argc){
-//  std::cout << "merge File" << std::endl;
 
-//  std::cout << argc << std::endl;
 
 std::string filepath = argc;
 std:: string filename= baseName(filepath);
 char* filename_arr;
 filename_arr = &filename[0];
 TCanvas *c = new TCanvas ("c","A3",1000,700);
-//TTree *TrawData = new TTree();
-//TrawData->ReadFile(argc,"time:voltage",',');
+
 TFile *f=new TFile(argc);
 TTree *TrawData=(TTree*)f->Get("T");
 
-// TrawData->Print();
-// //TrawData->Draw("voltage:time","", "colz");
+
  c->Update();
-//  gStyle->SetStatX(0.4);
-//    gStyle->SetStatY(0.3);  /// THIS IS THE WAY TO POSITION THE STAT BOX IN A 2D Histogram
-  //   TPad *pad1 = new TPad("pad1","",0,0.33,1,1);
-  // pad1-> Draw()  ;
-TH2F* h2 = new TH2F("h2", Form("%s",filename_arr), 25, 5.0e-7, 5.25e-7, 10, -0.15,-0.01);
+
+TH2F* h2 = new TH2F("h2", Form("%s",filename_arr), 200, 4.5e-7, 5.5e-7, 50, -0.25,0.1);
 TrawData->Draw("voltage:time>>h2","", "colz");
 h2->SetStats(0);
 h2->GetZaxis()->SetRangeUser(0., 500.);
 h2->SetTitle(Form("%s; Time [s] ; Amplitude [V]",filename_arr));
-  // pad1->SetLogy();   
-  // pad1->Modified();
 
-
-// //TH1F *h_rawData = new TH1F("RawData","RawData",18,-15,21);
-
-//    for (Int_t i = 0; i < 3996000; i++)
-//       h2->Set( TrawData->voltage->GetEntry(i)   , TrawData->time->GetEntry(i)  );   
-//    c->Update();
-// h2->Draw();
-// std::cout << "Primitives" << std::endl;
-//h2->Print();
-// auto htemp = (TH2*)gPad->GetPrimitive("htemp"); 
-
-// c->GetListOfPrimitives()->Print(); 
-// htemp->GetYaxis()->SetRangeUser(-1, 1.);
 gPad->Update();
-//c->Update();
 
-// htemp->GetXaxis()->SetLimits(-0.3,0.1)  ;
-
-
-
-
-//  TGraph* gr = new TGraph(argc,"%lg %lg",",");
-//  gr->Draw("lego");
-    // gr->GetHistogram()->SetMaximum(0.2);   // along          
-    // gr->GetHistogram()->SetMinimum(-0.3);  //   Y       gr->Draw();
-  //  gr->GetYaxis()->SetRangeUser(-0.3,0.1);
-  
-  //   gr->GetXaxis()->SetTitleSize(.05);
-  //    gr->GetYaxis()->SetTitleSize(.05);
-  //    gr->GetYaxis()->SetTitleOffset(0.8);
-  //  gr->GetXaxis()->SetTitleOffset(0.7);
-
-
-   //c->Update();
-
-//  auto htemp = (TH1F*)gPad->GetPrimitive("htemp"); 
-//   htemp->GetYaxis()->SetRangeUser(-.5,0.5);  
-//  
-
-
-
-
-
-// c->SetLogy();   
 c->SetGrid();
 c->cd();
-//c->Update();
 std::string outPath = "./data/timePlots/";
 std::string baseNamePlot = baseName(filepath);
 c->Print( (outPath+baseNamePlot+".png").c_str() );
 c->Close();
 }
 
+void countPulses(char *argc){
+
+std::string filepath = argc;
+std:: string filename= baseName(filepath);
+char* filename_arr;
+filename_arr = &filename[0];
+TCanvas *c = new TCanvas ("c","A3",1000,700);
+
+TFile *f= new TFile(argc);
+TTree *T=(TTree*)f->Get("T");
+ULong64_t nentries = (Int_t)T->GetEntries();
+T->Draw("noise>>h_noise", "","goff");
+TH1F *h_noise =(TH1F *)gDirectory->Get("h_noise"); 
+float noise_mean=h_noise->GetMean();
+std::cout << noise_mean << std::endl;
+
+T->Draw("voltage:Iteration$>>Myhist",Form("(Min$(voltage)>-%g)",noise_mean));
+TH1F *h_threshold =(TH1F *)gDirectory->Get("Myhist"); 
+h_threshold->Print();
+Double_t h_entries = (Double_t)h_threshold->GetEntries();
+
+float NoiseWaveformCounts = 100- (100*h_entries)/(nentries*200);
+std::cout << NoiseWaveformCounts << std::endl;
+c->SetGrid();
+c->cd();
+std::string outPath = "./data/occupancy/";
+std::string baseNamePlot = baseName(filepath);
+c->Print( (outPath+baseNamePlot+".png").c_str() );
+c->Close();
+std::cout << "END" << std::endl;
+
+
+}
+
+
+
 
 int main(int argc, char **argv){
 Double_t peaktovalley, sigma_fit;
 std::string inFile =      argv[1];     // Nombre del archivo
 std::string outFile =  argv[2]; 
-//std::string mergeFile =  argv[3]; 
 
 getParams(argv[1], &peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 );
-// std::cout << peaktovalley << std::endl;
 std::string outFilePath = "/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/"+outFile+".dat";
 std::ofstream a_file;
 a_file.open(outFilePath,std::ios::out | std::fstream::app);
 a_file<< baseName(argv[1])<<" "<< peaktovalley <<" "<< sigma_fit<<" "<< std::endl;
 a_file.close();
+std::cout << "END" << std::endl;
 
 getTimePlot(argv[1]);
+countPulses(argv[1]);
 return 0;
  
 }
