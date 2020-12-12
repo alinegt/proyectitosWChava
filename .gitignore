@@ -73,3 +73,5 @@ testBash.sh
 SPE/createTree
 SPE/getTimeCFD
 data
+SPE/.vscode/launch.json
+SPE/.vscode/tasks.json
