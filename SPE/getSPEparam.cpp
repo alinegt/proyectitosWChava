@@ -23,6 +23,10 @@
 #include <stdio.h>
 #include <iomanip>
 #include <stdlib.h>
+
+//class SPE_analysis {
+  //public:
+
 std::string baseName(std::string const &path)
 {
   std::string base_filename = path.substr(path.find_last_of("/\\") + 1);
@@ -30,15 +34,19 @@ std::string baseName(std::string const &path)
   return base_filename.substr(0, p);
 }
 
+TTree *loadTree(char *argc){
+  TFile *f = new TFile(argc);
+  TTree *T = (TTree *)f->Get("T");
+  return T;
+}
+
+
 // Function to load the histogram from dat file
-TH1F *loadHistFromFile(char *argc, double_t limInfBin, double_t limSupBin, double_t numberBin)
+TH1F *loadHistFromFile(TTree *T, double_t limInfBin, double_t limSupBin, double_t numberBin)
 {
 
-  TFile *f = new TFile(argc);
-  TTree *Tcharge = (TTree *)f->Get("T");
-  //TTree *Tcharge = new TTree("Tcharge","Tcharge");
-  //Tcharge->ReadFile(argc,"lineNumber:charge");
-  //Tcharge->Print();
+
+  TTree *Tcharge = T;
 
   TH1F *PeakToValleyFit = new TH1F("PeakToValleyFit", "No Coil", numberBin, limInfBin, limSupBin);
   float charge_v;
@@ -57,9 +65,13 @@ TH1F *loadHistFromFile(char *argc, double_t limInfBin, double_t limSupBin, doubl
   //PeakToValleyFit->Draw();
   return PeakToValleyFit;
 }
-///////////////////////
-/// SPE fit function
-//////////////////
+/**
+ * @brief Function to fit multi pe spectrum
+ * 
+ * @param x 
+ * @param par      Pointer to parameters for the fit
+ * @return Double_t 
+ */
 Double_t fitf(Double_t *x, Double_t *par)
 {
   Double_t arg = 0;
@@ -91,25 +103,31 @@ Double_t fitf(Double_t *x, Double_t *par)
   return fitval;
 }
 
-///////////////////////
-/// Function for getting params
-//////////////////
 
-Double_t getParams(char *argc, double_t *peak2Valley, double_t *sigma_fit)
+/**
+ * @brief Main function to get the parameters and generate 
+ * histograms
+ * 
+ * @param argc            Filepath to a root file containing charge and noise branches 
+ * @param peak2Valley     Pointer to the peak2Valley value passed to be updated
+ * @param sigma_fit       Pointer to the sigma value to get obtained from fit
+ * @return Double_t 
+ */
+Double_t getParams(TTree *T, std::string filename , double_t *peak2Valley, double_t *sigma_fit)
 {
   Double_t limInfBin = -1;
   Double_t limSupBin = 6;
   Double_t numberBin = 200;
   Double_t adcResolution = (limSupBin - limInfBin) / numberBin;
 
-  TH1F *h_peakToValley = loadHistFromFile(argc, limInfBin, limSupBin, numberBin);
+  TH1F *h_peakToValley = loadHistFromFile(T, limInfBin, limSupBin, numberBin);
   h_peakToValley->SetMaximum(10e4);
   //h_peakToValley->SetMinimum(0.0);
 
-  std::string filepath = argc;
-  std::string filename = baseName(filepath);
-  char *filename_arr;
-  filename_arr = &filename[0];
+  //std::string filepath = argc;
+  //std::string filename = baseName(filepath);
+  
+  char *filename_arr = &filename[0];
 
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
   TPad *pad1 = new TPad("pad1", "", 0, 0.33, 1, 1);
@@ -332,6 +350,7 @@ Double_t getParams(char *argc, double_t *peak2Valley, double_t *sigma_fit)
   ///////////////////////////////////////////////////////////////////////
   ///// Residuals plot
   ///////////////////////////////////////////////////////////////////////
+
   TPad *pad2 = new TPad("pad2", "pad2", 0, 0, 1, 0.3);
   pad2->Draw();
   pad2->cd();
@@ -405,23 +424,23 @@ Double_t getParams(char *argc, double_t *peak2Valley, double_t *sigma_fit)
   std::string outPath = "./data/plots/";
   c->Print((outPath + filename + ".png").c_str());
   c->Close();
-  std::cout << baseName(filepath) << std::endl;
+  std::cout << filename << std::endl;
 
   return 0;
 }
-
-void getTimePlot(char *argc)
+/**
+ * @brief Generate voltage vs time plots
+ * 
+ * @param TTree Tree object
+ * @param argc Filepath to the root file
+ */
+void getTimePlot(TTree *TrawData,std::string argc)
 {
 
-  std::string filepath = argc;
-  std::string filename = baseName(filepath);
+  std::string filename = argc;
   char *filename_arr;
   filename_arr = &filename[0];
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
-
-  TFile *f = new TFile(argc);
-  TTree *TrawData = (TTree *)f->Get("T");
-
   c->Update();
 
   TH2F *h2 = new TH2F("h2", Form("%s", filename_arr), 200, 4.5e-7, 5.5e-7, 50, -0.25, 0.1);
@@ -435,22 +454,26 @@ void getTimePlot(char *argc)
   c->SetGrid();
   c->cd();
   std::string outPath = "./data/timePlots/";
-  std::string baseNamePlot = baseName(filepath);
-  c->Print((outPath + baseNamePlot + ".png").c_str());
+  c->Print((outPath + filename + ".png").c_str());
   c->Close();
 }
 
-void countPulses(char *argc)
+/**
+ * @brief  Get the occupancy based on the number of pulses that exceeds
+ *  x times the RMS. x ~ 7 in charge estimation script
+ * @param TTree   Tree object
+ * @param argc    filepath to the root file
+ * 
+ * @sventurag 
+ */
+void countPulses(TTree *T,std::string argc)
 {
 
-  std::string filepath = argc;
-  std::string filename = baseName(filepath);
+  std::string filename = argc;
   char *filename_arr;
   filename_arr = &filename[0];
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
-
-  TFile *f = new TFile(argc);
-  TTree *T = (TTree *)f->Get("T");
+  
   ULong64_t nentries = (Int_t)T->GetEntries();
   T->Draw("noise>>h_noise", "", "goff");
   TH1F *h_noise = (TH1F *)gDirectory->Get("h_noise");
@@ -467,27 +490,26 @@ void countPulses(char *argc)
   c->SetGrid();
   c->cd();
   std::string outPath = "./data/occupancy/";
-  std::string baseNamePlot = baseName(filepath);
-  c->Print((outPath + baseNamePlot + ".png").c_str());
+  c->Print((outPath + filename + ".png").c_str());
   c->Close();
   std::cout << "END" << std::endl;
 }
-
+//}
 int main(int argc, char **argv)
 {
   Double_t peaktovalley, sigma_fit;
   std::string inFile = argv[1]; // Nombre del archivo
   std::string outFile = argv[2];
-
-  getParams(argv[1], &peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 );
+  TTree *T = loadTree(argv[1]);
   std::string outFilePath = "/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + outFile + ".dat";
   std::ofstream a_file;
   a_file.open(outFilePath, std::ios::out | std::fstream::app);
   a_file << baseName(argv[1]) << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
   a_file.close();
   std::cout << "END" << std::endl;
-
-  getTimePlot(argv[1]);
-  countPulses(argv[1]);
+  std::string rootFileName = baseName(argv[1]);
+  getParams(T, rootFileName,&peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 );
+  getTimePlot(T, rootFileName);
+  countPulses(T, rootFileName);
   return 0;
 }
