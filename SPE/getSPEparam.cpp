@@ -473,15 +473,20 @@ void countPulses(TTree *T,std::string argc)
   char *filename_arr;
   filename_arr = &filename[0];
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
-  
   ULong64_t nentries = (Int_t)T->GetEntries();
   T->Draw("noise>>h_noise", "", "goff");
   TH1F *h_noise = (TH1F *)gDirectory->Get("h_noise");
+  gPad->Update();
+  c->Update();
   float noise_mean = h_noise->GetMean();
   std::cout << noise_mean << std::endl;
-
   T->Draw("voltage:Iteration$>>Myhist", Form("(Min$(voltage)>-%g)", noise_mean));
-  TH1F *h_threshold = (TH1F *)gDirectory->Get("Myhist");
+  TH1F *h_threshold = (TH1F*)gPad->GetPrimitive("Myhist"); 
+  h_threshold->SetTitle(Form("%s; Time [s] ; Amplitude [V]", filename_arr));
+
+  gPad->Update();
+  c->Update();
+
   h_threshold->Print();
   Double_t h_entries = (Double_t)h_threshold->GetEntries();
 
