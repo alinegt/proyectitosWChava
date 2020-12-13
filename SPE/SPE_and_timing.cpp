@@ -525,6 +525,5 @@ int main(int argc, char **argv)
   a_file.close();
 
   std::cout << "END" << std::endl;
-
   return 0;
 }
