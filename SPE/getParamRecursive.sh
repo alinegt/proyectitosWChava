@@ -23,7 +23,7 @@ processedPath="${inputPath}""${file}"
 echo $mergeFile
 echo $processedPath
 cd $execPath
-./getSPEparam $processedPath $outputFileName 
+./SPE_and_timing $processedPath $outputFileName 
 cd $inputPath
 done
 cd /home/salvador/github/proyectitosWChava/SPE/data/plots/

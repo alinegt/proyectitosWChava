@@ -10,7 +10,7 @@ CXXFLAGS   += $(ROOTCFLAGS)
 LIBS        = $(ROOTLIBS) $(SYSLIBS)
 
 ### Targets
-TARGS = processWaveforms  getSPEparam #createTree getTimeCFD
+TARGS = processWaveforms  SPE_and_timing #createTree getTimeCFD
 
 all: $(TARGS)
 

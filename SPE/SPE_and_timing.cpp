@@ -24,8 +24,11 @@
 #include <iomanip>
 #include <stdlib.h>
 
-//class SPE_analysis {
-  //public:
+
+class SPE_and_timing{
+  public:
+TTree *T;
+std::string rootFileName;
 
 std::string baseName(std::string const &path)
 {
@@ -34,15 +37,17 @@ std::string baseName(std::string const &path)
   return base_filename.substr(0, p);
 }
 
-TTree *loadTree(char *argc){
+std::string loadTree(char *argc){
   TFile *f = new TFile(argc);
-  TTree *T = (TTree *)f->Get("T");
-  return T;
+  T = (TTree *)f->Get("T");
+  rootFileName = baseName(argc);
+  return rootFileName;
+
 }
 
 
 // Function to load the histogram from dat file
-TH1F *loadHistFromFile(TTree *T, double_t limInfBin, double_t limSupBin, double_t numberBin)
+TH1F *loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin)
 {
 
 
@@ -72,7 +77,7 @@ TH1F *loadHistFromFile(TTree *T, double_t limInfBin, double_t limSupBin, double_
  * @param par      Pointer to parameters for the fit
  * @return Double_t 
  */
-Double_t fitf(Double_t *x, Double_t *par)
+static Double_t fitf(Double_t *x, Double_t *par)
 {
   Double_t arg = 0;
   //   Double_t arg1 =0;
@@ -113,21 +118,23 @@ Double_t fitf(Double_t *x, Double_t *par)
  * @param sigma_fit       Pointer to the sigma value to get obtained from fit
  * @return Double_t 
  */
-Double_t getParams(TTree *T, std::string filename , double_t *peak2Valley, double_t *sigma_fit)
+Double_t SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit)
 {
   Double_t limInfBin = -1;
   Double_t limSupBin = 6;
   Double_t numberBin = 200;
   Double_t adcResolution = (limSupBin - limInfBin) / numberBin;
 
-  TH1F *h_peakToValley = loadHistFromFile(T, limInfBin, limSupBin, numberBin);
+
+
+  TH1F *h_peakToValley = loadHistFromFile(limInfBin, limSupBin, numberBin);
   h_peakToValley->SetMaximum(10e4);
   //h_peakToValley->SetMinimum(0.0);
 
   //std::string filepath = argc;
   //std::string filename = baseName(filepath);
   
-  char *filename_arr = &filename[0];
+  char *filename_arr = &rootFileName[0];
 
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
   TPad *pad1 = new TPad("pad1", "", 0, 0.33, 1, 1);
@@ -169,7 +176,7 @@ Double_t getParams(TTree *T, std::string filename , double_t *peak2Valley, doubl
   Double_t limInfFitf = 0.3;
   Double_t limSupFitf = 5;
   Double_t numberOfParams = 5;
-  TF1 *funcMulti = new TF1("fitf", fitf, limInfFitf, limSupFitf, numberOfParams);
+  TF1 *funcMulti = new TF1("fitf",SPE_and_timing::fitf, limInfFitf, limSupFitf, numberOfParams);
   // set the parameters to the mean and RMS of the histogram
   funcMulti->SetParameters(445, 0, 3, 1, 1.8);
   // a
@@ -422,9 +429,9 @@ Double_t getParams(TTree *T, std::string filename , double_t *peak2Valley, doubl
 
   c->Update();
   std::string outPath = "./data/plots/";
-  c->Print((outPath + filename + ".png").c_str());
+  c->Print((outPath + rootFileName + ".png").c_str());
   c->Close();
-  std::cout << filename << std::endl;
+  std::cout << rootFileName << std::endl;
 
   return 0;
 }
@@ -434,17 +441,16 @@ Double_t getParams(TTree *T, std::string filename , double_t *peak2Valley, doubl
  * @param TTree Tree object
  * @param argc Filepath to the root file
  */
-void getTimePlot(TTree *TrawData,std::string argc)
+void getTimePlot()
 {
-
-  std::string filename = argc;
+  std::string filename = rootFileName;
   char *filename_arr;
   filename_arr = &filename[0];
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
   c->Update();
 
   TH2F *h2 = new TH2F("h2", Form("%s", filename_arr), 200, 4.5e-7, 5.5e-7, 50, -0.25, 0.1);
-  TrawData->Draw("voltage:time>>h2", "", "colz");
+  T->Draw("voltage:time>>h2", "", "colz");
   h2->SetStats(0);
   h2->GetZaxis()->SetRangeUser(0., 500.);
   h2->SetTitle(Form("%s; Time [s] ; Amplitude [V]", filename_arr));
@@ -454,7 +460,7 @@ void getTimePlot(TTree *TrawData,std::string argc)
   c->SetGrid();
   c->cd();
   std::string outPath = "./data/timePlots/";
-  c->Print((outPath + filename + ".png").c_str());
+  c->Print((outPath + rootFileName + ".png").c_str());
   c->Close();
 }
 
@@ -466,10 +472,10 @@ void getTimePlot(TTree *TrawData,std::string argc)
  * 
  * @sventurag 
  */
-void countPulses(TTree *T,std::string argc)
+void PulseThresOccupancy()
 {
 
-  std::string filename = argc;
+  std::string filename = rootFileName;
   char *filename_arr;
   filename_arr = &filename[0];
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
@@ -487,7 +493,7 @@ void countPulses(TTree *T,std::string argc)
   gPad->Update();
   c->Update();
 
-  h_threshold->Print();
+  // h_threshold->Print();
   Double_t h_entries = (Double_t)h_threshold->GetEntries();
 
   float NoiseWaveformCounts = 100 - (100 * h_entries) / (nentries * 200);
@@ -495,26 +501,30 @@ void countPulses(TTree *T,std::string argc)
   c->SetGrid();
   c->cd();
   std::string outPath = "./data/occupancy/";
-  c->Print((outPath + filename + ".png").c_str());
+  c->Print((outPath + rootFileName + ".png").c_str());
   c->Close();
-  std::cout << "END" << std::endl;
 }
-//}
+};
 int main(int argc, char **argv)
 {
   Double_t peaktovalley, sigma_fit;
   std::string inFile = argv[1]; // Nombre del archivo
   std::string outFile = argv[2];
-  TTree *T = loadTree(argv[1]);
   std::string outFilePath = "/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + outFile + ".dat";
   std::ofstream a_file;
+  
+  SPE_and_timing getPlots;
+  std::string  fileName;
+  fileName =getPlots.loadTree(argv[1]);
+  getPlots.SPEhistAndPlots(&peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 );
+  getPlots.getTimePlot();
+  getPlots.PulseThresOccupancy();
+  
   a_file.open(outFilePath, std::ios::out | std::fstream::app);
-  a_file << baseName(argv[1]) << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
+  a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
   a_file.close();
+
   std::cout << "END" << std::endl;
-  std::string rootFileName = baseName(argv[1]);
-  getParams(T, rootFileName,&peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 );
-  getTimePlot(T, rootFileName);
-  countPulses(T, rootFileName);
+
   return 0;
 }
