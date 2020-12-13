@@ -40,6 +40,7 @@ std::string baseName(std::string const &path)
 std::string loadTree(char *argc){
   TFile *f = new TFile(argc);
   T = (TTree *)f->Get("T");
+  T->Print();
   rootFileName = baseName(argc);
   return rootFileName;
 
