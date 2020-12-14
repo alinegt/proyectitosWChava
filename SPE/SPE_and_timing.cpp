@@ -1,43 +1,19 @@
-#include "TCanvas.h"
-#include "TROOT.h"
-#include "TTree.h"
-#include "TH1F.h"
-#include "TH2D.h"
-#include "TLegend.h"
-#include "TSpectrum.h"
-#include "TMarker.h"
-#include "TStyle.h"
-#include "TPaveStats.h"
-#include "TLatex.h"
-#include "TString.h"
-#include "TGraph.h"
-#include <stdlib.h>
-#include "TMath.h"
-#include "TF1.h"
-#include "TGraph2D.h"
-#include "TFile.h"
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <fstream>
-#include <stdio.h>
-#include <iomanip>
-#include <stdlib.h>
+#include "SPE_and_timing.h"
+
+/// Constructor
+SPE_and_timing::SPE_and_timing()  {}
+/// Destructor
+SPE_and_timing::~SPE_and_timing() {}
 
 
-class SPE_and_timing{
-  public:
-TTree *T;
-std::string rootFileName;
-
-std::string baseName(std::string const &path)
+std::string SPE_and_timing::baseName(std::string const &path)
 {
   std::string base_filename = path.substr(path.find_last_of("/\\") + 1);
   std::string::size_type const p(base_filename.find_last_of('.'));
   return base_filename.substr(0, p);
 }
 
-std::string loadTree(char *argc){
+std::string SPE_and_timing::loadTree(char *argc){
   TFile *f = new TFile(argc);
   T = (TTree *)f->Get("T");
   T->Print();
@@ -48,7 +24,7 @@ std::string loadTree(char *argc){
 
 
 // Function to load the histogram from dat file
-TH1F *loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin)
+TH1F*  SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin)
 {
 
 
@@ -78,7 +54,8 @@ TH1F *loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBi
  * @param par      Pointer to parameters for the fit
  * @return Double_t 
  */
-static Double_t fitf(Double_t *x, Double_t *par)
+
+Double_t  SPE_and_timing::fitf(Double_t *x, Double_t *par)
 {
   Double_t arg = 0;
   //   Double_t arg1 =0;
@@ -119,7 +96,7 @@ static Double_t fitf(Double_t *x, Double_t *par)
  * @param sigma_fit       Pointer to the sigma value to get obtained from fit
  * @return Double_t 
  */
-Double_t SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit)
+Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit)
 {
   Double_t limInfBin = -1;
   Double_t limSupBin = 6;
@@ -442,7 +419,7 @@ Double_t SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit)
  * @param TTree Tree object
  * @param argc Filepath to the root file
  */
-void getTimePlot()
+void  SPE_and_timing::getTimePlot()
 {
   std::string filename = rootFileName;
   char *filename_arr;
@@ -473,7 +450,7 @@ void getTimePlot()
  * 
  * @sventurag 
  */
-void PulseThresOccupancy()
+void  SPE_and_timing::PulseThresOccupancy()
 {
 
   std::string filename = rootFileName;
@@ -505,7 +482,9 @@ void PulseThresOccupancy()
   c->Print((outPath + rootFileName + ".png").c_str());
   c->Close();
 }
-};
+
+
+
 int main(int argc, char **argv)
 {
   Double_t peaktovalley, sigma_fit;
