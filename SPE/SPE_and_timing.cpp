@@ -48,7 +48,8 @@ TH1F*  SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, 
   return PeakToValleyFit;
 }
 /**
- * @brief Function to fit multi pe spectrum
+ * @brief Function to fit multi pe spectrum.
+ * This is a static function, static declaration in header
  * 
  * @param x 
  * @param par      Pointer to parameters for the fit
