@@ -465,18 +465,28 @@ void  SPE_and_timing::PulseThresOccupancy()
   c->Update();
   float noise_mean = h_noise->GetMean();
   std::cout << noise_mean << std::endl;
+// This part of the code is because when using gDirectory->Get... GenEntries is always zero,
+// and when using gPad->GetPrimitive, SetTitle does not work. So, I have to draw the tree twice
+  T->Draw("voltage:Iteration$>>h_sel_entries", Form("(Min$(voltage)>-%g)", noise_mean));
+ TH1F *h_sel_entries = (TH1F*)gDirectory->Get("h_sel_entries");               
+  auto h_entries= h_sel_entries->GetEntries();
+
   T->Draw("voltage:Iteration$>>Myhist", Form("(Min$(voltage)>-%g)", noise_mean));
+ // TH1F *h_threshold = (TH1F*)gDirectory->Get("Myhist");
   TH1F *h_threshold = (TH1F*)gPad->GetPrimitive("Myhist"); 
+//
   h_threshold->SetTitle(Form("%s; Time [s] ; Amplitude [V]", filename_arr));
 
-  gPad->Update();
-  c->Update();
 
   // h_threshold->Print();
-  Double_t h_entries = (Double_t)h_threshold->GetEntries();
+    std::cout <<  "No. Entries"  << std::endl;
+
+  std::cout << nentries -h_entries/200  << std::endl;
 
   float NoiseWaveformCounts = 100 - (100 * h_entries) / (nentries * 200);
   std::cout << NoiseWaveformCounts << std::endl;
+   gPad->Update();
+  c->Update();
   c->SetGrid();
   c->cd();
   std::string outPath = "./data/occupancy/";
