@@ -10,6 +10,8 @@
 #include <iomanip>
 #include <stdlib.h>
 #include <vector>
+#include <algorithm> // std::min_element
+//#include <iterator>  // std::begin, std::end
 
 //ROOT
 #include <TROOT.h>
@@ -31,11 +33,13 @@ public:
     ~GetTimeCFD();
     bool loadDataFile(const std::string & a_inputFile);
     Long64_t getNumberOfEntries();
-    void forLoop();
-    float getCFDtime(std::vector<float> *a_signal, float a_fraction, float a_delay, int ch);
+    void loopOverEntriesTimingRes();
+    void loopOverEntries();
+    float getCFDtimeTimingRes(std::vector<float> *a_signal, float a_fraction, float a_delay, int ch);
+    float getCFDtime(std::vector<float> *a_signal, float a_fraction, float a_delay);
     float getInterpolationX(float a_x1, float a_x2, float a_y1, float a_y2);
     void saveHistogram(TH1F *a_histogram);
-    void saveFile(const std::string & a_outputFile);
+    void setOutFile(const std::string & a_outputFile);
 
 private:
     TTree* m_inputTree;
