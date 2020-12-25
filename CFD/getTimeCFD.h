@@ -2,6 +2,7 @@
 #define _GET_TIME_CFD_H
 
 //c++ includes
+
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -40,6 +41,9 @@ public:
     float getInterpolationX(float a_x1, float a_x2, float a_y1, float a_y2);
     void saveHistogram(TH1F *a_histogram);
     void setOutFile(const std::string & a_outputFile);
+    void plotHist(const std::string & a_outputFile);
+    std::string baseName(std::string const &path);
+
 
 private:
     TTree* m_inputTree;
