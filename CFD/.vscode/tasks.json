@@ -1,0 +1,59 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: g++ build active file",
+			"command": "/usr/bin/g++",
+			"args": [
+				"-O2",
+				"-Wall",
+				"-fPIC",
+				"-Wno-deprecated",
+				"-pthread",
+				"-std=c++17",
+				"-m64",
+				"-I/opt/root/6.22.02-install/include",
+				"-g",
+				"${file}",
+				"-o",
+				"${fileDirname}/${fileBasenameNoExtension}",
+				"-L/opt/root/6.22.02-install/lib",
+				"-lCore",
+				"-lImt",
+				"-lRIO",
+				"-lNet",
+				"-lHist",
+				"-lGraf",
+				"-lGraf3d",
+				"-lGpad",
+				"-lROOTVecOps",
+				"-lTree",
+				"-lTreePlayer",
+				"-lRint",
+				"-lPostscript",
+				"-lMatrix",
+				"-lPhysics",
+				"-lMathCore",
+				"-lThread",
+				"-lMultiProc",
+				"-lROOTDataFrame",
+				"-pthread",
+				"-lm",
+				"-ldl",
+				"-rdynamic"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "compiler: /usr/bin/g++"
+		}
+	]
+}
