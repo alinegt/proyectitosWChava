@@ -429,7 +429,7 @@ void  SPE_and_timing::getTimePlot()
   c->Update();
 
   TH2F *h2 = new TH2F("h2", Form("%s", filename_arr), 200, 4.5e-7, 5.5e-7, 50, -0.25, 0.1);
-  T->Draw("voltage:time>>h2", "", "colz");
+  T->Draw("voltage:time>>h2", Form("((Min$(voltage))<-%g)", noise_mean), "colz");
   h2->SetStats(0);
   h2->GetZaxis()->SetRangeUser(0., 500.);
   h2->SetTitle(Form("%s; Time [s] ; Amplitude [V]", filename_arr));
@@ -442,6 +442,18 @@ void  SPE_and_timing::getTimePlot()
   c->Print((outPath + rootFileName + ".png").c_str());
   c->Close();
 }
+
+auto SPE_and_timing::RMSnoise(){
+  TCanvas *c = new TCanvas("c", "A3", 1000, 700);
+
+ T->Draw("noise>>h_noise");
+  TH1F *h_noise = (TH1F *)gDirectory->Get("h_noise");
+  gPad->Update();
+  c->Update();
+  noise_mean = h_noise->GetMean();
+  return noise_mean;
+}
+
 
 /**
  * @brief  Get the occupancy based on the number of pulses that exceeds
@@ -459,11 +471,11 @@ void  SPE_and_timing::PulseThresOccupancy()
   filename_arr = &filename[0];
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
   ULong64_t nentries = (Int_t)T->GetEntries();
-  T->Draw("noise>>h_noise", "", "goff");
-  TH1F *h_noise = (TH1F *)gDirectory->Get("h_noise");
-  gPad->Update();
-  c->Update();
-  float noise_mean = h_noise->GetMean();
+  // T->Draw("noise>>h_noise");
+  // TH1F *h_noise = (TH1F *)gDirectory->Get("h_noise");
+  // gPad->Update();
+  // c->Update();
+  // float noise_mean = h_noise->GetMean();
   std::cout << noise_mean << std::endl;
 // This part of the code is because when using gDirectory->Get... GenEntries is always zero,
 // and when using gPad->GetPrimitive, SetTitle does not work. So, I have to draw the tree twice
@@ -471,7 +483,7 @@ void  SPE_and_timing::PulseThresOccupancy()
  TH1F *h_sel_entries = (TH1F*)gDirectory->Get("h_sel_entries");               
   auto h_entries= h_sel_entries->GetEntries();
 
-  T->Draw("voltage:Iteration$>>Myhist", Form("(Min$(voltage)>-%g)", noise_mean));
+  T->Draw("voltage:Iteration$>>Myhist", Form("(Min$(voltage)<-%g)", noise_mean));
  // TH1F *h_threshold = (TH1F*)gDirectory->Get("Myhist");
   TH1F *h_threshold = (TH1F*)gPad->GetPrimitive("Myhist"); 
 //
@@ -507,10 +519,10 @@ int main(int argc, char **argv)
   SPE_and_timing getPlots;
   std::string  fileName;
   fileName =getPlots.loadTree(argv[1]);
-  getPlots.SPEhistAndPlots(&peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 );
-  getPlots.getTimePlot();
+  getPlots.SPEhistAndPlots(&peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 ); 
+  getPlots.RMSnoise();
   getPlots.PulseThresOccupancy();
-  
+  getPlots.getTimePlot();
   a_file.open(outFilePath, std::ios::out | std::fstream::app);
   a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
   a_file.close();

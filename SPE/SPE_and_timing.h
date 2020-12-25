@@ -47,8 +47,10 @@ static Double_t fitf(Double_t *x, Double_t *par);
 Double_t SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit);
 void getTimePlot();
 void PulseThresOccupancy();
+auto RMSnoise();
  private:
 TTree *T;
+float noise_mean;
 
 
 };
