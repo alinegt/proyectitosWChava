@@ -45,8 +45,9 @@ int main(int argc, char **argv)
    std::string noMuestras =  argv[4]; // No. puntos en el pulso
    std::string noEventos =   argv[5]; // No. de eventos
    std::string deltaTiempo = argv[6]; // delta tiempo en s 
-   std::string outDatFile = argv[7]; // 
+   std::string outDatFile = argv[7]; //
    std::string outRootFile = argv[8]; //
+   std::string rmsFactor = argv[9]; //
    
 /************************************************************************************************/
 /****************************************VARIABLES MENU******************************************/
@@ -54,7 +55,8 @@ int main(int argc, char **argv)
    float ancho=std::stof(anchoPulso);
    float No_muestras= std::stof(noMuestras);       
    float No_eventos= std::stof(noEventos);      
-   float delta_t= std::stof(deltaTiempo) ;           
+   float delta_t= std::stof(deltaTiempo) ;
+   float rms_factor= std::stof(rmsFactor) ;
    float R=50.0; // Resistencia en Ohms
 /************************************************************************************************//************************************************************************************************/
 
@@ -148,7 +150,8 @@ int main(int argc, char **argv)
   avg_ruido1= (1/amplifGain) *(sum_ruido1)/(bin_inicial-1);
   avg_ruido2=(1/amplifGain) *(sum_ruido2)/(No_muestras-bin_inicial-ancho+1);
   sum_volt=sum_volt*(1/amplifGain);
-  
+  noise_rms= rms_factor*rms(v_noise);
+
   ct10=carga*0.1;
   ct50=carga*0.5;
   ct90=carga*0.9;
@@ -171,7 +174,7 @@ int main(int argc, char **argv)
 
 // rms
   
-noise_rms= 6*rms(v_noise);
+
 
 
 //   for( iprima=it; iprima<it+No_muestras; iprima++ )
