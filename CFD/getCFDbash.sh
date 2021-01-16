@@ -5,7 +5,7 @@ inputPath=/home/salvador/github/proyectitosWChava/SPE/data/processed/
 outputPath=/home/salvador/github/proyectitosWChava/CFD/data/rootFiles/
 fileExt=".root"
 
-make
+make -B
 cd $inputPath
 
 for file in *
@@ -25,6 +25,8 @@ cd $inputPath
 #processedPath=""
 #outputPath=""
 done
+cd $execPath
+root -l plotStack.C
 #cd ${outputPath}
 
 # rm SPEmontage.png

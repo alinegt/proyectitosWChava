@@ -26,9 +26,11 @@
 #include "TLegend.h"
 
 using namespace std;
-
+// const float Xdiv = 0.5;
+#define NAME_OF( v ) #v
 class GetTimeCFD
 {
+
 public:
     GetTimeCFD();
     ~GetTimeCFD();
@@ -41,7 +43,10 @@ public:
     float getInterpolationX(float a_x1, float a_x2, float a_y1, float a_y2);
     void saveHistogram(TH1F *a_histogram);
     void setOutFile(const std::string & a_outputFile);
-    void plotHist(const std::string & a_outputFile);
+    void plotHist(const std::string & a_outputFile, const std::string & branch);
+    // void plotHistLE(const std::string & a_outputFile);
+    void closeFile();
+
     std::string baseName(std::string const &path);
 
 
@@ -55,15 +60,16 @@ private:
     std::vector<float> m_resultSignal_ch1;
     std::vector<float> m_delaySignal_ch2;
     std::vector<float> m_resultSignal_ch2;
-    float m_timeCh1;
+    float m_timeCh1_cfd;
     float m_timeCh2;
-
+    int m_timeCh1_le;
+    float m_timeCh2_le;
+    std::string Xdiv= "0.5";
     bool m_fileLoaded;
     float m_timeDifference;
     //parameters of the histogram must be changed in order to set a proper range
     TH1F *h_timeDiff = new TH1F("h_timeDiff", "h_timeDiff", 70, 20, 25);
 
 };
-
 #endif
 

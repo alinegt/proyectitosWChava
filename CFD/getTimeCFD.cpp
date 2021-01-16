@@ -14,32 +14,37 @@ std::string outputFile = argv[2];
 GetTimeCFD time;
 time.loadDataFile(inputFile);
 cout<<"The tree has: "<<time.getNumberOfEntries()<<" events"<<endl;
-
 time.setOutFile(outputFile);
 //time.loopOverEntriesTimingRes();
 time.loopOverEntries();
-time.plotHist(outputFile);
+std:: string  branch1 = "timech1_le";
+std::string   branch2 = "timech1_cfd";
+std::string  base_outputFile = time.baseName(outputFile);
+
+time.plotHist( (base_outputFile + "_LE").c_str(), branch1);
+time.plotHist( (base_outputFile + "_CFD").c_str(), branch2);
+time.closeFile();
 
 }
 ///*********************************************************************
 ///======================================
 void GetTimeCFD::loopOverEntriesTimingRes()
 {
-    float a_timeCh1{}, a_timeCh2{};
+    float a_timech1_cfd{}, a_timeCh2{};
     for (int a_index=0 ; a_index<getNumberOfEntries() ; a_index++)
     {
         m_inputTree->GetEntry(a_index);
         //m_inputTree->GetEntry(0);
         //cout<<"time CFD: "<<getCFDtime(m_ch1)<<endl;
-        a_timeCh1=getCFDtimeTimingRes(m_ch1, .8, 18,1);
+        a_timech1_cfd=getCFDtimeTimingRes(m_ch1, .8, 5,1);
         //  m_resultSignal.clear();
         // m_delaySignal.clear();getInterpolationX
-        a_timeCh2=getCFDtimeTimingRes(m_ch2, .8, 18, 2);
+        a_timeCh2=getCFDtimeTimingRes(m_ch2, .8, 5, 2);
 
 
-        h_timeDiff->Fill(a_timeCh1-a_timeCh2);
-        m_timeDifference = a_timeCh1-a_timeCh2;
-        m_timeCh1=a_timeCh1;
+        h_timeDiff->Fill(a_timech1_cfd-a_timeCh2);
+        m_timeDifference = a_timech1_cfd-a_timeCh2;
+        m_timeCh1_cfd=a_timech1_cfd;
         m_timeCh2=a_timeCh2;
 
         m_outputTree->Fill();
@@ -52,7 +57,7 @@ void GetTimeCFD::loopOverEntriesTimingRes()
     m_outputFile->Write();
     saveHistogram(h_timeDiff);
     std::cout<<"File written"<<std::endl;
-    m_outputFile->Close();
+   // m_outputFile->Close();
 
 
 }
@@ -61,7 +66,7 @@ void GetTimeCFD::loopOverEntriesTimingRes()
 ///======================================
 void GetTimeCFD::loopOverEntries()
 {
-    float a_timeCh1{}, a_timeCh2{};
+    float a_timech1_cfd{}, a_timeCh2{};
     
     m_inputTree->Draw("noise>>h_noise", "", "goff");
     TH1F *h_noise = (TH1F *)gDirectory->Get("h_noise");
@@ -74,22 +79,13 @@ void GetTimeCFD::loopOverEntries()
         //m_inputTree->GetEntry(0);
         //cout<<"time CFD: "<<getCFDtime(m_ch1)<<endl;
         if (  *minimum  <noise_mean*(-1)  )  {
-        a_timeCh1=getCFDtime(m_ch1, .7, -10);
-        //  m_resultSignal.clear();
-        // m_delaySignal.clear();getInterpolationX
-        // a_timeCh2=getCFDtime(m_ch2, .8, 18, 2);
-
-       
-        // h_timeDiff->Fill(a_timeCh1-a_timeCh2);
-        // m_timeDifference = a_timeCh1-a_timeCh2;
-        m_timeCh1=a_timeCh1;
-        // m_timeCh2=a_timeCh2;
+        m_timeCh1_cfd=getCFDtime(m_ch1, .8, -3);
+        m_timeCh1_le =std::min_element(  m_ch1->begin(), m_ch1->end() ) - m_ch1->begin(); ;
 
         m_outputTree->Fill();
         m_resultSignal_ch1.clear();
         m_delaySignal_ch1.clear();
-        // m_resultSignal_ch2.clear();
-        // m_delaySignal_ch2.clear();
+
         }
     }
     m_outputFile->Write();
@@ -194,7 +190,7 @@ float GetTimeCFD::getCFDtimeTimingRes(std::vector<float> *a_signal, float a_frac
 float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, float a_delay){
     std::vector <float> a_delaySignal;
     std::vector <float> a_resultSignal;    
-    float Xdiv = 0.5; // each sample corresponds to 0.5 ns 
+    //float Xdiv = 0.5; // each sample corresponds to 0.5 ns 
     bool a_flag = false;
     float a_x1{},a_x2{},a_y1{},a_y2{};
     float a_timeCFD{};
@@ -222,7 +218,7 @@ float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, flo
 
     for(long unsigned int a_index=0 ; a_index<a_resultSignal.size();a_index++)
     {
-        if ((a_resultSignal.at(a_index)<-0.01)&&(a_flag==false))
+        if ((a_resultSignal.at(a_index)<-0.02)&&(a_flag==false))
         {a_flag = true;}
         if ((a_resultSignal.at(a_index)>0.00)&&(a_flag==true)){
             //cout<<a_index<<" "<<a_resultSignal.at(a_index)<<endl;
@@ -233,7 +229,7 @@ float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, flo
                 a_flag = false;
 
                 a_timeCFD = getInterpolationX(a_x1,a_x2,a_y1,a_y2);
-                a_timeCFD = Xdiv*a_timeCFD;
+                a_timeCFD = a_timeCFD;
                 //cout<<a_x1<<" "<<a_x2<<" "<<a_y1<<" "<<a_y2<<endl;
         }
 
@@ -289,6 +285,14 @@ Long64_t GetTimeCFD::getNumberOfEntries()
     return a_entries;
 }
 ///======================================
+
+
+/**
+ * @brief Get the Time CFD::set Out File object
+ * 
+ * @param a_outputFile 
+ */
+
 /// Save Tree root in a output file
 void GetTimeCFD::setOutFile(const std::string & a_outputFile){
 
@@ -302,44 +306,49 @@ void GetTimeCFD::setOutFile(const std::string & a_outputFile){
     m_outputTree -> Branch("delaySignal_ch2",&m_delaySignal_ch2);
     m_outputTree -> Branch("ch1",&m_ch1);
     m_outputTree -> Branch("ch2",&m_ch2);
-    m_outputTree -> Branch("timech1",&m_timeCh1);
+    m_outputTree -> Branch("timech1_cfd",&m_timeCh1_cfd);
     m_outputTree -> Branch("timech2",&m_timeCh2);
+    m_outputTree -> Branch("timech1_le",&m_timeCh1_le);  // Leading edge analysis
+
 
 
     return;
 }
 
-void GetTimeCFD::plotHist(const std::string & a_outputFile){
+void GetTimeCFD::plotHist(const std::string & a_outputFile, const std::string & branch){
 TCanvas *c = new TCanvas("c", "A3", 1000, 700);
-// m_outputTree->Print("timech1");
+// m_outputTree->Print("timech1_cfd");
 int xmin= 50;
 int xmax= 75;
- std::string titleHist=baseName(a_outputFile);
+  std::string titleHist= a_outputFile;
  char *titleHist_arr;
   titleHist_arr = &titleHist[0];
-TH1F *hframe = new TH1F("hframe","CFD Results",75,xmin,xmax);
+TH1F *hframe = new TH1F("hframe","CFD Results",50,xmin,xmax);
   hframe->SetTitle(Form("%s; Time [ns] ; Counts", titleHist_arr));
 
 hframe->Draw();
- hframe->GetYaxis()->SetRangeUser(0., 170.);
+ hframe->GetYaxis()->SetRangeUser(0., 400.);
 // hframe->GetXaxis()->SetRangeUser(0., 110.);  
- m_outputTree->Draw("timech1","","same");
+
+ m_outputTree->Draw(Form( " %s * %s",branch.c_str(), Xdiv.c_str() )   ,"","same"); 
  TH1F *h_temp = (TH1F*)gPad->GetPrimitive("htemp"); 
-
-
-
   c->Update();
   c->SetGrid();
   c->cd();
    std::string outPath = "./data/plots/";
-   c->Print((outPath + baseName(a_outputFile) + ".png").c_str());
+   c->Print((outPath + a_outputFile + ".png").c_str());
    
    h_temp->Write();
    c->Close();
-    m_outputFile->Close();
 
 return;
 
+}
+
+void GetTimeCFD::closeFile()
+{
+m_outputFile->Close();
+return;
 }
 
 std::string GetTimeCFD::baseName(std::string const &path)
