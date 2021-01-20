@@ -330,8 +330,10 @@ hframe->Draw();
  hframe->GetYaxis()->SetRangeUser(0., 400.);
 // hframe->GetXaxis()->SetRangeUser(0., 110.);  
 
- m_outputTree->Draw(Form( " %s * %s",branch.c_str(), Xdiv.c_str() )   ,"","same"); 
- TH1F *h_temp = (TH1F*)gPad->GetPrimitive("htemp"); 
+ m_outputTree->Draw(Form( " %s * %s>> h_%s",branch.c_str(), Xdiv.c_str(), a_outputFile.c_str())   ,"","same"); 
+ TH1F *h_temp = (TH1F*)gPad->GetPrimitive(Form("h_%s", a_outputFile.c_str() ));
+ h_temp->SetName(Form("h_%s",  a_outputFile.c_str()) ); 
+ h_temp->SetTitle(Form("%s",  a_outputFile.c_str()) );
   c->Update();
   c->SetGrid();
   c->cd();
