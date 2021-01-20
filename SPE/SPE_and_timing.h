@@ -31,6 +31,8 @@
 #include "TGraph2D.h"
 #include "TFile.h"
 #include "TCanvas.h"
+#include "TPaletteAxis.h"
+
 
 using namespace std;
 
