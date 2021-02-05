@@ -1,5 +1,5 @@
 #! /bin/bash
-make
+
 execPath=/home/salvador/github/proyectitosWChava/timing
 inputPath=/home/salvador/github/proyectitosWChava/SPE/data/processed/
 outputPath=/home/salvador/github/proyectitosWChava/timing/data/rootFiles/
@@ -26,6 +26,9 @@ cd $inputPath
 #outputPath=""
 done
 cd $execPath
+root -l plotStackLE2.C
+root -l plotStackCFD2.C
+
 # root -l plotStack.C
 # root -l plotStackLE.C
 #cd ${outputPath}
