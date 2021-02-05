@@ -116,7 +116,7 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
   char *filename_arr = &rootFileName[0];
 
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
-  TPad *pad1 = new TPad("pad1", "", 0, 0.33, 1, 1);
+  TPad *pad1 = new TPad("pad1", "", 0, 0.0, 1, 1);
   pad1->SetLogy();
   pad1->SetGrid();
   pad1->Draw();
@@ -323,11 +323,11 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
   ///// Text box
   ///////////////////////////////////////////////////////////////////////
   TLatex t(0.15, 0.9, Form("Peak/valley:%g", *peak2Valley));
-  t.SetTextSize(0.03);
-  TLatex t2(0.15, 0.875, Form("Resolution:%g pC/bin", adcResolution));
-  t2.SetTextSize(0.03);
-  TLatex t3(0.15, 0.85, Form("Occupancy:%g%%", occupancy));
-  t3.SetTextSize(0.03);
+  t.SetTextSize(0.05);
+  TLatex t2(0.15, 0.85, Form("Resolution:%g pC/bin", adcResolution));
+  t2.SetTextSize(0.05);
+  TLatex t3(0.15, 0.8, Form("Occupancy:%g%%", occupancy));
+  t3.SetTextSize(0.05);
 
   t.Draw();
   t2.Draw();
@@ -337,74 +337,74 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
   ///// Residuals plot
   ///////////////////////////////////////////////////////////////////////
 
-  TPad *pad2 = new TPad("pad2", "pad2", 0, 0, 1, 0.3);
-  pad2->Draw();
-  pad2->cd();
-  // TF1 *f_SPEGaus = (TF1*) h_spe-> GetListOfFunctions()->FindObject("gaus");
-  TF1 *f_SPEGaus = (TF1 *)h_multiph->GetListOfFunctions()->FindObject("fitf");
-
-  TH1F *h_residuals = new TH1F("Residuals Multi SPE Fit", "Residuals MultiSPE Fit", 18, -15, 21);
-  //pad1->SetBottomMargin(0.01);
-  //pad1->SetBorderMode(0);
-  // pad1->SetLogy();
-  pad2->SetTopMargin(0.00001);
-  pad2->SetBottomMargin(0.25);
-  pad2->SetBorderMode(0);
-  // pad1->Draw();
+  // TPad *pad2 = new TPad("pad2", "pad2", 0, 0, 1, 0.3);
   // pad2->Draw();
-  pad1->cd();
-  h_residuals->SetLineWidth(2);
-  h_residuals->SetTitle(Form("SPE fit Residual; Charge [pC] ;Counts"));
-  h_residuals->GetXaxis()->SetTitleSize(.11);
-  h_residuals->GetYaxis()->SetTitleSize(.11);
-  h_residuals->GetYaxis()->SetTitleOffset(0.3);
-  h_residuals->GetXaxis()->SetTitleOffset(1);
-  h_residuals->GetXaxis()->SetTicks("+-");
-  h_residuals->GetXaxis()->SetLabelFont(63);
-  h_residuals->GetXaxis()->SetLabelSize(16);
-  h_residuals->GetYaxis()->SetLabelFont(63);
-  h_residuals->GetYaxis()->SetLabelSize(16);
-  h_residuals->GetYaxis()->SetRangeUser(0., 50.);
-  pad2->SetGrid();
-  pad2->cd();
-  double_t res;
-  Int_t binxSupGauss = xaxis->FindBin(3.4);
-  Int_t binxInfFitf = xaxis->FindBin(limInfFitf);
+  // pad2->cd();
+  // // TF1 *f_SPEGaus = (TF1*) h_spe-> GetListOfFunctions()->FindObject("gaus");
+  // TF1 *f_SPEGaus = (TF1 *)h_multiph->GetListOfFunctions()->FindObject("fitf");
 
-  // std::cout << h_peakToValley->GetNbinsX()<< std::endl;
-  // std::cout << binxInf<< std::endl;
-  // std::cout << binxSupGauss<< std::endl;
+  // TH1F *h_residuals = new TH1F("Residuals Multi SPE Fit", "Residuals MultiSPE Fit", 18, -15, 21);
+  // //pad1->SetBottomMargin(0.01);
+  // //pad1->SetBorderMode(0);
+  // // pad1->SetLogy();
+  // pad2->SetTopMargin(0.00001);
+  // pad2->SetBottomMargin(0.25);
+  // pad2->SetBorderMode(0);
+  // // pad1->Draw();
+  // // pad2->Draw();
+  // pad1->cd();
+  // h_residuals->SetLineWidth(2);
+  // h_residuals->SetTitle(Form("SPE fit Residual; Charge [pC] ;Counts"));
+  // h_residuals->GetXaxis()->SetTitleSize(.11);
+  // h_residuals->GetYaxis()->SetTitleSize(.11);
+  // h_residuals->GetYaxis()->SetTitleOffset(0.3);
+  // h_residuals->GetXaxis()->SetTitleOffset(1);
+  // h_residuals->GetXaxis()->SetTicks("+-");
+  // h_residuals->GetXaxis()->SetLabelFont(63);
+  // h_residuals->GetXaxis()->SetLabelSize(16);
+  // h_residuals->GetYaxis()->SetLabelFont(63);
+  // h_residuals->GetYaxis()->SetLabelSize(16);
+  // h_residuals->GetYaxis()->SetRangeUser(0., 50.);
+  // pad2->SetGrid();
+  // pad2->cd();
+  // double_t res;
+  // Int_t binxSupGauss = xaxis->FindBin(3.4);
+  // Int_t binxInfFitf = xaxis->FindBin(limInfFitf);
 
-  for (int i = 0; i < h_multiph->GetNbinsX(); i++)
-  {
+  // // std::cout << h_peakToValley->GetNbinsX()<< std::endl;
+  // // std::cout << binxInf<< std::endl;
+  // // std::cout << binxSupGauss<< std::endl;
 
-    if (i >= binxInfFitf && i <= binxSupGauss)
-    {
-      res = h_multiph->GetBinContent(i) - f_SPEGaus->Eval(h_multiph->GetBinCenter(i));
-      h_residuals->Fill(res);
-    }
-  }
+  // for (int i = 0; i < h_multiph->GetNbinsX(); i++)
+  // {
 
-  h_residuals->Draw();
+  //   if (i >= binxInfFitf && i <= binxSupGauss)
+  //   {
+  //     res = h_multiph->GetBinContent(i) - f_SPEGaus->Eval(h_multiph->GetBinCenter(i));
+  //     h_residuals->Fill(res);
+  //   }
+  // }
 
-  h_residuals->Fit("gaus", "Q", "sames", -17 + h_residuals->FindFirstBinAbove(0), h_residuals->FindLastBinAbove(0) + 3);
-  // std::cout << h_residuals->FindFirstBinAbove(0) << std::endl;
-  // std::cout << h_residuals->FindLastBinAbove(0) << std::endl;
+  // h_residuals->Draw();
+
+  // h_residuals->Fit("gaus", "Q", "sames", -17 + h_residuals->FindFirstBinAbove(0), h_residuals->FindLastBinAbove(0) + 3);
+  // // std::cout << h_residuals->FindFirstBinAbove(0) << std::endl;
+  // // std::cout << h_residuals->FindLastBinAbove(0) << std::endl;
 
   c->Update();
 
-  TPaveStats *psRes = (TPaveStats *)h_residuals->GetListOfFunctions()->FindObject("stats");
-  psRes->SetX1NDC(0.6);
-  psRes->SetX2NDC(0.9);
-  psRes->SetY1NDC(0.5);
-  psRes->SetY2NDC(1);
-  psRes->SetTextSize(.1);
-  // psRes->SetTextColor(kBlack);
-  psRes->SetOptStat(1000000001);
-  psRes->SetOptFit(0001);
-  psRes->Draw();
-  // pad2->cd();30
-  pad2->Modified();
+  // TPaveStats *psRes = (TPaveStats *)h_residuals->GetListOfFunctions()->FindObject("stats");
+  // psRes->SetX1NDC(0.6);
+  // psRes->SetX2NDC(0.9);
+  // psRes->SetY1NDC(0.5);
+  // psRes->SetY2NDC(1);
+  // psRes->SetTextSize(.1);
+  // // psRes->SetTextColor(kBlack);
+  // psRes->SetOptStat(1000000001);
+  // psRes->SetOptFit(0001);
+  // psRes->Draw();
+  // // pad2->cd();30
+  // pad2->Modified();
 
   c->Update();
   std::string outPath = "./data/plots/";
@@ -463,6 +463,7 @@ auto SPE_and_timing::RMSnoise(){
   gPad->Update();
   c->Update();
   noise_mean = h_noise->GetMean();
+  noise_mean = 0.03;
   return noise_mean;
 }
 
