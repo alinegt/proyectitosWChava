@@ -44,6 +44,9 @@ public:
     void saveHistogram(TH1F *a_histogram);
     void setOutFile(const std::string & a_outputFile);
     void plotHist(const std::string & a_outputFile, const std::string & branch);
+    void GetTimeLeadEdge(std::vector<float> *a_vector);
+    float getTime(long unsigned int a_index2, std::vector<float> *a_vector2);
+
     // void plotHistLE(const std::string & a_outputFile);
     void closeFile();
 
@@ -54,15 +57,19 @@ private:
     TTree* m_inputTree;
     TTree* m_outputTree;
     TFile* m_outputFile;
+    std::vector<float> *m_time=0; // Time vector from scope
     std::vector<float> *m_ch1=0;
     std::vector<float> *m_ch2=0;
     std::vector<float> m_delaySignal_ch1;
     std::vector<float> m_resultSignal_ch1;
     std::vector<float> m_delaySignal_ch2;
     std::vector<float> m_resultSignal_ch2;
-    float m_timeCh1_cfd;
+    float m_timeCh1_cfd; 
     float m_timeCh2;
     int m_timeCh1_le;
+    float m_timeCh1_10;
+    float m_timeCh1_50;
+    float m_timeCh1_90;
     float m_timeCh2_le;
     std::string Xdiv= "0.5";
     bool m_fileLoaded;
