@@ -17,7 +17,7 @@ cout<<"The tree has: "<<time.getNumberOfEntries()<<" events"<<endl;
 time.setOutFile(outputFile);
 //time.loopOverEntriesTimingRes();
 time.loopOverEntries();
-std:: string  branch1 = "timech1_le";
+std:: string  branch1 = "timech1_90";
 std::string   branch2 = "timech1_cfd";
 std::string  base_outputFile = time.baseName(outputFile);
 
@@ -66,22 +66,25 @@ void GetTimeCFD::loopOverEntriesTimingRes()
 ///======================================
 void GetTimeCFD::loopOverEntries()
 {
-    float a_timech1_cfd{}, a_timeCh2{};
     
     m_inputTree->Draw("noise>>h_noise", "", "goff");
     TH1F *h_noise = (TH1F *)gDirectory->Get("h_noise");
     float noise_mean = h_noise->GetMean();
+    cout<<"noise_mean= "<< noise_mean<<endl;
 
-    for (int a_index=0 ; a_index<getNumberOfEntries() ; a_index++)
+
+    for (int a_index0=0 ; a_index0<getNumberOfEntries() ; a_index0++)
     {
-        m_inputTree->GetEntry(a_index);
+        m_inputTree->GetEntry(a_index0);
+        float noiseFromPlot=0.03;
         auto minimum=std::min_element(  m_ch1->begin(), m_ch1->end() ) ;
         //m_inputTree->GetEntry(0);
         //cout<<"time CFD: "<<getCFDtime(m_ch1)<<endl;
-        if (  *minimum  <noise_mean*(-1)  )  {
-        m_timeCh1_cfd=getCFDtime(m_ch1, .8, -3);
-        m_timeCh1_le =std::min_element(  m_ch1->begin(), m_ch1->end() ) - m_ch1->begin(); ;
-
+        if (  *minimum  < noiseFromPlot*(-1)  )  {
+       // if (  *minimum  < noise_mean*(-1)  )  {
+        m_timeCh1_cfd=getCFDtime(m_ch1, .5, -5);
+        GetTimeLeadEdge(m_ch1); 
+        
         m_outputTree->Fill();
         m_resultSignal_ch1.clear();
         m_delaySignal_ch1.clear();
@@ -95,6 +98,76 @@ void GetTimeCFD::loopOverEntries()
 
 
 }
+
+void GetTimeCFD::GetTimeLeadEdge(std::vector<float> *a_vector){
+    auto peak= *min_element( a_vector->begin(), a_vector->end() );
+    bool flag10= false;
+    bool flag50= false;
+    bool flag90= false;
+
+   for(long unsigned int a_index1=1 ; a_index1<a_vector->size()-1;a_index1++)
+    {
+    //   cout<<a_index1<<endl;
+    //   cout<<0.1*peak<<endl;
+
+    //    cout<<a_vector->size()<<endl;
+
+        if (  (a_vector->at(a_index1) < (float)0.1*peak )  && (flag10==false) ) 
+        {
+            // cout<<"time10"<<endl;
+
+            m_timeCh1_10 = getTime(a_index1, a_vector);
+            
+            flag10= true;
+        }
+
+         if ((a_vector->at(a_index1) < 0.5*(double)peak )  && (flag50==false) ) 
+        {
+            m_timeCh1_50 = getTime(a_index1, a_vector);
+            flag50= true;
+                        // cout<<"time50"<<endl;
+
+        }
+          if ( (a_vector->at(a_index1) < 0.9*(double)peak  ) && (flag90==false) )
+        {
+            m_timeCh1_90 = getTime(a_index1, a_vector);
+            flag90=true;
+                        // cout<<"time90"<<endl;
+
+        }
+    }
+}
+float GetTimeCFD::getTime(long unsigned int a_index2, std::vector<float> *a_vector2){
+
+                   
+               float a_time;
+            float a_x1,a_x2,a_y1,a_y2=0;
+
+               a_x1 = m_time-> at (a_index2-1);
+                a_x2 = m_time-> at (a_index2);
+
+                a_y1 = a_vector2->at(a_index2-1);
+
+                a_y2 = a_vector2->at(a_index2);
+
+                a_time = getInterpolationX(a_x1,a_x2,a_y1,a_y2);
+                
+                return a_time;
+}
+
+///======================================
+/// Zero crossing (y=0)
+float GetTimeCFD::getInterpolationX(float a_x1, float a_x2, float a_y1, float a_y2)
+{
+    
+    float a_interpolationXNum=0;
+    float a_slope=0;
+    a_slope = (a_y2-a_y1)/(a_x2-a_x1);
+    a_interpolationXNum = a_x1-(a_y1/a_slope);
+    // cout<<a_interpolationXNum/1e-9<<endl;
+    return a_interpolationXNum/1e-9;
+}
+
 
 ///======================================
 
@@ -154,7 +227,7 @@ float GetTimeCFD::getCFDtimeTimingRes(std::vector<float> *a_signal, float a_frac
     }
     // std::rotate(a_delaySignal.begin(), a_delaySignal.begin()+a_fraction,a_delaySignal.end())
 
-    for(long unsigned int a_index=0 ; a_index<a_resultSignal.size();a_index++)
+    for(long unsigned int a_index=1 ; a_index<a_resultSignal.size()-1;a_index++)
     {
         if ((a_resultSignal.at(a_index)<-100.)&&(a_flag==false))
         {a_flag = true;}
@@ -190,12 +263,9 @@ float GetTimeCFD::getCFDtimeTimingRes(std::vector<float> *a_signal, float a_frac
 float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, float a_delay){
     std::vector <float> a_delaySignal;
     std::vector <float> a_resultSignal;    
-    //float Xdiv = 0.5; // each sample corresponds to 0.5 ns 
     bool a_flag = false;
-    float a_x1{},a_x2{},a_y1{},a_y2{};
-    float a_timeCFD{};
-    //cout<<"signal size: "<<a_signal->size();
-    ///Negative and delayed signal
+    float a_timeCFD=0;
+     ///Negative and delayed signal
     for (long unsigned int a_index=0 ; a_index<a_signal->size();a_index++)
     {
         a_delaySignal.push_back(a_signal->at(a_index)*(-1));
@@ -215,6 +285,8 @@ float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, flo
         a_resultSignal.push_back(a_fraction *a_signal->at(a_index)+a_delaySignal.at(a_index));
     }
     // std::rotate(a_delaySignal.begin(), a_delaySignal.begin()+a_fraction,a_delaySignal.end())
+        m_resultSignal_ch1= a_resultSignal;
+        m_delaySignal_ch1= a_delaySignal;
 
     for(long unsigned int a_index=0 ; a_index<a_resultSignal.size();a_index++)
     {
@@ -222,14 +294,16 @@ float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, flo
         {a_flag = true;}
         if ((a_resultSignal.at(a_index)>0.00)&&(a_flag==true)){
             //cout<<a_index<<" "<<a_resultSignal.at(a_index)<<endl;
-                a_x1 = (float)a_index-1;
-                a_x2 = (float)a_index;
-                a_y1 = a_resultSignal.at(a_index-1);
-                a_y2 = a_resultSignal.at(a_index);
+            
+            
+                //             a_x1 = (float)a_index-1;
+                // a_x2 = (float)a_index;
+                // a_y1 = a_resultSignal.at(a_index-1);
+                // a_y2 = a_resultSignal.at(a_index);
+
+                a_timeCFD = getTime(a_index,&m_resultSignal_ch1);
                 a_flag = false;
 
-                a_timeCFD = getInterpolationX(a_x1,a_x2,a_y1,a_y2);
-                a_timeCFD = a_timeCFD;
                 //cout<<a_x1<<" "<<a_x2<<" "<<a_y1<<" "<<a_y2<<endl;
         }
 
@@ -237,8 +311,6 @@ float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, flo
         //cout<<a_index<<" "<<m_resultSignal.at(a_index)<<endl;
     }
     // if (ch==1) {
-        m_resultSignal_ch1= a_resultSignal;
-        m_delaySignal_ch1=a_delaySignal;
     // } else
     // {
     //     m_resultSignal_ch2=a_resultSignal;
@@ -247,23 +319,12 @@ float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, flo
     
     
     //cout<<"time CFD: "<<a_timeCFD<<endl;
-    return a_timeCFD;
+    return a_timeCFD+a_delay;
 }
 
 
 
 
-///======================================
-/// Zero crossing (y=0)
-float GetTimeCFD::getInterpolationX(float a_x1, float a_x2, float a_y1, float a_y2)
-{
-    float a_interpolationXNum{};
-    float a_slope{};
-    a_slope = (a_y2-a_y1)/(a_x2-a_x1);
-    a_interpolationXNum = a_x1-(a_y1/a_slope);
-
-    return a_interpolationXNum;
-}
 
 ///======================================
 bool GetTimeCFD::loadDataFile(const std::string & a_inputFile)
@@ -272,6 +333,7 @@ bool GetTimeCFD::loadDataFile(const std::string & a_inputFile)
     auto f = new TFile(inFile.c_str(),"READONLY");
     m_inputTree = (TTree*)f->Get("T");
     m_inputTree -> SetBranchAddress("voltage",&m_ch1);
+    m_inputTree -> SetBranchAddress("time", &m_time );
    // m_inputTree -> SetBranchAddress("ch2",&m_ch2);
     m_fileLoaded = true;
     return m_fileLoaded;
@@ -309,7 +371,10 @@ void GetTimeCFD::setOutFile(const std::string & a_outputFile){
     m_outputTree -> Branch("timech1_cfd",&m_timeCh1_cfd);
     m_outputTree -> Branch("timech2",&m_timeCh2);
     m_outputTree -> Branch("timech1_le",&m_timeCh1_le);  // Leading edge analysis
-
+    m_outputTree -> Branch("timech1_10",&m_timeCh1_10);
+    m_outputTree -> Branch("timech1_50",&m_timeCh1_50);
+    m_outputTree -> Branch("timech1_90",&m_timeCh1_90);
+    m_outputTree -> Branch("time", &m_time);
 
 
     return;
@@ -318,20 +383,23 @@ void GetTimeCFD::setOutFile(const std::string & a_outputFile){
 void GetTimeCFD::plotHist(const std::string & a_outputFile, const std::string & branch){
 TCanvas *c = new TCanvas("c", "A3", 1000, 700);
 // m_outputTree->Print("timech1_cfd");
-int xmin= 50;
-int xmax= 75;
+// int xmin= 40;
+// int xmax= 70;
   std::string titleHist= a_outputFile;
  char *titleHist_arr;
   titleHist_arr = &titleHist[0];
-TH1F *hframe = new TH1F("hframe","CFD Results",50,xmin,xmax);
-  hframe->SetTitle(Form("%s; Time [ns] ; Counts", titleHist_arr));
+// TH1F *hframe = new TH1F("hframe","CFD Results",50,xmin,xmax);
 
-hframe->Draw();
- hframe->GetYaxis()->SetRangeUser(0., 400.);
-// hframe->GetXaxis()->SetRangeUser(0., 110.);  
+// hframe->Draw();
+//  hframe->GetYaxis()->SetRangeUser(0., 400.);
+// // hframe->GetXaxis()->SetRangeUser(0., 110.);  
 
- m_outputTree->Draw(Form( " %s * %s>> h_%s",branch.c_str(), Xdiv.c_str(), a_outputFile.c_str())   ,"","same"); 
+ m_outputTree->Draw(Form( " %s >> h_%s(100,450,550)",branch.c_str(), a_outputFile.c_str()) ,""); 
  TH1F *h_temp = (TH1F*)gPad->GetPrimitive(Form("h_%s", a_outputFile.c_str() ));
+   h_temp->SetTitle(Form("%s; Time [ns] ; Counts", titleHist_arr));
+
+h_temp->GetYaxis()->SetRangeUser(0., 300.);
+
  h_temp->SetName(Form("h_%s",  a_outputFile.c_str()) ); 
  h_temp->SetTitle(Form("%s",  a_outputFile.c_str()) );
   c->Update();
