@@ -37,6 +37,15 @@ void plotStack() {
 
     hs->Add(h_noCoil);
 
+
+   TFile *fsh = new TFile("./data/rootFiles/coils_sh_2_X0_Y0_Z475.root");
+    TH1F * h_coils_sh_X0_Y0_Z475 = (TH1F*)fsh->Get("htemp;2");
+   // h_coils_X0_Y0_Z0->Draw();
+    h_coils_sh_X0_Y0_Z475->SetLineColor(kViolet);
+    hs->Add(h_coils_sh_X0_Y0_Z475);
+    
+
+
    TCanvas *cs = new TCanvas("cs","cs",300,2000,1500,2000);
    TText T; T.SetTextFont(42); T.SetTextAlign(21);
    
@@ -44,6 +53,7 @@ void plotStack() {
 
    TH1F residual_X0_Y0_Z0= *h_noCoil - *h_coils_X0_Y0_Z0;
    TH1F residual_X0_Y0_Z475= *h_noCoil - *h_coils_X0_Y0_Z475;
+   
    residual_X0_Y0_Z0.SetLineColor(kRed);
    residual_X0_Y0_Z475.SetLineColor(kBlack);
 
