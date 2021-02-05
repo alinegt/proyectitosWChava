@@ -10,7 +10,7 @@ CXXFLAGS   += $(ROOTCFLAGS)
 LIBS        = $(ROOTLIBS) $(SYSLIBS)
 
 ### Targets
-TARGS =  createTree getTimeCFD
+TARGS =   getTimeCFD
 
 all: $(TARGS)
 
