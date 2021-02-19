@@ -14,60 +14,64 @@ void plotStackCFD2() {
    
 
     THStack *hs = new THStack("hs","");
-
-    TFile *f0 = new TFile("./data/rootFiles/Coils_OFF_AlumBox_X0_Y0_Z475.root");
-    TH1F * h_Coils_OFF_AlumBox_X0_Y0_Z475_CFD = (TH1F*)f0->Get("h_Coils_OFF_AlumBox_X0_Y0_Z475_CFD;1");
-     TPaveStats *ps1 = (TPaveStats *)h_Coils_OFF_AlumBox_X0_Y0_Z475_CFD->GetListOfFunctions()->FindObject("stats");
+      
+    TFile *f0 = new TFile("./data/rootFiles/mergeRoot.root");
+   TH1F * h_shielding = (TH1F*)f0->Get("h_noCoil_feb8_LE");
+   TH1F * h_noCoil = (TH1F*)f0->Get("h_noCoil_8feb_2_LE");
+   TH1F *h_coilOn =  (TH1F*)f0->Get("h_coils_ON_AlumBox_X0_Y0_Z475_LE");
+   
+    TPaveStats *ps1 = (TPaveStats *)h_noCoil->GetListOfFunctions()->FindObject("stats");
     ps1->SetTextColor(kRed);
     ps1->SetX1NDC(0.15);
-      ps1->SetX2NDC(0.4);
-      ps1->SetY1NDC(0.6);
-      ps1->SetY2NDC(0.8);
-    h_Coils_OFF_AlumBox_X0_Y0_Z475_CFD->SetLineColor(kRed);
-        h_Coils_OFF_AlumBox_X0_Y0_Z475_CFD->SetLineWidth(3);
-
-    hs->Add(h_Coils_OFF_AlumBox_X0_Y0_Z475_CFD);
+    ps1->SetX2NDC(0.4);
+    ps1->SetY1NDC(0.6);
+    ps1->SetY2NDC(0.8);
+    h_noCoil->SetLineColor(kRed);
+    h_noCoil->SetLineWidth(3);
+    hs->Add(h_noCoil);
     
-    TFile *f475 = new TFile("./data/rootFiles/Coils_ON_AlumBox_X0_Y0_Z475.root");
-    TH1F * h_Coils_ON_AlumBox_X0_Y0_Z475_CFD = (TH1F*)f475->Get("h_Coils_ON_AlumBox_X0_Y0_Z475_CFD;1");
-     TPaveStats *ps2 = (TPaveStats *)h_Coils_ON_AlumBox_X0_Y0_Z475_CFD->GetListOfFunctions()->FindObject("stats");
+     TPaveStats *ps2 = (TPaveStats *)h_shielding->GetListOfFunctions()->FindObject("stats");
     ps2->SetTextColor(kBlue);
     ps2->SetX1NDC(0.15);
       ps2->SetX2NDC(0.4);
       ps2->SetY1NDC(0.35);
       ps2->SetY2NDC(0.55);
-    h_Coils_ON_AlumBox_X0_Y0_Z475_CFD->SetLineColor(kBlue);
-    h_Coils_ON_AlumBox_X0_Y0_Z475_CFD->SetLineWidth(3);
+     h_shielding->SetLineColor(kBlue);
+     h_shielding->SetLineWidth(3);
 
-    hs->Add(h_Coils_ON_AlumBox_X0_Y0_Z475_CFD);
+     hs->Add(h_shielding);
 
-    TFile *f = new TFile("./data/rootFiles/Coils_ON_muMetal2_X0_Y0_Z475.root");
-    TH1F * h_Coils_ON_muMetal2_X0_Y0_Z475_CFD = (TH1F*)f->Get("h_Coils_ON_muMetal2_X0_Y0_Z475_CFD;1");
-  TPaveStats *ps3 = (TPaveStats *)h_Coils_ON_muMetal2_X0_Y0_Z475_CFD->GetListOfFunctions()->FindObject("stats");
+
+  TPaveStats *ps3 = (TPaveStats *)h_coilOn->GetListOfFunctions()->FindObject("stats");
        ps3->SetTextColor(kBlack);
     ps3->SetX1NDC(0.6);
       ps3->SetX2NDC(0.85);
       ps3->SetY1NDC(0.35);
       ps3->SetY2NDC(0.55);
-    h_Coils_ON_muMetal2_X0_Y0_Z475_CFD->SetLineColor(kBlack);
-    h_Coils_ON_muMetal2_X0_Y0_Z475_CFD->SetLineWidth(3);
+    h_coilOn->SetLineColor(kBlack);
+    h_coilOn->SetLineWidth(3);
 
-        hs->Add(h_Coils_ON_muMetal2_X0_Y0_Z475_CFD);
+        // hs->Add(h_coilOn);
 
-   hs->SetTitle(Form("; Time [ns] ; Counts"));
+    hs->SetTitle(Form("; Time [ns] ; Counts"));
 
-    THStack *hs_res = new THStack("hs_res","");
+     THStack *hs_res = new THStack("hs_res","");
 
-   TH1F residual_Coils_ON_AlumBox_X0_Y0_Z475_CFD=   *h_Coils_ON_AlumBox_X0_Y0_Z475_CFD   - *h_Coils_OFF_AlumBox_X0_Y0_Z475_CFD;  
-   TH1F residual_Coils_ON_muMetal2_X0_Y0_Z475_CFD=  *h_Coils_ON_muMetal2_X0_Y0_Z475_CFD - *h_Coils_OFF_AlumBox_X0_Y0_Z475_CFD ;
+  //  TH1F residual_coilOn=   *h_noCoil- *h_coilOn; //  *h_coilOn - *h_noCoil;  
+   TH1F residual_shielding= *h_noCoil - *h_shielding;//  *h_coilOn - *h_shielding ;
+//   residual_coilOn.SetTitle("coilON - no Coil");
+ //  residual_shielding.SetTitle("coilON - coil_shielding");
 
-   residual_Coils_ON_AlumBox_X0_Y0_Z475_CFD.SetLineColor(kBlue);
-   residual_Coils_ON_muMetal2_X0_Y0_Z475_CFD.SetLineColor(kBlack);
+   //residual_coilOn.SetTitle("no Coil - coil ON");
+   residual_shielding.SetTitle("no Coil_morning - no Coil_afternoon");
+
+  // residual_coilOn.SetLineColor(kBlue);
+   residual_shielding.SetLineColor(kBlack);
 
 
 
-   hs_res-> Add(&residual_Coils_ON_AlumBox_X0_Y0_Z475_CFD);
-   hs_res-> Add(&residual_Coils_ON_muMetal2_X0_Y0_Z475_CFD);
+  //  hs_res-> Add(&residual_coilOn);
+   hs_res-> Add(&residual_shielding);
       hs_res->SetTitle(Form("; Time [ns] ; Counts"));
 
    
@@ -76,7 +80,7 @@ void plotStackCFD2() {
 
    cs->Divide(1,2);
 
-   cs->cd(1); hs->Draw("nostack"); T.DrawTextNDC(.5,.95,"Timing, CFD");
+   cs->cd(1); hs->Draw("nostack"); T.DrawTextNDC(.5,.95,"Timing, Leading edge");
 
      hs->GetXaxis()->SetTitleOffset(0.5);
       hs->GetXaxis()->SetTitleSize(0.1);
@@ -112,7 +116,7 @@ void plotStackCFD2() {
    //cs->Close();
 
   // cs->Close();
-     return cs;
+    return cs;
 
 }
 
