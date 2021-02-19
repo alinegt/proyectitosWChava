@@ -429,7 +429,7 @@ void  SPE_and_timing::getTimePlot()
   c->Update();
 
   TH2F *h2 = new TH2F("h2", Form("%s", filename_arr), 200, 450, 550, 50, -0.25, 0.1);
-  T->Draw("voltage:time/(1e-9)>>h2", Form("((Min$(voltage))<-%g)", noise_mean), "colz");
+  T->Draw("voltage:time/(1e-9)>>h2", Form("( ( ( Min$(voltage) ) <-%g ) &&  ( ( Max$(voltage) ) <%g ) )", 0.03, 0.1), "colz");
   h2->SetStats(0);
   h2->GetZaxis()->SetRangeUser(0., 500.);
   h2->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
