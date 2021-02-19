@@ -397,7 +397,7 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
  m_outputTree->Draw(Form( " %s >> h_%s(100,450,550)",branch.c_str(), a_outputFile.c_str()) ,""); 
  TH1F *h_temp = (TH1F*)gPad->GetPrimitive(Form("h_%s", a_outputFile.c_str() ));
    h_temp->SetTitle(Form("%s; Time [ns] ; Counts", titleHist_arr));
-
+h_temp->GetXaxis()->SetNdivisions(200);
 h_temp->GetYaxis()->SetRangeUser(0., 300.);
 
  h_temp->SetName(Form("h_%s",  a_outputFile.c_str()) ); 
