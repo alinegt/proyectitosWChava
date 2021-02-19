@@ -12,27 +12,19 @@
 # processedWaveforms.dat  (charge data)
 # processWaveforms  (executable)
 
-#path=/home/salvador/Documents/WPT/data/noCoil
-# path=/home/salvador/Documents/WPT/data/noCoil2
-#path=/home/salvador/Documents/WPT/data/coils_X0_Y0_2nd
-#dataPath=/home/salvador/Documents/WPT/data_dec_03/
-#dataPath=/home/salvador/Documents/WPT/data_01_20_2021/toPresent
-#dataPath=/home/salvador/Documents/WPT/data_feb5_2021
-dataPath=/home/salvador/Documents/WPT/data_feb8_2021/toPresent/
+dataPath=$1
+localPath=$PWD
+mergePath=$localPath/data/merge/
+processedPath=$localPath/data/processed/
+scriptsPath=$localPath/
+# Deleting last run files
+rm $mergePath*.dat
+rm $processedPath*.root
 
-#dataPath=/home/salvador/Documents/WPT/data 
-mergePath=/home/salvador/github/proyectitosWChava/SPE/data/merge/
-processedPath=/home/salvador/github/proyectitosWChava/SPE/data/processed/
-scriptsPath=//home/salvador/github/proyectitosWChava/SPE/
-
-# dirName="${path##*/}"
-# mergeName="${dirName}""_merge.dat"
-# processedName="${dirName}"".dat"
 make
 cd $dataPath
 for dir in */
 do
-
 dirName="${dir%/}"
 mergeName="${dirName}""_merge.dat"
 processedName="${dirName}"".dat"
@@ -40,7 +32,6 @@ outRootFile="${dirName}"".root"
 echo $dirName
 echo $mergeName
 cd $dir
-# rm $mergeName
 
 rm *.dat
 
@@ -52,7 +43,6 @@ dataFileName="$nameOnly.dat"
 
 tail -n 200 $file >> $dataFileName
 
-#echo $file $nameOnly $dataFileName
 done 
  
 cat *.dat > $mergePath$mergeName
@@ -60,8 +50,7 @@ cat *.dat > $mergePath$mergeName
 cd $scriptsPath
 
 ./processWaveforms $mergePath$mergeName 100 60 200 19980 5e-10 $processedPath$processedName $processedPath$outRootFile 5
-#root plotHistFromFile.C
-# echo $dirName
+
 cd $dataPath
 done
 
