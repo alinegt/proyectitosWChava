@@ -15,7 +15,11 @@
 #path=/home/salvador/Documents/WPT/data/noCoil
 # path=/home/salvador/Documents/WPT/data/noCoil2
 #path=/home/salvador/Documents/WPT/data/coils_X0_Y0_2nd
-dataPath=/home/salvador/Documents/WPT/data_dec_03/
+#dataPath=/home/salvador/Documents/WPT/data_dec_03/
+#dataPath=/home/salvador/Documents/WPT/data_01_20_2021/toPresent
+#dataPath=/home/salvador/Documents/WPT/data_feb5_2021
+dataPath=/home/salvador/Documents/WPT/data_feb8_2021/toPresent/
+
 #dataPath=/home/salvador/Documents/WPT/data 
 mergePath=/home/salvador/github/proyectitosWChava/SPE/data/merge/
 processedPath=/home/salvador/github/proyectitosWChava/SPE/data/processed/
