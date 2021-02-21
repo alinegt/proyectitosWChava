@@ -48,12 +48,14 @@ std::string loadTree(char *argc);
 static Double_t fitf(Double_t *x, Double_t *par);
 Double_t SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit);
 void getTimePlot();
+void sel_pulses();
 void PulseThresOccupancy();
 auto RMSnoise();
  private:
 TTree *T;
+TTree *Tsubset;
 float noise_mean;
-
+TFile *f;
 
 };
 

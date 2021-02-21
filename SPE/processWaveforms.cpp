@@ -1,6 +1,5 @@
 
-//Este programa procesa los datos tomados por el sistema de adquisición de datos de CAEN, y se obtienen un archivo con datos de salida
-
+// To process data from scope
 //c++ includes
 #include <iostream>
 #include <string>
@@ -61,23 +60,26 @@ int main(int argc, char **argv)
 /************************************************************************************************//************************************************************************************************/
 
    FILE *fichero;
-   FILE *fichero2;
-   unsigned int i,iprima,i2=1; 
-   float x1=0, x2=0;//, x3=0, ch2=0, ch3, ch4;
-   float carga=0, it=1;
+   //FILE *fichero2;
+   unsigned int i,i2=1; 
+   //iprima
+   float x1=0;//, x2=0, x3=0, ch2=0, ch3, ch4;
+   float carga=0;//, it=1;
    int voltaje_max=0, voltaje_min=0;
    float prom_max=0, prom_min=0;
-   float t10=0, t50=0, t90=0, ct10=0, ct50=0, ct90=0;
-   float Carga_actual=0, Carga_anterior=0, tiempo=1;
+   //float t10=0, t50=0, t90=0, 
+  // float ct10=0, ct50=0, ct90=0;
+  //  float Carga_actual=0, Carga_anterior=0; 
+  // float tiempo=1;
   // char c1[10],c2[10],c3[10],c4[10],c5[10];
    float sum_ruido1; // Sumatoria en primer parte de la waveform
    float sum_ruido2; // Sumatoria en segunda parte de la waveform despues del pulso
    float sum_volt;   // Sumatoria en el rango del pulso
    float volt;    // Valor de voltaje en osciloscopio en Volts
    float avg_ruido1; // Sumatoria del ruido antes de pulso dividida por el no. de muestras en ese rango
-   float avg_ruido2; // Sumatoria del ruido despues de pulso dividida por el no. de muestras en ese rango
+  //  float avg_ruido2; // Sumatoria del ruido despues de pulso dividida por el no. de muestras en ese rango
    fichero = fopen( inFile.c_str(), "r" );
-   fichero2 = fopen( inFile.c_str(), "r" );
+   //fichero2 = fopen( inFile.c_str(), "r" );
    float picoScale = 1e-12; //  factor to scale to picoCoulombs
    float flipConstant = -1;  // Negative pulses flipped by this constant
    float amplifGain = 10;
@@ -105,9 +107,9 @@ int main(int argc, char **argv)
 // Estimando la carga mediante una sumatoria
   do
   {
-   tiempo=1;
-   Carga_actual=0;
-   Carga_anterior=0;
+  //  tiempo=1;
+  //  Carga_actual=0;
+  //  Carga_anterior=0;
    carga=0;
    voltaje_max=-1000;
    voltaje_min=1000; 
@@ -115,7 +117,7 @@ int main(int argc, char **argv)
    sum_ruido1=0;
    sum_ruido2=0;
    avg_ruido1=0;
-   avg_ruido2=0;
+  //  avg_ruido2=0;
    volt=0;
    for( i=0; i<No_muestras; i++ )
    {
@@ -148,13 +150,13 @@ int main(int argc, char **argv)
    }
 
   avg_ruido1= (1/amplifGain) *(sum_ruido1)/(bin_inicial-1);
-  avg_ruido2=(1/amplifGain) *(sum_ruido2)/(No_muestras-bin_inicial-ancho+1);
+  // avg_ruido2=(1/amplifGain) *(sum_ruido2)/(No_muestras-bin_inicial-ancho+1);
   sum_volt=sum_volt*(1/amplifGain);
   noise_rms= rms_factor*rms(v_noise);
 
-  ct10=carga*0.1;
-  ct50=carga*0.5;
-  ct90=carga*0.9;
+  // ct10=carga*0.1;
+  // ct50=carga*0.5;
+  // ct90=carga*0.9;
   prom_max=prom_max+voltaje_max;
   prom_min=prom_min+voltaje_min;
   if (bin_inicial==1)

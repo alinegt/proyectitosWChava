@@ -16,11 +16,12 @@ std::string SPE_and_timing::baseName(std::string const &path)
 std::string SPE_and_timing::loadTree(char *argc){
   TFile *f = new TFile(argc);
   T = (TTree *)f->Get("T");
-  T->Print();
+  // T->Print();
   rootFileName = baseName(argc);
   return rootFileName;
 
 }
+
 
 
 // Function to load the histogram from dat file
@@ -428,8 +429,12 @@ void  SPE_and_timing::getTimePlot()
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
   c->Update();
 
+  std::string selBr="bvoltage_selected";
+  char *selBranch_array;
+  selBranch_array = &selBr[0];
+
   TH2F *h2 = new TH2F("h2", Form("%s", filename_arr), 200, 450, 550, 50, -0.25, 0.1);
-  T->Draw("voltage:time/(1e-9)>>h2", Form("( ( ( Min$(voltage) ) <-%g ) &&  ( ( Max$(voltage) ) <%g ) )", 0.03, 0.1), "colz");
+  T->Draw(Form( "%s:time/(1e-9)>>h2", selBranch_array ), Form("( ( ( Min$(%s) ) <-%g ) &&  ( ( Max$(%s) ) <%g ) )",selBranch_array ,0.03, selBranch_array,0.1), "colz");
   h2->SetStats(0);
   h2->GetZaxis()->SetRangeUser(0., 500.);
   h2->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
@@ -438,7 +443,7 @@ void  SPE_and_timing::getTimePlot()
   gPad->Update();
    TPaletteAxis *palette = (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
 
-// the following lines moe the paletter. Choose the values you need for the position.
+// the following lines move the paletter. Choose the values you need for the position.
    palette->SetX1NDC(0.9);
    palette->SetX2NDC(0.95);
    palette->SetY1NDC(0.2);
@@ -446,14 +451,91 @@ void  SPE_and_timing::getTimePlot()
    gPad->Modified();
    gPad->Update();
 
-
-
   c->SetGrid();
   c->cd();
   std::string outPath = "./data/timePlots/";
   c->Print((outPath + rootFileName + ".png").c_str());
   c->Close();
 }
+
+
+
+
+
+//Select pulses waveforms
+
+
+void SPE_and_timing::sel_pulses(){
+  TFile *hfile = new TFile("htree.root","RECREATE");
+// gROOT->cd();
+// TTree * Tsubset = new TTree("Tsubset", "Tsubset")
+TTree *Tsubset = T->CloneTree();
+std::vector<float> *v_voltage=0;
+std::vector<float> *v_voltage_selected=0;
+Tsubset->SetBranchAddress("voltage",&v_voltage); 
+
+TBranch *bvoltage_selected = Tsubset->Branch("bvoltage_selected",&v_voltage_selected); 
+Long64_t nentries = Tsubset->GetEntries(); 
+
+for (Long64_t i=0;i<nentries;i++) { 
+Tsubset->GetEntry(i); 
+
+//auto minVoltageIndex = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ) - v_voltage->begin(); 
+ auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ); 
+    if ((float)*minVoltage > -0.05){
+//  if ((int)minVoltageIndex >=0) {
+    // std::cout << minVoltageIndex << std::endl;
+    v_voltage_selected = v_voltage;
+    Tsubset->Fill(); 
+
+  //  }
+   
+ }
+
+} 
+Tsubset->Print(); 
+// Tsubset->ResetBranchAddresses();
+gROOT->cd();
+  std::string filename = rootFileName;
+  char *filename_arr;
+  filename_arr = &filename[0];
+  TCanvas *c2 = new TCanvas("c2", "A3", 1000, 700);
+  c2->Update();
+
+  std::string selBr="bvoltage_selected";
+  char *selBranch_array;
+  selBranch_array = &selBr[0];
+
+  TH2F *h = new TH2F("h", Form("%s", filename_arr), 200, 450, 550, 50, -0.25, 0.1);
+  Tsubset->Draw(Form( "%s:time/(1e-9)>>h", selBranch_array ),"", "colz");
+  h->SetStats(0);
+  h->GetZaxis()->SetRangeUser(0., 500.);
+  h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
+  h->GetXaxis()->SetNoExponent();
+    gPad->Update();
+
+ c2->SetGrid();
+  c2->cd();
+  std::string outPath = "./data/timePlots/";
+  c2->Print((outPath + rootFileName + ".png").c_str());
+  // hfile->Write();
+  hfile->Close();
+  c2->Close();
+
+
+
+// T->Write(); 
+// delete f;
+}
+
+
+
+//Noise measurement
+
+
+
+
+
 
 auto SPE_and_timing::RMSnoise(){
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
@@ -528,14 +610,15 @@ int main(int argc, char **argv)
   std::string outFile = argv[2];
   std::string outFilePath = "/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + outFile + ".dat";
   std::ofstream a_file;
-  
+  // TTree *Tsubset;
   SPE_and_timing getPlots;
   std::string  fileName;
   fileName =getPlots.loadTree(argv[1]);
-  getPlots.SPEhistAndPlots(&peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 ); 
-  getPlots.RMSnoise();
-  getPlots.PulseThresOccupancy();
-  getPlots.getTimePlot();
+  // getPlots.SPEhistAndPlots(&peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 ); 
+  // getPlots.RMSnoise();
+  // getPlots.PulseThresOccupancy();
+  getPlots.sel_pulses();
+  // getPlots.getTimePlot();
   a_file.open(outFilePath, std::ios::out | std::fstream::app);
   a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
   a_file.close();
