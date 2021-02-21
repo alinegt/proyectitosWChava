@@ -51,6 +51,7 @@ void getTimePlot();
 void sel_pulses();
 void PulseThresOccupancy();
 auto RMSnoise();
+// void noise();
  private:
 TTree *T;
 TTree *Tsubset;

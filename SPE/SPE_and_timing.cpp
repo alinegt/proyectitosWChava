@@ -466,7 +466,10 @@ void  SPE_and_timing::getTimePlot()
 
 
 void SPE_and_timing::sel_pulses(){
-  TFile *hfile = new TFile("htree.root","RECREATE");
+ std::string filename = rootFileName;
+  char *filename_arr;
+  filename_arr = &filename[0];
+  TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr),"RECREATE");
 // gROOT->cd();
 // TTree * Tsubset = new TTree("Tsubset", "Tsubset")
 TTree *Tsubset = T->CloneTree();
@@ -484,7 +487,6 @@ Tsubset->GetEntry(i);
  auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ); 
     if ((float)*minVoltage > -0.05){
 //  if ((int)minVoltageIndex >=0) {
-    // std::cout << minVoltageIndex << std::endl;
     v_voltage_selected = v_voltage;
     Tsubset->Fill(); 
 
@@ -493,12 +495,9 @@ Tsubset->GetEntry(i);
  }
 
 } 
-Tsubset->Print(); 
-// Tsubset->ResetBranchAddresses();
+// Tsubset->Print(); 
 gROOT->cd();
-  std::string filename = rootFileName;
-  char *filename_arr;
-  filename_arr = &filename[0];
+ 
   TCanvas *c2 = new TCanvas("c2", "A3", 1000, 700);
   c2->Update();
 
@@ -518,10 +517,12 @@ gROOT->cd();
   c2->cd();
   std::string outPath = "./data/timePlots/";
   c2->Print((outPath + rootFileName + ".png").c_str());
-  // hfile->Write();
-  hfile->Close();
-  c2->Close();
 
+  c2->Close();
+Tsubset->ResetBranchAddresses();
+
+ hfile->Write();
+ hfile->Close();
 
 
 // T->Write(); 
@@ -530,8 +531,14 @@ gROOT->cd();
 
 
 
-//Noise measurement
+//Noise measurements
 
+// void SPE_and_timing::noise(){
+// TTree *Tnoise = Tsubset;
+// Tnoise->Print(); 
+
+
+// }
 
 
 
@@ -545,7 +552,8 @@ auto SPE_and_timing::RMSnoise(){
   gPad->Update();
   c->Update();
   noise_mean = h_noise->GetMean();
-  noise_mean = 0.03;
+  std::cout << noise_mean << std::endl;
+  //noise_mean = 0.03;
   return noise_mean;
 }
 
@@ -615,12 +623,15 @@ int main(int argc, char **argv)
   std::string  fileName;
   fileName =getPlots.loadTree(argv[1]);
   // getPlots.SPEhistAndPlots(&peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 ); 
-  // getPlots.RMSnoise();
+  auto rms = getPlots.RMSnoise();
   // getPlots.PulseThresOccupancy();
   getPlots.sel_pulses();
   // getPlots.getTimePlot();
+  // getPlots.noise();
   a_file.open(outFilePath, std::ios::out | std::fstream::app);
-  a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
+  // a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
+  a_file << fileName << " " << rms << " "  << std::endl;
+
   a_file.close();
 
   std::cout << "END" << std::endl;
