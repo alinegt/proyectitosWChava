@@ -14,7 +14,7 @@ std::string SPE_and_timing::baseName(std::string const &path)
 }
 
 std::string SPE_and_timing::loadTree(char *argc){
-  TFile *f = new TFile(argc);
+  TFile *f = new TFile(argc, "UPDATE");
   T = (TTree *)f->Get("T");
   // T->Print();
   rootFileName = baseName(argc);
@@ -459,11 +459,23 @@ void  SPE_and_timing::getTimePlot()
 }
 
 
-
+// void tree3AddBranch() {
+//    TFile f("tree3.root","update");
+//    Float_t new_v;
+//    TTree *t3 = (TTree*)f->Get("t3");
+//    TBranch *newBranch = t3-> Branch("new_v",&new_v,"new_v/F");
+//    //read the number of entries in the t3
+//    Int_t nentries = (Int_t)t3->GetEntries();
+//    for (Int_t i = 0; i < nentries; i++){
+//       new_v= gRandom->Gaus(0,1);
+//       newBranch->Fill();
+//    }
+//    t3->Write("",TObject::kOverwrite); // save only the new version of
+//                                       // the tree
+// }
 
 
 //Select pulses waveforms
-
 
 void SPE_and_timing::sel_pulses(){
  std::string filename = rootFileName;
@@ -472,30 +484,32 @@ void SPE_and_timing::sel_pulses(){
   TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr),"RECREATE");
 // gROOT->cd();
 // TTree * Tsubset = new TTree("Tsubset", "Tsubset")
-TTree *Tsubset = T->CloneTree();
+// TTree *Tsubset = T->CloneTree();
 std::vector<float> *v_voltage=0;
-std::vector<float> *v_voltage_selected=0;
-Tsubset->SetBranchAddress("voltage",&v_voltage); 
+std::vector<float> *v_voltage_selected;
 
-TBranch *bvoltage_selected = Tsubset->Branch("bvoltage_selected",&v_voltage_selected); 
-Long64_t nentries = Tsubset->GetEntries(); 
+T->SetBranchAddress("voltage",&v_voltage); 
+
+TBranch *bvoltage_selected = T->Branch("bvoltage_selected",&v_voltage_selected); 
+Long64_t nentries = T->GetEntries(); 
 
 for (Long64_t i=0;i<nentries;i++) { 
-Tsubset->GetEntry(i); 
+T->GetEntry(i); 
 
 //auto minVoltageIndex = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ) - v_voltage->begin(); 
  auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ); 
     if ((float)*minVoltage > -0.05){
 //  if ((int)minVoltageIndex >=0) {
     v_voltage_selected = v_voltage;
-    Tsubset->Fill(); 
+
+    T->Fill(); 
 
   //  }
    
  }
 
 } 
-// Tsubset->Print(); 
+ T->Print(); 
 gROOT->cd();
  
   TCanvas *c2 = new TCanvas("c2", "A3", 1000, 700);
@@ -506,7 +520,7 @@ gROOT->cd();
   selBranch_array = &selBr[0];
 
   TH2F *h = new TH2F("h", Form("%s", filename_arr), 200, 450, 550, 50, -0.25, 0.1);
-  Tsubset->Draw(Form( "%s:time/(1e-9)>>h", selBranch_array ),"", "colz");
+  T->Draw(Form( "%s:time/(1e-9)>>h", selBranch_array ),"", "colz");
   h->SetStats(0);
   h->GetZaxis()->SetRangeUser(0., 500.);
   h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
@@ -519,15 +533,59 @@ gROOT->cd();
   c2->Print((outPath + rootFileName + ".png").c_str());
 
   c2->Close();
-Tsubset->ResetBranchAddresses();
+T->ResetBranchAddresses();
 
  hfile->Write();
  hfile->Close();
-
+  // T->Write("",TObject::kOverwrite); // save only the new version of
 
 // T->Write(); 
 // delete f;
 }
+
+
+
+
+float SPE_and_timing::rms_vector(std::vector<float> noise){
+
+	float sum = 0;
+  for (auto it = noise.begin() ; it != noise.end(); ++it){
+	sum += std::pow(*it, 2);
+  
+  }
+	// for (int i = 0; i < (int)noise->size(); i++){
+   //*sum += pow(1, 2);
+
+  // }
+	float rms =0;
+  rms= sqrt(sum / noise.size());
+
+   return rms;
+}
+
+
+// Return std of gaussian fit for a vector 
+Double_t SPE_and_timing::h_std(vector <float> noise){
+
+  auto numberBin=  noise.size();
+  auto limInfBin=  noise.begin();
+  auto limSupBin=  noise.end();
+  TH1F *h_noiseFit = new TH1F("h_noiseFit", "Noise Hist", 200, -0.07, 0.05);
+  for (auto it = noise.begin() ; it != noise.end(); ++it)
+  {
+    
+    h_noiseFit->Fill(*it);
+  }
+  h_noiseFit->Fit("gaus", "Q", "sames");
+  h_noiseFit->GetFunction("gaus")->SetLineColor(kBlack);
+  h_noiseFit->GetFunction("gaus")->SetLineWidth(2);
+  TF1 *parGaus = (TF1 *)h_noiseFit->GetListOfFunctions()->FindObject("gaus");
+  Double_t noiseSigmaFit = 0;
+  noiseSigmaFit = parGaus->GetParameter(2);
+  return noiseSigmaFit;
+
+}
+
 
 
 
@@ -545,6 +603,14 @@ Tsubset->ResetBranchAddresses();
 
 
 auto SPE_and_timing::RMSnoise(){
+// std::string filename = rootFileName;
+//   char *filename_arr;
+//   filename_arr = &filename[0];
+//   TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr),"OPEN+");
+//    TFile *f = new TFile(argc);
+//   T = (TTree *)f->Get("T");
+//   // T->Print();
+//   rootFileName = baseName(argc);
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
 
  T->Draw("noise>>h_noise");
@@ -552,6 +618,7 @@ auto SPE_and_timing::RMSnoise(){
   gPad->Update();
   c->Update();
   noise_mean = h_noise->GetMean();
+
   std::cout << noise_mean << std::endl;
   //noise_mean = 0.03;
   return noise_mean;

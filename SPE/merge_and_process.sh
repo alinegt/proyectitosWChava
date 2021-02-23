@@ -17,10 +17,12 @@ localPath=$PWD
 mergePath=$localPath/data/merge/
 processedPath=$localPath/data/processed/
 scriptsPath=$localPath/
+cuttedPath=$localPath/data/cutted/
+
 # Deleting last run files
 rm $mergePath*.dat
 rm $processedPath*.root
-
+rm $cuttedPath*.root
 make
 cd $dataPath
 for dir in */
@@ -49,7 +51,7 @@ cat *.dat > $mergePath$mergeName
 
 cd $scriptsPath
 
-./processWaveforms $mergePath$mergeName 100 60 200 19980 5e-10 $processedPath$processedName $processedPath$outRootFile 5
+./processWaveforms $mergePath$mergeName 100 60 200 19980 5e-10 $processedPath$processedName $processedPath$outRootFile 6
 
 cd $dataPath
 done
