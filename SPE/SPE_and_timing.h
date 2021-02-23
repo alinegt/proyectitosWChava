@@ -51,6 +51,9 @@ void getTimePlot();
 void sel_pulses();
 void PulseThresOccupancy();
 auto RMSnoise();
+float rms(vector <float> *v_voltage);
+Double_t h_std(vector <float> *v_voltage);
+
 // void noise();
  private:
 TTree *T;

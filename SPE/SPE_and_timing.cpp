@@ -469,15 +469,32 @@ void SPE_and_timing::sel_pulses(){
  std::string filename = rootFileName;
   char *filename_arr;
   filename_arr = &filename[0];
-  TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr),"RECREATE");
+     // Deactivate all branches
+   T->SetBranchStatus("*", 0);
+ 
+   // Activate only four of them
+   for (auto activeBranchName : {"time", "voltage"})
+    T->SetBranchStatus(activeBranchName, 1);
+   TFile hfile(Form("./data/cutted/%s.root", filename_arr),"RECREATE");
+  // TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr),"RECREATE");
 // gROOT->cd();
 // TTree * Tsubset = new TTree("Tsubset", "Tsubset")
 TTree *Tsubset = T->CloneTree();
 std::vector<float> *v_voltage=0;
 std::vector<float> *v_voltage_selected=0;
+std::vector<float> *v_time=0;
+std::vector<float> *v_time2=0;
+float noise_rms;
+float noise_std;
+
 Tsubset->SetBranchAddress("voltage",&v_voltage); 
+Tsubset->SetBranchAddress("time",&v_time); 
 
 TBranch *bvoltage_selected = Tsubset->Branch("bvoltage_selected",&v_voltage_selected); 
+TBranch *btime = Tsubset->Branch("btime",&v_time2); 
+TBranch *bnoise_rms = Tsubset->Branch("brms",&noise_rms); 
+TBranch *bnoise_std = Tsubset->Branch("noise_std",&noise_std); 
+
 Long64_t nentries = Tsubset->GetEntries(); 
 
 for (Long64_t i=0;i<nentries;i++) { 
@@ -487,7 +504,10 @@ Tsubset->GetEntry(i);
  auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ); 
     if ((float)*minVoltage > -0.05){
 //  if ((int)minVoltageIndex >=0) {
+    v_time2 = v_time;
     v_voltage_selected = v_voltage;
+    noise_rms = rms(v_voltage);
+    noise_std = h_std(v_voltage);
     Tsubset->Fill(); 
 
   //  }
@@ -495,7 +515,9 @@ Tsubset->GetEntry(i);
  }
 
 } 
-// Tsubset->Print(); 
+Tsubset->ResetBranchAddresses();
+ Tsubset->Print(); 
+
 gROOT->cd();
  
   TCanvas *c2 = new TCanvas("c2", "A3", 1000, 700);
@@ -519,15 +541,50 @@ gROOT->cd();
   c2->Print((outPath + rootFileName + ".png").c_str());
 
   c2->Close();
-Tsubset->ResetBranchAddresses();
+ Tnoise->Write(); 
 
- hfile->Write();
+ hfile->Write();  
  hfile->Close();
 
 
-// T->Write(); 
-// delete f;
+ delete T;
 }
+
+
+float SPE_and_timing::rms(vector <float> *v_voltage){
+float sum=0, rms=0;
+for (auto& n : *v_voltage){
+sum += pow(n, 2);
+    } 
+rms = sum/v_voltage->size();
+return rms;
+
+
+}
+
+
+
+// Return std of gaussian fit for a vector 
+Double_t SPE_and_timing::h_std(vector <float> *v_voltage){
+
+  // auto numberBin=  noise.size();
+  // auto limInfBin=  noise.begin();
+  // auto limSupBin=  noise.end();
+  TH1F *h_noiseFit = new TH1F("h_noiseFit", "Noise Hist", 200, -0.05, 0.05);
+  for (auto it = v_voltage->begin() ; it != v_voltage->end(); ++it)
+  {
+    h_noiseFit->Fill(*it);
+  }
+  h_noiseFit->Fit("gaus", "Q", "sames");
+  h_noiseFit->GetFunction("gaus")->SetLineColor(kBlack);
+  h_noiseFit->GetFunction("gaus")->SetLineWidth(2);
+  TF1 *parGaus = (TF1 *)h_noiseFit->GetListOfFunctions()->FindObject("gaus");
+  Double_t noiseSigmaFit = 0;
+  noiseSigmaFit = parGaus->GetParameter(2);
+  delete h_noiseFit;
+  return noiseSigmaFit;
+}
+
 
 
 
