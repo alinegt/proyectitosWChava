@@ -14,7 +14,7 @@ std::string SPE_and_timing::baseName(std::string const &path)
 }
 
 std::string SPE_and_timing::loadTree(char *argc){
-  TFile *f = new TFile(argc, "UPDATE");
+  TFile *f = new TFile(argc);
   T = (TTree *)f->Get("T");
   // T->Print();
   rootFileName = baseName(argc);
@@ -481,46 +481,54 @@ void SPE_and_timing::sel_pulses(){
  std::string filename = rootFileName;
   char *filename_arr;
   filename_arr = &filename[0];
-  TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr),"RECREATE");
-// gROOT->cd();
-// TTree * Tsubset = new TTree("Tsubset", "Tsubset")
-// TTree *Tsubset = T->CloneTree();
-std::vector<float> *v_voltage=0;
+ TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr),"RECREATE");
+gROOT->cd();
+// TTree * Tnoise = new TTree("Tnoise", "Tnoise");
+TTree *Tnoise = T->CloneTree();
+std::vector<float> *v_voltage;
 std::vector<float> *v_voltage_selected;
+std::vector<float> *v_time;
+std::vector<float> *v_time2;
+// TTree *Tnoise =T; 
+Tnoise->SetBranchAddress("voltage",&v_voltage); 
+Tnoise->SetBranchAddress("time",&v_time); 
 
-T->SetBranchAddress("voltage",&v_voltage); 
+TBranch *bvoltage= Tnoise-> Branch("bvoltage_sel", &v_voltage_selected);
+// TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr),"RECREATE");
+// TTree* T2 = new TTree("T2","Noise measurements");
+// T2->Branch("voltage_selected",&v_voltage_selected);
+// T2->Branch("time",&v_time);
 
-TBranch *bvoltage_selected = T->Branch("bvoltage_selected",&v_voltage_selected); 
 Long64_t nentries = T->GetEntries(); 
 
 for (Long64_t i=0;i<nentries;i++) { 
-T->GetEntry(i); 
-
+Tnoise->GetEntry(i); 
 //auto minVoltageIndex = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ) - v_voltage->begin(); 
- auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ); 
-    if ((float)*minVoltage > -0.05){
+//  auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ); 
+//     if ((float)*minVoltage > -0.05){
 //  if ((int)minVoltageIndex >=0) {
     v_voltage_selected = v_voltage;
+   // v_time2 = v_time;
 
-    T->Fill(); 
+    Tnoise->Fill(); 
 
   //  }
    
- }
+// }
 
 } 
- T->Print(); 
+ Tnoise->Print(); 
 gROOT->cd();
  
   TCanvas *c2 = new TCanvas("c2", "A3", 1000, 700);
   c2->Update();
 
-  std::string selBr="bvoltage_selected";
+  std::string selBr="voltage_selected";
   char *selBranch_array;
   selBranch_array = &selBr[0];
 
   TH2F *h = new TH2F("h", Form("%s", filename_arr), 200, 450, 550, 50, -0.25, 0.1);
-  T->Draw(Form( "%s:time/(1e-9)>>h", selBranch_array ),"", "colz");
+  Tnoise->Draw(Form( "%s:time/(1e-9)>>h", selBranch_array ),"", "colz");
   h->SetStats(0);
   h->GetZaxis()->SetRangeUser(0., 500.);
   h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
@@ -533,10 +541,10 @@ gROOT->cd();
   c2->Print((outPath + rootFileName + ".png").c_str());
 
   c2->Close();
-T->ResetBranchAddresses();
+Tnoise->ResetBranchAddresses();
 
- hfile->Write();
- hfile->Close();
+// hfile->Write();
+// hfile->Close();
   // T->Write("",TObject::kOverwrite); // save only the new version of
 
 // T->Write(); 
