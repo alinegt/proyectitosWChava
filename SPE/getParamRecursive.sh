@@ -12,14 +12,15 @@ make -B
 localPath=$PWD
 execPath=$localPath
 inputPath=$localPath/data/processed/
-outputFileName=SPEparams
+outputFileName=$1
+echo outputFileName
 mergePath=$localPath/data/merge/
 
 rm $localPath/data/occupancy/*.png
 rm $localPath/data/plots/*.png
 rm $localPath/data/timePlots/*.png
 rm $localPath/data/SPEparam/SPEparams.dat
-
+rm $localPath/data/NoisePlots/*png
 cd $inputPath
 for file in *
 do

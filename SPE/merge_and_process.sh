@@ -49,7 +49,7 @@ cat *.dat > $mergePath$mergeName
 
 cd $scriptsPath
 
-./processWaveforms $mergePath$mergeName 100 60 200 19980 5e-10 $processedPath$processedName $processedPath$outRootFile 5
+./processWaveforms $mergePath$mergeName 90 60 400 1998 5e-10 $processedPath$processedName $processedPath$outRootFile 1
 
 cd $dataPath
 done
