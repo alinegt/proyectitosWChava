@@ -44,7 +44,7 @@ SPE_and_timing();
 ~SPE_and_timing();
 std::string baseName(std::string const &path);
 TH1F *loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin);
-std::string loadTree(char *argc);
+std::string rootFilename(char *argc);
 static Double_t fitf(Double_t *x, Double_t *par);
 Double_t SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit);
 void getTimePlot();
@@ -53,13 +53,15 @@ void PulseThresOccupancy();
 auto RMSnoise();
 float rms(vector <float> *v_voltage);
 Double_t h_std(vector <float> *v_voltage);
+// TTree *T;
 
 // void noise();
  private:
-TTree *T;
-TTree *Tsubset;
+ const char *path;
+//  int noiseMaxIndex;
+// TTree *Tsubset;
 float noise_mean;
-TFile *f;
+// TFile *f;
 
 };
 
