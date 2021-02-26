@@ -10,14 +10,14 @@ int main(int argc, char **argv)
 {
   Double_t peaktovalley, sigma_fit;
   std::string inFile = argv[1]; // Nombre del archivo
-  std::string outFile = argv[2];
-  std::string outputRoot = argv[4];
+  std::string outFile = argv[2]; // output text file
+  std::string outputRoot = argv[4]; // Output root file
   std::ofstream a_file;
   // TTree *Tsubset;
   SPE_and_timing getPlots;
   getPlots.noiseMaxIndex = std::stoi(argv[3]); // max index value for noise measurements
   std::string  fileName;
-  fileName =getPlots.rootFilename(argv[1]);
+  fileName =getPlots.rootFilename(argv[1], argv[4]);
   getPlots.inputPath = argv[1];
  std::cout<< "getPlots.inputPath" << std::endl;
 
@@ -26,22 +26,21 @@ int main(int argc, char **argv)
   std::cout<< "getPlots.outputPath" << std::endl;
 
   std::cout<< getPlots.outputPath << std::endl;
-//  outputRootName= getPlots.rootFileName(argv[4]);
-  // getPlots.SPEhistAndPlots(&peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 ); 
-  //int noiseMaxIndex;
+
   // getPlots.PulseThresOccupancy();
  
    getPlots.sel_pulses();
-   Double_t rms = getPlots.RMSnoise();
+  //  getPlots.plot_sel();
+  //  Double_t rms = getPlots.RMSnoise();
   // getPlots.getTimePlot();
   // getPlots.noise();
   std::string outFilePath = ("/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + outFile + ".dat").c_str();
 
-  a_file.open(outFilePath, std::ios::out | std::fstream::app);
+  //a_file.open(outFilePath, std::ios::out | std::fstream::app);
   //a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
-  a_file << fileName << " " << rms << " "  << std::endl;
+  //a_file << fileName << " " << rms << " "  << std::endl;
 
-  a_file.close();
+  //a_file.close();
 
   std::cout << "END" << std::endl;
   return 0;
@@ -56,16 +55,17 @@ std::string SPE_and_timing::baseName(std::string const &path)
 
 
 
-std::string SPE_and_timing::rootFilename(char *argc){
-   //noiseMaxIndex=90;
-  path = argc;
-  TFile *f = new TFile(argc);
-  TTree *T = (TTree *)f->Get("T");
-  // T->Print();
-  rootFileName = baseName(argc);
-  delete T;
-  f->Close();
-  return rootFileName;
+std::string SPE_and_timing::rootFilename(char *inputRootPath, char *outputRootPath){
+  
+  inputRootFileName = baseName(inputRootPath);
+  outputRootFileName = baseName(outputRootPath);  
+ 
+  // TFile *f = new TFile(inputPath);
+  // TTree *T = (TTree *)f->Get("T");
+  // // T->Print();
+  // delete T;
+  // f->Close();
+   return inputRootFileName;
 
 }
 
@@ -76,7 +76,7 @@ std::string SPE_and_timing::rootFilename(char *argc){
 TH1F*  SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin)
 {
 
-TFile *f = new TFile(path);
+TFile *f = new TFile(inputPath);
   TTree *T = (TTree *)f->Get("T");
   TTree *Tcharge = T;
 
@@ -165,7 +165,7 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
   //std::string filepath = argc;
   //std::string filename = baseName(filepath);
   
-  char *filename_arr = &rootFileName[0];
+  char *filename_arr = &inputRootFileName[0];
 
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
   TPad *pad1 = new TPad("pad1", "", 0, 0.0, 1, 1);
@@ -460,9 +460,9 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
 
   c->Update();
   std::string outPath = "./data/plots/";
-  c->Print((outPath + rootFileName + ".png").c_str());
+  c->Print((outPath + inputRootFileName + ".png").c_str());
   c->Close();
-  std::cout << rootFileName << std::endl;
+  std::cout << inputRootFileName << std::endl;
 
   return 0;
 }
@@ -474,11 +474,11 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
  */
 void  SPE_and_timing::getTimePlot()
 {
- TFile *f = new TFile(path);
+ TFile *f = new TFile(inputPath);
   TTree *T = (TTree *)f->Get("T");
   // T->Print();
   
-  std::string filename = rootFileName;
+  std::string filename = inputRootFileName;
   char *filename_arr;
   filename_arr = &filename[0];
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
@@ -509,7 +509,7 @@ void  SPE_and_timing::getTimePlot()
   c->SetGrid();
   c->cd();
   std::string outPath = "./data/timePlots/";
-  c->Print((outPath + rootFileName + ".png").c_str());
+  c->Print((outPath + inputRootFileName + ".png").c_str());
   delete T;
   f->Close();
   c->Close();
@@ -532,30 +532,56 @@ for (Long64_t i=0;i<nentries;i++) {
   delete f; }
 
 
+// void SPE_and_timing::sel_pulses2(){
+
+
+
+
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //Select pulses waveforms
 
 
 void SPE_and_timing::sel_pulses(){
- std::string filename = rootFileName;
+ std::string filename = outputRootFileName;
   char *filename_arr;
   filename_arr = &filename[0];
-  TFile *f = new TFile(outputPath, "UPDATE");
+  TFile *f = new TFile(outputPath,"update");
   TTree *T = (TTree *)f->Get("T");
- 
+   TTree *Tsel = new TTree("Tsel", "Tree after cuts");
 std::vector<float> *v_voltage=0;
-std::vector<float> *v_voltage_selected=0;
+std::vector<float> *v_voltage_selected;
 std::vector<float> *v_time=0;
-std::vector<float> *v_time2=0;
+std::vector<float> *v_time2;
 float noise_rms;
 float noise_std;
+T->SetBranchStatus("*", 0);
+ 
+   // Activate only four of them
+   for (auto activeBranchName : {"time", "voltage"})
+    T->SetBranchStatus(activeBranchName, 1);
+
+
+TBranch *bvoltage_selected = Tsel->Branch("bvoltage_selected",&v_voltage_selected); 
+TBranch *btime = Tsel->Branch("btime",&v_time2); 
+TBranch *bnoise_rms = Tsel->Branch("brms",&noise_rms); 
+//TBranch *bnoise_std = Tsel->Branch("noise_std",&noise_std); 
 
 T->SetBranchAddress("voltage",&v_voltage); 
 T->SetBranchAddress("time",&v_time); 
-
-TBranch *bvoltage_selected = T->Branch("bvoltage_selected",&v_voltage_selected); 
-TBranch *btime = T->Branch("btime",&v_time2); 
-TBranch *bnoise_rms = T->Branch("brms",&noise_rms); 
-TBranch *bnoise_std = T->Branch("noise_std",&noise_std); 
 
 Long64_t nentries = T->GetEntries(); 
 
@@ -565,17 +591,18 @@ T->GetEntry(i);
 auto maxVoltage = std::max_element(v_voltage->begin(),next(v_voltage->begin(), noiseMaxIndex) ); 
 //auto minVoltageIndex = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ) - v_voltage->begin(); 
  auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), noiseMaxIndex) ); 
-  if ((float)* maxVoltage < 0.04 ){
-    if ((float)*minVoltage > -0.05){
+  if ((float)* maxVoltage < 0.1 ){
+    if ((float)*minVoltage > -0.01){
 //  if ((int)minVoltageIndex >=0) {
     v_time2 = v_time;
     v_voltage_selected = v_voltage;
     noise_rms = rms(v_voltage)*1;
-    noise_std = h_std(v_voltage)*1;
-    bvoltage_selected->Fill(); 
-    btime->Fill(); 
-    bnoise_rms->Fill(); 
-    bnoise_std->Fill(); 
+   // noise_std = h_std(v_voltage)*1;
+    Tsel->Fill();
+    // bvoltage_selected->Fill(); 
+    // btime->Fill(); 
+    // bnoise_rms->Fill(); 
+    // bnoise_std->Fill(); 
 
   //  }
     }
@@ -584,41 +611,61 @@ auto maxVoltage = std::max_element(v_voltage->begin(),next(v_voltage->begin(), n
 } 
 // Tsubset->GetBranch("bvoltage_selected")->SetFile("small_fH.root");
 // Tsubset->CopyEntries(T);
-T->Write("",TObject::kOverwrite); // save only the new version of
-// T->ResetBranchAddresses();
+ Tsel->ResetBranchAddresses();
+Tsel->Write();
+// Tsel->Write("",TObject::kOverwrite); // save only the new version of
 //  T->Print(); 
+  // Tsel->Write(); 
+  Tsel->Print();
+  delete f;
+// gROOT->cd();
+}
 
-gROOT->cd();
- 
+
+void SPE_and_timing::plot_sel(){
+  
+   std::string filename = outputRootFileName;
+  char *filename_arr;
+  filename_arr = &filename[0];
+
+  std::cout<< outputPath <<endl;
+  TFile *f = new TFile(outputPath);
+  TTree *T = (TTree *)f->Get("T");
+
   TCanvas *c2 = new TCanvas("c2", "A3", 1000, 700);
-  c2->Update();
+  // c2->Update();
 
-  std::string selBr="bvoltage_selected";
-  char *selBranch_array;
-  selBranch_array = &selBr[0];
+  // std::string selBr="bvoltage_selected";
+  // char *selBranch_array;
+  // selBranch_array = &selBr[0];
 
-  TH2F *h = new TH2F("h", Form("%s", filename_arr), 200, 450, 550, 50, -0.25, 0.1);
-  T->Draw(Form( "%s:time/(1e-9)>>h", selBranch_array ),"", "colz");
-  h->SetStats(0);
-  h->GetZaxis()->SetRangeUser(0., 500.);
-  h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
-  h->GetXaxis()->SetNoExponent();
-    gPad->Update();
+  // TH2F *h2 = new TH2F("h2", "h2", 200, 450, 550, 50, -0.25, 0.1);
+  T->Draw("bvoltage_selected:time","", "colz");
+  // TH1F *h =new TH1F("h", "h", 200, 0.0, 0.05);
+  // T->Draw("brms>>h");
+  // T->Draw("bvoltage_selected:time/(1e-9)>>htemp","", "colz");
+  // h->SetStats(0);
+  // h2->GetZaxis()->SetRangeUser(0., 500.);
+  // h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
+//   h->GetXaxis()->SetNoExponent();
+//     gPad->Update();
+   c2->Update();
 
- c2->SetGrid();
-  c2->cd();
+//  c2->SetGrid();
+//   c2->cd();
   std::string outPath = "./data/timePlots/";
-  c2->Print((outPath + rootFileName + ".png").c_str());
+  c2->Print((outPath + outputRootFileName + ".png").c_str());
 
-  c2->Close();
+   c2->Close();
   //  Tsubset->Write(); 
 // 
   //  delete T;
     // T->Print(); 
-  T->Write(); 
+  // Tsel->Write(); 
   // f->Write();
   // f->Close();
-  delete f;
+  // delete Tsel;
+
 
   // hfile->Write();  
   // hfile->Close();
@@ -751,7 +798,7 @@ h_noise_rms_sel->Fit("gaus", "Q", "sames");
   int randomN;
   //randomN = rand() % 50000 + 1;
   std::string randomNstring = std::to_string(randomN);
-  c->Print((outPath + rootFileName +".png").c_str());
+  c->Print((outPath + inputRootFileName +".png").c_str());
   
   delete T;
   f->Close();
@@ -771,10 +818,10 @@ h_noise_rms_sel->Fit("gaus", "Q", "sames");
 void  SPE_and_timing::PulseThresOccupancy()
 {
 
-TFile *f = new TFile(path);
+TFile *f = new TFile(inputPath);
 // delete T;
   TTree *T = (TTree *)f->Get("T");
-  std::string filename = rootFileName;
+  std::string filename = inputRootFileName;
   char *filename_arr;
   filename_arr = &filename[0];
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
@@ -810,7 +857,7 @@ TFile *f = new TFile(path);
   c->SetGrid();
   c->cd();
   std::string outPath = "./data/occupancy/";
-  c->Print((outPath + rootFileName + ".png").c_str());
+  c->Print((outPath + inputRootFileName + ".png").c_str());
   // delete T;
   f->Close();
   c->Close();
