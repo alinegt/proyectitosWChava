@@ -39,28 +39,38 @@ using namespace std;
 
 class SPE_and_timing{
   public:
-std::string rootFileName;
 SPE_and_timing();
 ~SPE_and_timing();
+
+Double_t RMSnoise();
 std::string baseName(std::string const &path);
 TH1F *loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin);
-std::string loadTree(char *argc);
+std::string rootFilename(char *inputRootFilePath, char* outputRootPath);
 static Double_t fitf(Double_t *x, Double_t *par);
 Double_t SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit);
 void getTimePlot();
 void sel_pulses();
 void PulseThresOccupancy();
-auto RMSnoise();
-Double_t h_std( vector <float> noise);
-float rms_vector( vector <float> noise);
+void plot_sel();
 
+
+float rms(vector <float> *v_voltage);
+Double_t h_std(vector <float> *v_voltage);
+// TTree *T;
+int noiseMaxIndex;
+ const char *inputPath;
+ const char *outputPath;
 
 // void noise();
- private:
-TTree *T;
-TTree *Tsubset;
+//  protected:
+private:
+std::string  inputRootFileName;
+std::string outputRootFileName;  
+//  const char *path;
+
+// TTree *Tsubset;
 float noise_mean;
-TFile *f;
+// TFile *f;
 
 };
 

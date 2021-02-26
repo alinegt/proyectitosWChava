@@ -13,6 +13,7 @@
 # processWaveforms  (executable)
 
 dataPath=$1
+noiseMaxIndex=$2
 localPath=$PWD
 mergePath=$localPath/data/merge/
 processedPath=$localPath/data/processed/
@@ -51,7 +52,7 @@ cat *.dat > $mergePath$mergeName
 
 cd $scriptsPath
 
-./processWaveforms $mergePath$mergeName 100 60 200 19980 5e-10 $processedPath$processedName $processedPath$outRootFile 6
+./processWaveforms $mergePath$mergeName $noiseMaxIndex 60 400 19980 5e-10 $processedPath$processedName $processedPath$outRootFile 1
 
 cd $dataPath
 done
