@@ -16,6 +16,7 @@ outputFileName=$1
 noiseMaxIndex=$2
 echo outputFileName
 mergePath=$localPath/data/merge/
+outputRoot=$localPath/data/output/
 
 rm $localPath/data/occupancy/*.png
 rm $localPath/data/plots/*.png
@@ -23,14 +24,17 @@ rm $localPath/data/timePlots/*.png
 rm $localPath/data/SPEparam/SPEparams.dat
 rm $localPath/data/NoisePlots/*png
 rm $localPath/data/SPEparam/$1".dat"
+rm $localPath/data/output/*.root
 cd $inputPath
 for file in *
 do
 processedPath="${inputPath}""${file}"
-echo $mergeFile
+outputRootPath="${outputRoot}""${file}"
 echo $processedPath
+echo $outputRootPath
 cd $execPath
-./SPE_and_timing $processedPath $outputFileName $noiseMaxIndex
+cp $processedPath $outputRoot
+./SPE_and_timing $processedPath $outputFileName $noiseMaxIndex $outputRootPath
 cd $inputPath
 done
 
