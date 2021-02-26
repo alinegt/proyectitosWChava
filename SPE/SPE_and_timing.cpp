@@ -30,7 +30,7 @@ int main(int argc, char **argv)
   // getPlots.PulseThresOccupancy();
  
    getPlots.sel_pulses();
-  //  getPlots.plot_sel();
+    // getPlots.plot_sel();
   //  Double_t rms = getPlots.RMSnoise();
   // getPlots.getTimePlot();
   // getPlots.noise();
@@ -559,66 +559,92 @@ void SPE_and_timing::sel_pulses(){
  std::string filename = outputRootFileName;
   char *filename_arr;
   filename_arr = &filename[0];
-  TFile *f = new TFile(outputPath,"update");
-  TTree *T = (TTree *)f->Get("T");
-   TTree *Tsel = new TTree("Tsel", "Tree after cuts");
-std::vector<float> *v_voltage=0;
-std::vector<float> *v_voltage_selected;
-std::vector<float> *v_time=0;
-std::vector<float> *v_time2;
-float noise_rms;
-float noise_std;
-T->SetBranchStatus("*", 0);
+  TFile *f = new TFile(inputPath);
+   TTree *T = (TTree *)f->Get("T");
+// delete f;
+    TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr),"RECREATE");
+ TTree *Tsel = T->CloneTree();
+  Tsel->SetBranchStatus("*", 0);
  
    // Activate only four of them
    for (auto activeBranchName : {"time", "voltage"})
-    T->SetBranchStatus(activeBranchName, 1);
+    Tsel->SetBranchStatus(activeBranchName, 1);
+
+// gROOT->cd();
+// TTree * Tsubset = new TTree("Tsubset", "Tsubset")
+// TTree *Tsubset = T->CloneTree();
+std::vector<float> *v_voltage=0;
+std::vector<float> *v_voltage_selected=0;
+std::vector<float> *v_time=0;
+std::vector<float> *v_time2=0;
+
+
+Tsel->SetBranchAddress("voltage",&v_voltage); 
+Tsel->SetBranchAddress("time",&v_time); 
 
 
 TBranch *bvoltage_selected = Tsel->Branch("bvoltage_selected",&v_voltage_selected); 
 TBranch *btime = Tsel->Branch("btime",&v_time2); 
-TBranch *bnoise_rms = Tsel->Branch("brms",&noise_rms); 
-//TBranch *bnoise_std = Tsel->Branch("noise_std",&noise_std); 
 
-T->SetBranchAddress("voltage",&v_voltage); 
-T->SetBranchAddress("time",&v_time); 
-
-Long64_t nentries = T->GetEntries(); 
+Long64_t nentries = Tsel->GetEntries(); 
 
 for (Long64_t i=0;i<nentries;i++) { 
-T->GetEntry(i); 
-// std::cout << noiseMaxIndex <<std::endl;
-auto maxVoltage = std::max_element(v_voltage->begin(),next(v_voltage->begin(), noiseMaxIndex) ); 
-//auto minVoltageIndex = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ) - v_voltage->begin(); 
- auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), noiseMaxIndex) ); 
-  if ((float)* maxVoltage < 0.1 ){
-    if ((float)*minVoltage > -0.01){
-//  if ((int)minVoltageIndex >=0) {
-    v_time2 = v_time;
-    v_voltage_selected = v_voltage;
-    noise_rms = rms(v_voltage)*1;
-   // noise_std = h_std(v_voltage)*1;
-    Tsel->Fill();
-    // bvoltage_selected->Fill(); 
-    // btime->Fill(); 
-    // bnoise_rms->Fill(); 
-    // bnoise_std->Fill(); 
+Tsel->GetEntry(i); 
+ auto maxVoltage = std::max_element(v_voltage->begin(),next(v_voltage->begin(), 100) ); 
 
+//auto minVoltageIndex = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ) - v_voltage->begin(); 
+ auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 100) ); 
+    
+    if ((float)*minVoltage > -0.01){
+    if ((float)*maxVoltage < 0.04){
+
+//  if ((int)minVoltageIndex >=0) {
+    v_voltage_selected = v_voltage;
+
+    bvoltage_selected->Fill(); 
+    btime->Fill();
   //  }
-    }
+   
  }
+    }
+
 
 } 
-// Tsubset->GetBranch("bvoltage_selected")->SetFile("small_fH.root");
-// Tsubset->CopyEntries(T);
- Tsel->ResetBranchAddresses();
-Tsel->Write();
+Tsel->ResetBranchAddresses();
+
+// T->Write();
 // Tsel->Write("",TObject::kOverwrite); // save only the new version of
-//  T->Print(); 
-  // Tsel->Write(); 
-  Tsel->Print();
-  delete f;
-// gROOT->cd();
+
+ Tsel->Print(); 
+gROOT->cd();
+ 
+  TCanvas *c2 = new TCanvas("c2", "A3", 1000, 700);
+  c2->Update();
+
+  std::string selBr="bvoltage_selected";
+  char *selBranch_array;
+  selBranch_array = &selBr[0];
+
+  TH2F *h = new TH2F("h", Form("%s", filename_arr), 200, 450, 550, 50, -0.25, 0.1);
+  Tsel->Draw(Form( "%s:time/(1e-9)>>h", selBranch_array ),"", "colz");
+  h->SetStats(0);
+  h->GetZaxis()->SetRangeUser(0., 500.);
+  h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
+  h->GetXaxis()->SetNoExponent();
+    gPad->Update();
+
+ c2->SetGrid();
+  c2->cd();
+  std::string outPath = "./data/timePlots/";
+  c2->Print((outPath + outputRootFileName + ".png").c_str());
+
+  c2->Close();
+
+ hfile->Write();
+ hfile->Close();
+ 
+  
+
 }
 
 
@@ -628,9 +654,11 @@ void SPE_and_timing::plot_sel(){
   char *filename_arr;
   filename_arr = &filename[0];
 
-  std::cout<< outputPath <<endl;
-  TFile *f = new TFile(outputPath);
-  TTree *T = (TTree *)f->Get("T");
+  // std::cout<< outputPath <<endl;
+    TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr));
+  TTree *T = (TTree *)hfile->Get("T");
+  T->Print();
+
 
   TCanvas *c2 = new TCanvas("c2", "A3", 1000, 700);
   // c2->Update();
@@ -639,13 +667,13 @@ void SPE_and_timing::plot_sel(){
   // char *selBranch_array;
   // selBranch_array = &selBr[0];
 
-  // TH2F *h2 = new TH2F("h2", "h2", 200, 450, 550, 50, -0.25, 0.1);
-  T->Draw("bvoltage_selected:time","", "colz");
+  TH2F *h2 = new TH2F("h2", "h2", 200, 450, 550, 50, -0.25, 0.1);
+  T->Draw("bvoltage_selected:time/(1e-9)>>h2","", "colz");
   // TH1F *h =new TH1F("h", "h", 200, 0.0, 0.05);
   // T->Draw("brms>>h");
   // T->Draw("bvoltage_selected:time/(1e-9)>>htemp","", "colz");
   // h->SetStats(0);
-  // h2->GetZaxis()->SetRangeUser(0., 500.);
+ h2->GetZaxis()->SetRangeUser(0., 500.);
   // h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
 //   h->GetXaxis()->SetNoExponent();
 //     gPad->Update();
@@ -663,7 +691,7 @@ void SPE_and_timing::plot_sel(){
     // T->Print(); 
   // Tsel->Write(); 
   // f->Write();
-  // f->Close();
+   hfile->Close();
   // delete Tsel;
 
 
