@@ -13,6 +13,7 @@ localPath=$PWD
 execPath=$localPath
 inputPath=$localPath/data/processed/
 outputFileName=$1
+noiseMaxIndex=$2
 echo outputFileName
 mergePath=$localPath/data/merge/
 
@@ -21,6 +22,7 @@ rm $localPath/data/plots/*.png
 rm $localPath/data/timePlots/*.png
 rm $localPath/data/SPEparam/SPEparams.dat
 rm $localPath/data/NoisePlots/*png
+rm $localPath/data/SPEparam/$1".dat"
 cd $inputPath
 for file in *
 do
@@ -28,7 +30,7 @@ processedPath="${inputPath}""${file}"
 echo $mergeFile
 echo $processedPath
 cd $execPath
-./SPE_and_timing $processedPath $outputFileName 
+./SPE_and_timing $processedPath $outputFileName $noiseMaxIndex
 cd $inputPath
 done
 

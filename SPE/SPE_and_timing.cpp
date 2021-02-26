@@ -6,6 +6,39 @@ SPE_and_timing::SPE_and_timing()  {}
 SPE_and_timing::~SPE_and_timing() {}
 
 
+int main(int argc, char **argv)
+{
+  Double_t peaktovalley, sigma_fit;
+  std::string inFile = argv[1]; // Nombre del archivo
+  std::string outFile = argv[2];
+  std::ofstream a_file;
+  // TTree *Tsubset;
+  SPE_and_timing getPlots;
+  getPlots.noiseMaxIndex = std::stoi(argv[3]); // max index value for noise measurements
+  std::string  fileName;
+  fileName =getPlots.rootFilename(argv[1]);
+
+  // getPlots.SPEhistAndPlots(&peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 ); 
+  //int noiseMaxIndex;
+  // getPlots.PulseThresOccupancy();
+  
+   getPlots.sel_pulses();
+   Double_t rms = getPlots.RMSnoise();
+  
+  // getPlots.getTimePlot();
+  // getPlots.noise();
+  std::string outFilePath = ("/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + outFile + ".dat").c_str();
+
+  a_file.open(outFilePath, std::ios::out | std::fstream::app);
+  //a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
+  a_file << fileName << " " << rms << " "  << std::endl;
+
+  a_file.close();
+
+  std::cout << "END" << std::endl;
+  return 0;
+}
+
 std::string SPE_and_timing::baseName(std::string const &path)
 {
   std::string base_filename = path.substr(path.find_last_of("/\\") + 1);
@@ -14,6 +47,7 @@ std::string SPE_and_timing::baseName(std::string const &path)
 }
 
 std::string SPE_and_timing::rootFilename(char *argc){
+   //noiseMaxIndex=90;
   path = argc;
   TFile *f = new TFile(argc);
   TTree *T = (TTree *)f->Get("T");
@@ -516,10 +550,10 @@ Long64_t nentries = T->GetEntries();
 
 for (Long64_t i=0;i<nentries;i++) { 
 T->GetEntry(i); 
-
-auto maxVoltage = std::max_element(v_voltage->begin(),next(v_voltage->begin(), 90) ); 
+// std::cout << noiseMaxIndex <<std::endl;
+auto maxVoltage = std::max_element(v_voltage->begin(),next(v_voltage->begin(), noiseMaxIndex) ); 
 //auto minVoltageIndex = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ) - v_voltage->begin(); 
- auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ); 
+ auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), noiseMaxIndex) ); 
   if ((float)* maxVoltage < 0.04 ){
     if ((float)*minVoltage > -0.05){
 //  if ((int)minVoltageIndex >=0) {
@@ -583,10 +617,10 @@ gROOT->cd();
 
 float SPE_and_timing::rms(vector <float> *v_voltage){
 float sum=0, rms=0;
-  for (auto it = v_voltage->begin() ; it != v_voltage->begin()+90; ++it){
+  for (auto it = v_voltage->begin() ; it != v_voltage->begin()+noiseMaxIndex; ++it){
 sum += pow(*it, 2);
     } 
-rms = sqrt(sum/90);
+rms = sqrt(sum/noiseMaxIndex);
 return rms;
 
 
@@ -603,7 +637,7 @@ Double_t SPE_and_timing::h_std(vector <float> *v_voltage){
   // auto limInfBin=  noise.begin();
   // auto limSupBin=  noise.end();
   TH1F *h_noiseFit = new TH1F("h_noiseFit", "Noise Hist", 25, -0.05, 0.05);
-  for (auto it = v_voltage->begin() ; it != v_voltage->begin()+90; ++it)
+  for (auto it = v_voltage->begin() ; it != v_voltage->begin()+noiseMaxIndex; ++it)
   {
     h_noiseFit->Fill(*it);
   }
@@ -649,7 +683,7 @@ Double_t SPE_and_timing::h_std(vector <float> *v_voltage){
 
 
 
-auto SPE_and_timing::RMSnoise(){
+Double_t SPE_and_timing::RMSnoise(){
   
   TFile *f = new TFile(path);
   TTree *T = (TTree *)f->Get("T");
@@ -663,7 +697,7 @@ auto SPE_and_timing::RMSnoise(){
   // TH1F *h_noise = (TH1F *)gDirectory->Get("h_noise");
   gPad->Update();
   c->Update();
-  auto noise_rms_mean = h_noise_rms->GetMean();
+  Double_t noise_rms_mean = h_noise_rms->GetMean();
   std::cout << "noise_rms_mean" << std::endl;
    h_noise_rms->SetLineColor(kRed);
 
@@ -682,7 +716,7 @@ auto SPE_and_timing::RMSnoise(){
   c->Update();
   
 
-  auto noise_std_mean = h_noise_std->GetMean();
+  Double_t noise_std_mean = h_noise_std->GetMean();
   std::cout << "noise_std_mean" << std::endl;
 
   std::cout << noise_std_mean << std::endl;
@@ -696,7 +730,7 @@ h_noise_rms_sel->Fit("gaus", "Q", "sames");
   gPad->Update();
   c->Update();
   
-  auto noise_rms_sel_mean = h_noise_rms_sel->GetMean();
+  Double_t noise_rms_sel_mean = h_noise_rms_sel->GetMean();
   std::cout << "noise_rms_sel_mean" << std::endl;
 
   std::cout << noise_rms_sel_mean << std::endl;
@@ -772,35 +806,3 @@ TFile *f = new TFile(path);
 }
 
 
-
-int main(int argc, char **argv)
-{
-  Double_t peaktovalley, sigma_fit;
-  std::string inFile = argv[1]; // Nombre del archivo
-  std::string outFile = argv[2];
-  std::ofstream a_file;
-  // TTree *Tsubset;
-  SPE_and_timing getPlots;
-  std::string  fileName;
-  fileName =getPlots.rootFilename(argv[1]);
-  // getPlots.SPEhistAndPlots(&peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 ); 
-  // int noiseMaxIndex;
-  // noiseMaxIndex=90;
-  // getPlots.PulseThresOccupancy();
-  
-   getPlots.sel_pulses();
-   auto rms = getPlots.RMSnoise();
-  
-  // getPlots.getTimePlot();
-  // getPlots.noise();
-  std::string outFilePath = ("/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + outFile + ".dat").c_str();
-
-  a_file.open(outFilePath, std::ios::out | std::fstream::app);
-  //a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
-  a_file << fileName << " " << rms << " "  << std::endl;
-
-  a_file.close();
-
-  std::cout << "END" << std::endl;
-  return 0;
-}
