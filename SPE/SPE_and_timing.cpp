@@ -11,20 +11,28 @@ int main(int argc, char **argv)
   Double_t peaktovalley, sigma_fit;
   std::string inFile = argv[1]; // Nombre del archivo
   std::string outFile = argv[2];
+  std::string outputRoot = argv[4];
   std::ofstream a_file;
   // TTree *Tsubset;
   SPE_and_timing getPlots;
   getPlots.noiseMaxIndex = std::stoi(argv[3]); // max index value for noise measurements
   std::string  fileName;
   fileName =getPlots.rootFilename(argv[1]);
+  getPlots.inputPath = argv[1];
+ std::cout<< "getPlots.inputPath" << std::endl;
 
+  std::cout<< getPlots.inputPath << std::endl;
+  getPlots.outputPath= argv[4];
+  std::cout<< "getPlots.outputPath" << std::endl;
+
+  std::cout<< getPlots.outputPath << std::endl;
+//  outputRootName= getPlots.rootFileName(argv[4]);
   // getPlots.SPEhistAndPlots(&peaktovalley, &sigma_fit); //, &occupancy, &sigmaSPE0, &sigmaResSPE0 ); 
   //int noiseMaxIndex;
   // getPlots.PulseThresOccupancy();
-  
+ 
    getPlots.sel_pulses();
    Double_t rms = getPlots.RMSnoise();
-  
   // getPlots.getTimePlot();
   // getPlots.noise();
   std::string outFilePath = ("/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + outFile + ".dat").c_str();
@@ -46,6 +54,8 @@ std::string SPE_and_timing::baseName(std::string const &path)
   return base_filename.substr(0, p);
 }
 
+
+
 std::string SPE_and_timing::rootFilename(char *argc){
    //noiseMaxIndex=90;
   path = argc;
@@ -58,6 +68,7 @@ std::string SPE_and_timing::rootFilename(char *argc){
   return rootFileName;
 
 }
+
 
 
 
@@ -528,7 +539,7 @@ void SPE_and_timing::sel_pulses(){
  std::string filename = rootFileName;
   char *filename_arr;
   filename_arr = &filename[0];
-  TFile *f = new TFile(path, "UPDATE");
+  TFile *f = new TFile(outputPath, "UPDATE");
   TTree *T = (TTree *)f->Get("T");
  
 std::vector<float> *v_voltage=0;
@@ -685,7 +696,7 @@ Double_t SPE_and_timing::h_std(vector <float> *v_voltage){
 
 Double_t SPE_and_timing::RMSnoise(){
   
-  TFile *f = new TFile(path);
+  TFile *f = new TFile(outputPath);
   TTree *T = (TTree *)f->Get("T");
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
   TH1F *h_noise_rms = new TH1F("h_noise_rms", "rms noise",50,0.00,0.01 );

@@ -54,10 +54,14 @@ void getTimePlot();
 void sel_pulses();
 void PulseThresOccupancy();
 
+
 float rms(vector <float> *v_voltage);
 Double_t h_std(vector <float> *v_voltage);
 // TTree *T;
 int noiseMaxIndex;
+ const char *inputPath;
+ const char *outputPath;
+
 // void noise();
 //  protected:
 private:
