@@ -584,16 +584,16 @@ Tsel->SetBranchAddress("time",&v_time);
 
 
 TBranch *bvoltage_selected = Tsel->Branch("bvoltage_selected",&v_voltage_selected); 
-TBranch *btime = Tsel->Branch("btime",&v_time2); 
+// TBranch *btime = Tsel->Branch("btime",&v_time2); 
 
 Long64_t nentries = Tsel->GetEntries(); 
 
 for (Long64_t i=0;i<nentries;i++) { 
 Tsel->GetEntry(i); 
- auto maxVoltage = std::max_element(v_voltage->begin(),next(v_voltage->begin(), 100) ); 
+ auto maxVoltage = std::max_element(v_voltage->begin(),next(v_voltage->begin(), noiseMaxIndex) ); 
 
 //auto minVoltageIndex = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ) - v_voltage->begin(); 
- auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 100) ); 
+ auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), noiseMaxIndex) ); 
     
     if ((float)*minVoltage > -0.01){
     if ((float)*maxVoltage < 0.04){
@@ -602,7 +602,7 @@ Tsel->GetEntry(i);
     v_voltage_selected = v_voltage;
 
     bvoltage_selected->Fill(); 
-    btime->Fill();
+    // btime->Fill();
   //  }
    
  }
