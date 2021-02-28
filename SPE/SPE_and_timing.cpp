@@ -30,6 +30,9 @@ int main(int argc, char **argv)
   // getPlots.PulseThresOccupancy();
  
    getPlots.sel_pulses();
+
+
+  //  getPlots.RMSbranch();
     // getPlots.plot_sel();
   //  Double_t rms = getPlots.RMSnoise();
   // getPlots.getTimePlot();
@@ -563,30 +566,17 @@ void SPE_and_timing::sel_pulses(){
 // delete f;
     TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr),"RECREATE");
  TTree *Tsel = T->CloneTree();
-  Tsel->SetBranchStatus("*", 0);
  
-   // Activate only four of them
-   for (auto activeBranchName : {"time", "voltage"})
-    Tsel->SetBranchStatus(activeBranchName, 1);
 
-// gROOT->cd();
-// TTree * Tsubset = new TTree("Tsubset", "Tsubset")
-// TTree *Tsubset = T->CloneTree();
 std::vector<float> *v_voltage=0;
-std::vector<float> *v_voltage_selected=0;
-std::vector<float> *v_time=0;
-std::vector<float> *v_time2=0;
 
+Bool_t bol_voltage_selected;
 
 Tsel->SetBranchAddress("voltage",&v_voltage); 
-Tsel->SetBranchAddress("time",&v_time); 
 
-
-TBranch *bvoltage_selected = Tsel->Branch("bvoltage_selected",&v_voltage_selected); 
-// TBranch *btime = Tsel->Branch("btime",&v_time2); 
+TBranch *bvoltage_selected = Tsel->Branch("bvoltage_selected",&bol_voltage_selected); 
 
 Long64_t nentries = Tsel->GetEntries(); 
-
 for (Long64_t i=0;i<nentries;i++) { 
 Tsel->GetEntry(i); 
  auto maxVoltage = std::max_element(v_voltage->begin(),next(v_voltage->begin(), noiseMaxIndex) ); 
@@ -594,42 +584,37 @@ Tsel->GetEntry(i);
 //auto minVoltageIndex = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ) - v_voltage->begin(); 
  auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), noiseMaxIndex) ); 
     
-    if ((float)*minVoltage > -0.01){
-    if ((float)*maxVoltage < 0.04){
+    if ( ( (float)*minVoltage > -0.01) & ((float)*maxVoltage < 0.04))  {
 
-//  if ((int)minVoltageIndex >=0) {
-    v_voltage_selected = v_voltage;
-
-    bvoltage_selected->Fill(); 
-    // btime->Fill();
-  //  }
-   
- }
+    // v_voltage_selected = v_voltage;
+    bol_voltage_selected = true;
     }
+    else {
+    bol_voltage_selected=false;
 
+    }
+bvoltage_selected->Fill();
 
 } 
 Tsel->ResetBranchAddresses();
 
-// T->Write();
-// Tsel->Write("",TObject::kOverwrite); // save only the new version of
 
- Tsel->Print(); 
-gROOT->cd();
+//gROOT->cd();
  
   TCanvas *c2 = new TCanvas("c2", "A3", 1000, 700);
   c2->Update();
 
-  std::string selBr="voltage_selected";
+  std::string selBr="voltage";
   char *selBranch_array;
   selBranch_array = &selBr[0];
 
   TH2F *h = new TH2F("h", Form("%s", filename_arr), 200, 450, 550, 50, -0.25, 0.1);
-  Tsel->Draw(Form( "%s:time/(1e-9)>>h", selBranch_array ),"", "colz");
+  Tsel->Draw(Form( "%s:time/(1e-9)>>h", selBranch_array ),"bvoltage_selected==1", "colz");
   h->SetStats(0);
   h->GetZaxis()->SetRangeUser(0., 500.);
   h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
   h->GetXaxis()->SetNoExponent();
+  h->Write();
     gPad->Update();
 
  c2->SetGrid();
@@ -641,10 +626,124 @@ gROOT->cd();
 
  hfile->Write();
  hfile->Close();
+   delete hfile;
+  
+
+}
+
+
+
+void SPE_and_timing::RMSbranch(){
+   std::string filename = outputRootFileName;
+  char *filename_arr;
+  filename_arr = &filename[0];
+ TFile *hfile2 = new TFile(Form("./data/cutted/%s.root", filename_arr),"update");
+ hfile2->ls();
+ TTree *T = (TTree *)hfile2->Get("T");
+//  T->Print();
+
+
+ // Deactivate branches
+  T->SetBranchStatus("*", 0);
+ 
+   // Activate only the branch we will use
+   for (auto activeBranchName : {"bvoltage_selected"})
+    T->SetBranchStatus(activeBranchName, 1);
+
+
+ 
+ std::vector<float> *v_voltage=0;
+ Float_t f_rms;
+
+ T->SetBranchAddress("bvoltage_selected",&v_voltage); 
+
+
+TBranch *brms = T->Branch ("brms",&f_rms);
+
+// // Set branch address to read
+
+// // Create TBranch for the new Tree
+// TBranch *brms_sel = Trms->Branch("brms_sel",&f_rms_sel); 
+
+TH1F *hrms = new TH1F("hrms", "hrms",200, 0.002, 0.007);
+TBranch *b = T->GetBranch("bvoltage_selected");
+   
+     Long64_t nentries=b->GetEntries();
+     std::cout<< nentries << endl;
+     
+     for (Long64_t i=0;i<nentries;i++) { 
+
+    b->GetEntry(i); 
+   float sum=0;
+  for (auto it = v_voltage->begin() ; it != v_voltage->begin()+noiseMaxIndex; ++it){
+       sum += pow(*it, 2);
+    } 
+      f_rms = sqrt(sum/noiseMaxIndex);
+      hrms->Fill(f_rms);
+      brms->Fill();
+    // T->GetListOfBranches()->Remove(b);
+//  }
+     }
+ T->Print();
+
+  //  T->GetCurrentFile()->Write();
+  //     T->GetCurrentFile()->Close();
+T->Write();
+// hrms->Write();
+   hfile2->Write();
+  hfile2->Close();  
+
+//  std::string filename = outputRootFileName;
+//   char *filename_arr;
+//   filename_arr = &filename[0];
+//   // Open the input Tree
+//       TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr),"UPDATE");
+//   // TFile *f = new TFile(inputPath);
+//    TTree *T = (TTree *)hfile->Get("T");
+//     // TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr),"UPDATE");
+//  // Clone the Tree
+//  TTree *Trms = T->CloneTree();
+
+//  // Deactivate branches
+//   Trms->SetBranchStatus("*", 0);
+ 
+//    // Activate only the branch we will use
+//    for (auto activeBranchName : {"bvoltage_selected"})
+//     Trms->SetBranchStatus(activeBranchName, 1);
+
+// // input and output variables
+// std::vector<float> *v_voltage=0;
+// Float_t f_rms_sel;
+
+// // Set branch address to read
+// Trms->SetBranchAddress("bvoltage_selected",&v_voltage); 
+
+// // Create TBranch for the new Tree
+// TBranch *brms_sel = Trms->Branch("brms_sel",&f_rms_sel); 
+
+// Long64_t nentries = brms_sel->GetEntries(); 
+
+// for (Long64_t i=0;i<nentries;i++) { 
+// Trms->GetEntry(i); 
+
+// // Process the input vector to generate the output and fill the new branch
+
+//     f_rms_sel = rms(v_voltage);
+//     brms_sel->Fill(); 
+
+// } 
+// Trms->ResetBranchAddresses();
+
+//  Trms->Print(); 
+// gROOT->cd();
+ 
+//  hfile->Write();
+//  hfile->Close();
  
   
 
 }
+
 
 
 void SPE_and_timing::plot_sel(){
@@ -700,13 +799,14 @@ void SPE_and_timing::plot_sel(){
 }
 
 
-float SPE_and_timing::rms(vector <float> *v_voltage){
-float sum=0, rms=0;
+Float_t  SPE_and_timing::rms(vector <float> *v_voltage){
+float sum=0;
+Float_t f_rms;
   for (auto it = v_voltage->begin() ; it != v_voltage->begin()+noiseMaxIndex; ++it){
 sum += pow(*it, 2);
     } 
-rms = sqrt(sum/noiseMaxIndex);
-return rms;
+f_rms = sqrt(sum/noiseMaxIndex);
+return f_rms;
 
 // hfile->Write();
 // hfile->Close();
