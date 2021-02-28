@@ -52,12 +52,7 @@ Double_t SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit);
 void getTimePlot();
 void sel_pulses();
 void PulseThresOccupancy();
-void plot_sel();
-void RMSbranch();
 
-
-
-Float_t rms(vector <float> *v_voltage);
 Double_t h_std(vector <float> *v_voltage);
 // TTree *T;
 int noiseMaxIndex;
