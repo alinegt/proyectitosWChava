@@ -53,7 +53,7 @@ void getTimePlot();
 void sel_pulses();
 void PulseThresOccupancy();
 
-Double_t h_std(vector <float> *v_voltage);
+Float_t h_std(vector <float> *v_voltage);
 // TTree *T;
 int noiseMaxIndex;
  const char *inputPath;

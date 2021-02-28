@@ -577,13 +577,14 @@ std::vector<float> *v_voltage=0;
 // New Variable for the output Tree
 Bool_t bol_voltage_selected;
 Float_t f_rms;
-
+Float_t f_std;
 // Set branch Address for the input Tree variable
 Tsel->SetBranchAddress("voltage",&v_voltage); 
 
 // Create new branch
 TBranch *bvoltage_selected = Tsel->Branch("bvoltage_selected",&bol_voltage_selected); 
 TBranch *brms = Tsel->Branch("brms",&f_rms); 
+TBranch *bstd = Tsel->Branch("bstd",&f_std); 
 
 // For loop to fill NEW BRANCH
 Long64_t nentries = Tsel->GetEntries(); 
@@ -607,9 +608,15 @@ Tsel->GetEntry(i);
 	for (int i = 0; i < noiseMaxIndex; i++){
 		sum += pow( v_voltage->at(i), 2);}
 	f_rms= sqrt(sum / noiseMaxIndex);
+  
+  f_std=h_std(v_voltage);
+  //  std::cout<< f_std<<std::endl;
 
-brms->Fill();
+
+
 bvoltage_selected->Fill(); // NOTE : Filling new branch
+brms->Fill();
+bstd->Fill();
 } 
 Tsel->ResetBranchAddresses();
 
@@ -647,6 +654,45 @@ Tsel->ResetBranchAddresses();
 }
 
 
+// Return std of gaussian fit for a vector 
+Float_t SPE_and_timing::h_std(vector <float> *v_voltage){
+ TCanvas *c3 = new TCanvas("c3", "A3", 1000, 700);
+  c3->Update();
+
+  // auto numberBin=  noise.size();
+  // auto limInfBin=  noise.begin();
+  // auto limSupBin=  noise.end();
+  TH1F *h_noiseFit = new TH1F("h_noiseFit", "Noise Hist", 25, -0.05, 0.05);
+  for (auto it = v_voltage->begin() ; it != v_voltage->begin()+noiseMaxIndex; ++it)
+  {
+    h_noiseFit->Fill(*it);
+  }
+  h_noiseFit->Draw();
+
+  h_noiseFit->Fit("gaus", "Q", "sames");
+  h_noiseFit->GetFunction("gaus")->SetLineColor(kBlack);
+  h_noiseFit->GetFunction("gaus")->SetLineWidth(2);
+  TF1 *parGaus = (TF1 *)h_noiseFit->GetListOfFunctions()->FindObject("gaus");
+  
+  Float_t noiseSigmaFit = 0;
+  noiseSigmaFit = parGaus->GetParameter(2);
+  
+  gPad->Update();
+ c3->SetGrid();
+  c3->cd();
+  std::string outPath = "./data/NoiseFits/";
+  int randomN;
+  randomN = rand() % 10
+   + 1;
+  std::string randomNstring = std::to_string(randomN);
+  // c3->Print((outPath + outputRootFileName + randomNstring +".png").c_str());
+  
+  
+  delete c3;
+  delete h_noiseFit;
+  
+  return noiseSigmaFit;
+}
 
 
 Double_t SPE_and_timing::RMSnoise(){
@@ -673,7 +719,7 @@ Double_t SPE_and_timing::RMSnoise(){
   TH1F *h_noise_std = new TH1F("h_noise_std", "std_noise",50,0.0,0.01 );
    h_noise_std->SetLineColor(kBlack);
 
-  T->Draw("noise_std>>h_noise_std","", "sames");
+  T->Draw("bstd>>h_noise_std","", "sames");
 
   h_noise_std->Fit("gaus", "Q", "sames");
   h_noise_std->GetFunction("gaus")->SetLineColor(kBlack);
