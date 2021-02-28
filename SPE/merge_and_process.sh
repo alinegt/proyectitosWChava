@@ -38,6 +38,11 @@ cd $dir
 
 rm *.dat
 
+approx_pulse_width=60
+number_of_points=200
+number_of_waveforms=19980
+delta_time=5e-10
+
 for file in *
 do
 nameOnly="${file##*/}"
@@ -52,7 +57,7 @@ cat *.dat > $mergePath$mergeName
 
 cd $scriptsPath
 
-./processWaveforms $mergePath$mergeName $noiseMaxIndex 60 400 19980 5e-10 $processedPath$processedName $processedPath$outRootFile 1
+./processWaveforms $mergePath$mergeName $noiseMaxIndex $approx_pulse_width $number_of_points $number_of_waveforms 5e-10 $processedPath$processedName $processedPath$outRootFile 1
 
 cd $dataPath
 done
