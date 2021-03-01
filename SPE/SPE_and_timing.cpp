@@ -31,17 +31,14 @@ int main(int argc, char **argv)
  
    getPlots.sel_pulses();
 
-
-  //  getPlots.RMSbranch();
-    // getPlots.plot_sel();
-  //  Double_t rms = getPlots.RMSnoise();
+  Double_t rms = getPlots.RMSnoise();
   // getPlots.getTimePlot();
   // getPlots.noise();
   std::string outFilePath = ("/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + outFile + ".dat").c_str();
 
-  //a_file.open(outFilePath, std::ios::out | std::fstream::app);
-  //a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
-  //a_file << fileName << " " << rms << " "  << std::endl;
+  a_file.open(outFilePath, std::ios::out | std::fstream::app);
+  // a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
+  a_file << fileName << " " << rms << " "  << std::endl;
 
   //a_file.close();
 
@@ -598,9 +595,13 @@ Tsel->GetEntry(i);
     if ( ( (float)*minVoltage > -0.05) & ((float)*maxVoltage < 0.04))  {
 
     bol_voltage_selected = true;
+      f_std=h_std(v_voltage);
+
     }
     else {
     bol_voltage_selected=false;
+      f_std=0.0/0.0;
+
 
     }
 
@@ -609,7 +610,7 @@ Tsel->GetEntry(i);
 		sum += pow( v_voltage->at(i), 2);}
 	f_rms= sqrt(sum / noiseMaxIndex);
   
-  f_std=h_std(v_voltage);
+  // f_std=h_std(v_voltage);
   //  std::cout<< f_std<<std::endl;
 
 
@@ -697,11 +698,18 @@ Float_t SPE_and_timing::h_std(vector <float> *v_voltage){
 
 Double_t SPE_and_timing::RMSnoise(){
   
-  TFile *f = new TFile(outputPath);
+
+std::string filename = outputRootFileName;
+char *filename_arr;
+filename_arr = &filename[0];
+
+TFile *f = new TFile(Form("./data/cutted/%s.root", filename_arr));
+
+ // TFile *f = new TFile(outputPath);
   TTree *T = (TTree *)f->Get("T");
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
   TH1F *h_noise_rms = new TH1F("h_noise_rms", "rms noise",50,0.00,0.01 );
- T->Draw("noise>>h_noise_rms");
+ T->Draw("noise>>h_noise_rms","bvoltage_selected==1");
 
   h_noise_rms->Fit("gaus", "Q", "sames");
   h_noise_rms->GetFunction("gaus")->SetLineColor(kRed);
@@ -719,7 +727,7 @@ Double_t SPE_and_timing::RMSnoise(){
   TH1F *h_noise_std = new TH1F("h_noise_std", "std_noise",50,0.0,0.01 );
    h_noise_std->SetLineColor(kBlack);
 
-  T->Draw("bstd>>h_noise_std","", "sames");
+  T->Draw("bstd>>h_noise_std","bvoltage_selected==1", "sames");
 
   h_noise_std->Fit("gaus", "Q", "sames");
   h_noise_std->GetFunction("gaus")->SetLineColor(kBlack);
@@ -734,7 +742,7 @@ Double_t SPE_and_timing::RMSnoise(){
   std::cout << noise_std_mean << std::endl;
 
  TH1F *h_noise_rms_sel = new TH1F("h_noise_rms_sel", "rms sel",50,0.0,0.01 );
-  T->Draw("brms>>h_noise_rms_sel","", "sames");
+  T->Draw("brms>>h_noise_rms_sel","bvoltage_selected==1", "sames");
      h_noise_rms_sel->SetLineColor(kBlue);
 h_noise_rms_sel->Fit("gaus", "Q", "sames");
   h_noise_rms_sel->GetFunction("gaus")->SetLineColor(kBlue);
