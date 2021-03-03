@@ -27,18 +27,23 @@ int main(int argc, char **argv)
 
   std::cout<< getPlots.outputPath << std::endl;
 
+  getPlots.param_out_file= argv[2];
+  std::cout<< getPlots.param_out_file<<std::endl;
+
   // getPlots.PulseThresOccupancy();
  
    getPlots.sel_pulses();
 
-  Double_t rms = getPlots.RMSnoise();
+  Double_t rms_noise;
+  Double_t std_noise;
+
+  Double_t rms = getPlots.RMSnoise(&std_noise, &rms_noise);
   // getPlots.getTimePlot();
   // getPlots.noise();
   std::string outFilePath = ("/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + outFile + ".dat").c_str();
-
   a_file.open(outFilePath, std::ios::out | std::fstream::app);
   // a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
-  a_file << fileName << " " << rms << " "  << std::endl;
+  a_file << fileName << " " << rms_noise << " "  <<  std_noise  <<std::endl;
 
   //a_file.close();
 
@@ -509,7 +514,7 @@ void  SPE_and_timing::getTimePlot()
   c->SetGrid();
   c->cd();
   std::string outPath = "./data/timePlots/";
-  c->Print((outPath + inputRootFileName + ".png").c_str());
+  c->Print((outPath  + param_out_file +"/" + inputRootFileName + ".png").c_str());
   delete T;
   f->Close();
   c->Close();
@@ -643,7 +648,9 @@ Tsel->ResetBranchAddresses();
  c2->SetGrid();
   c2->cd();
   std::string outPath = "./data/timePlots/";
-  c2->Print((outPath + outputRootFileName + ".png").c_str());
+  c2->Print((outPath  + param_out_file +"/" + outputRootFileName + ".png").c_str());
+
+  // c2->Print((outPath + outputRootFileName + ".png").c_str());
 
   c2->Close();
 
@@ -696,7 +703,7 @@ Float_t SPE_and_timing::h_std(vector <float> *v_voltage){
 }
 
 
-Double_t SPE_and_timing::RMSnoise(){
+Double_t SPE_and_timing::RMSnoise(Double_t *std_noise, Double_t *rms_noise){
   
 
 std::string filename = outputRootFileName;
@@ -724,6 +731,7 @@ TFile *f = new TFile(Form("./data/cutted/%s.root", filename_arr));
   std::cout << noise_rms_mean << std::endl;
   //noise_mean = 0.03;
 
+
   TH1F *h_noise_std = new TH1F("h_noise_std", "std_noise",50,0.0,0.01 );
    h_noise_std->SetLineColor(kBlack);
 
@@ -740,6 +748,7 @@ TFile *f = new TFile(Form("./data/cutted/%s.root", filename_arr));
   std::cout << "noise_std_mean" << std::endl;
 
   std::cout << noise_std_mean << std::endl;
+  *std_noise = noise_std_mean;
 
  TH1F *h_noise_rms_sel = new TH1F("h_noise_rms_sel", "rms sel",50,0.0,0.01 );
   T->Draw("brms>>h_noise_rms_sel","bvoltage_selected==1", "sames");
@@ -755,7 +764,7 @@ h_noise_rms_sel->Fit("gaus", "Q", "sames");
 
   std::cout << noise_rms_sel_mean << std::endl;
 
-
+  *rms_noise = noise_rms_sel_mean;
   std::string outPath = "./data/NoisePlots/";
   int randomN;
   //randomN = rand() % 50000 + 1;

@@ -43,7 +43,7 @@ class SPE_and_timing{
 SPE_and_timing();
 ~SPE_and_timing();
 
-Double_t RMSnoise();
+Double_t RMSnoise(Double_t *std_noise, Double_t *rms_noise);
 std::string baseName(std::string const &path);
 TH1F *loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin);
 std::string rootFilename(char *inputRootFilePath, char* outputRootPath);
@@ -58,6 +58,7 @@ Float_t h_std(vector <float> *v_voltage);
 int noiseMaxIndex;
  const char *inputPath;
  const char *outputPath;
+ const char  *param_out_file;
 
 // void noise();
 //  protected:

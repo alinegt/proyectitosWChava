@@ -30,8 +30,8 @@ for file in *
 do
 processedPath="${inputPath}""${file}"
 outputRootPath="${outputRoot}""${file}"
-echo $processedPath
-echo $outputRootPath
+# echo $processedPath
+# echo $outputRootPath
 cd $execPath
 cp $processedPath $outputRoot
 ./SPE_and_timing $processedPath $outputFileName $noiseMaxIndex $outputRootPath
