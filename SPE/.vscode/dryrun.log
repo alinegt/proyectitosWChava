@@ -1,0 +1,8 @@
+make all --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/salvador/github/proyectitosWChava/SPE'
+ 
+g++ -O2 -Wall -fPIC -Wno-deprecated -g -pthread -std=c++17 -m64 -I/opt/root/6.22.02-install/include -o processWaveforms processWaveforms.cpp -L/opt/root/6.22.02-install/lib -lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lMultiProc -lROOTDataFrame -pthread -lm -ldl -rdynamic  -lSpectrum
+ 
+g++ -O2 -Wall -fPIC -Wno-deprecated -g -pthread -std=c++17 -m64 -I/opt/root/6.22.02-install/include -o SPE_and_timing SPE_and_timing.cpp -L/opt/root/6.22.02-install/lib -lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lMultiProc -lROOTDataFrame -pthread -lm -ldl -rdynamic  -lSpectrum
+make: Leaving directory '/home/salvador/github/proyectitosWChava/SPE'
+ 

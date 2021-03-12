@@ -20,7 +20,7 @@ outputRoot=$localPath/data/output/
 
 rm $localPath/data/occupancy/*.png
 rm $localPath/data/plots/*.png
-rm $localPath/data/timePlots/*.png
+rm $localPath/data/timePlots/noCoil/*.png
 rm $localPath/data/SPEparam/SPEparams.dat
 rm $localPath/data/NoisePlots/*png
 rm $localPath/data/SPEparam/$1".dat"
@@ -41,5 +41,5 @@ done
 cd $localPath/data/plots/
 montage -geometry 1000x1000+2+2  *.png SPEmontage.png
 
-cd $localPath/data/timePlots/
+cd $localPath/data/timePlots/noCoil/
 montage -geometry 1000x1000+2+2 *.png Timemontage.png

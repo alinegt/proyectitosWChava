@@ -8,7 +8,7 @@ SPE_and_timing::~SPE_and_timing() {}
 
 int main(int argc, char **argv)
 {
-  Double_t peaktovalley, sigma_fit;
+  Double_t peak2valley, sigma_fit;
   std::string inFile = argv[1]; // Nombre del archivo
   std::string outFile = argv[2]; // output text file
   std::string outputRoot = argv[4]; // Output root file
@@ -29,15 +29,19 @@ int main(int argc, char **argv)
 
   getPlots.param_out_file= argv[2];
   std::cout<< getPlots.param_out_file<<std::endl;
+  
+
+  // getPlots.getTimePlot();
 
   // getPlots.PulseThresOccupancy();
- 
    getPlots.sel_pulses();
 
   Double_t rms_noise;
   Double_t std_noise;
 
-  Double_t rms = getPlots.RMSnoise(&std_noise, &rms_noise);
+ Double_t rms = getPlots.RMSnoise(&std_noise, &rms_noise);
+
+ getPlots.SPEhistAndPlots(&peak2valley, &sigma_fit);
   // getPlots.getTimePlot();
   // getPlots.noise();
   std::string outFilePath = ("/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + outFile + ".dat").c_str();
@@ -81,8 +85,8 @@ std::string SPE_and_timing::rootFilename(char *inputRootPath, char *outputRootPa
 TH1F*  SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin)
 {
 
-TFile *f = new TFile(inputPath);
-  TTree *T = (TTree *)f->Get("T");
+TFile *f_loadhist = new TFile(inputPath);
+  TTree *T = (TTree *)f_loadhist->Get("T");
   TTree *Tcharge = T;
 
   TH1F *PeakToValleyFit = new TH1F("PeakToValleyFit", "No Coil", numberBin, limInfBin, limSupBin);
@@ -91,17 +95,13 @@ TFile *f = new TFile(inputPath);
 
   Tcharge->SetBranchAddress("charge", &charge_v);
 
-  for (ULong64_t j = 0; j < nentries; j++)
-  {
+  for (ULong64_t j = 0; j < nentries; j++){
     Tcharge->GetEntry(j);
     PeakToValleyFit->Fill(charge_v);
   }
+  
   Tcharge->ResetBranchAddresses();
-  delete T;
-  f->Close();
- 
-  //TCanvas *c1 = new TCanvas();
-  //PeakToValleyFit->Draw();
+
   return PeakToValleyFit;
 }
 /**
@@ -158,13 +158,13 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
 {
   Double_t limInfBin = -1;
   Double_t limSupBin = 6;
-  Double_t numberBin = 200;
+  Double_t numberBin = 100;
   Double_t adcResolution = (limSupBin - limInfBin) / numberBin;
 
 
 
   TH1F *h_peakToValley = loadHistFromFile(limInfBin, limSupBin, numberBin);
-  h_peakToValley->SetMaximum(10e4);
+  // h_peakToValley->SetMaximum(10e4);
   //h_peakToValley->SetMinimum(0.0);
 
   //std::string filepath = argc;
@@ -172,7 +172,7 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
   
   char *filename_arr = &inputRootFileName[0];
 
-  TCanvas *c = new TCanvas("c", "A3", 1000, 700);
+  TCanvas *c_hist = new TCanvas("c_hist", "A3", 1000, 700);
   TPad *pad1 = new TPad("pad1", "", 0, 0.0, 1, 1);
   pad1->SetLogy();
   pad1->SetGrid();
@@ -282,7 +282,7 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
   ///////////////////////////////////////////////////////////////////////
   ////// Stats boxes
   ///////////////////////////////////////////////////////////////////////
-  c->Update();
+  c_hist->Update();
   TPaveStats *ps1 = (TPaveStats *)h_peakToValley->GetListOfFunctions()->FindObject("stats");
   ps1->SetX1NDC(0.5);
   ps1->SetX2NDC(0.9);
@@ -356,9 +356,9 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
   mx2->SetMarkerColor(kGreen);
   mx2->Draw("SAME");
 
-  c->Update();
+  c_hist->Update();
 
-  c->cd();
+  c_hist->cd();
   ///////////////////////////////////////////////////////////////////////
   ///// Bin content
   ///////////////////////////////////////////////////////////////////////
@@ -367,7 +367,7 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
   Int_t binxInf = xaxis->FindBin(limInfFitf);
   Int_t binxSup = xaxis->FindBin(limSupBin);
 
-  c->Update();
+  c_hist->Update();
 
   Double_t binSum = 0;
   Int_t j = 0;
@@ -448,7 +448,7 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
   // // std::cout << h_residuals->FindFirstBinAbove(0) << std::endl;
   // // std::cout << h_residuals->FindLastBinAbove(0) << std::endl;
 
-  c->Update();
+  c_hist->Update();
 
   // TPaveStats *psRes = (TPaveStats *)h_residuals->GetListOfFunctions()->FindObject("stats");
   // psRes->SetX1NDC(0.6);
@@ -463,10 +463,10 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
   // // pad2->cd();30
   // pad2->Modified();
 
-  c->Update();
+  c_hist->Update();
   std::string outPath = "./data/plots/";
-  c->Print((outPath + inputRootFileName + ".png").c_str());
-  c->Close();
+  c_hist->Print((outPath + inputRootFileName + ".png").c_str());
+  c_hist->Close();
   std::cout << inputRootFileName << std::endl;
 
   return 0;
@@ -493,7 +493,7 @@ void  SPE_and_timing::getTimePlot()
   char *selBranch_array;
   selBranch_array = &selBr[0];
 
-  TH2F *h2 = new TH2F("h2", Form("%s", filename_arr), 200, 450, 550, 50, -0.25, 0.1);
+  TH2F *h2 = new TH2F("h2", Form("%s", filename_arr), 200, 520, 620, 50, -0.4, 0.1);
   T->Draw(Form( "%s:time/(1e-9)>>h2", selBranch_array ), Form("( ( ( Min$(%s) ) <-%g ) &&  ( ( Max$(%s) ) <%g ) )",selBranch_array ,0.03, selBranch_array,0.1), "colz");
   h2->SetStats(0);
   h2->GetZaxis()->SetRangeUser(0., 500.);
@@ -513,28 +513,28 @@ void  SPE_and_timing::getTimePlot()
 
   c->SetGrid();
   c->cd();
-  std::string outPath = "./data/timePlots/";
-  c->Print((outPath  + param_out_file +"/" + inputRootFileName + ".png").c_str());
+  //std::string outPath = "./data/timePlots/"; 
+  //c->Print((outPath  + param_out_file +"/" + inputRootFileName + ".png").c_str());
   delete T;
   f->Close();
   c->Close();
 }
 
 
-void upd() { TFile *f = new TFile("hs.root","update"); 
-TTree *T = (TTree*)f->Get("ntuple"); 
-float px,py; float pt; 
-TBranch *bpt = T->Branch("pt",&pt,"pt/F"); 
-T->SetBranchAddress("px",&px); 
-T->SetBranchAddress("py",&py); 
-Long64_t nentries = T->GetEntries(); 
-for (Long64_t i=0;i<nentries;i++) { 
-  T->GetEntry(i); 
-  pt = TMath::Sqrt(px*px+py*py); 
-  bpt->Fill(); } 
-  T->Print(); 
-  T->Write(); 
-  delete f; }
+// void upd() { TFile *f = new TFile("hs.root","update"); 
+// TTree *T = (TTree*)f->Get("ntuple"); 
+// float px,py; float pt; 
+// TBranch *bpt = T->Branch("pt",&pt,"pt/F"); 
+// T->SetBranchAddress("px",&px); 
+// T->SetBranchAddress("py",&py); 
+// Long64_t nentries = T->GetEntries(); 
+// for (Long64_t i=0;i<nentries;i++) { 
+//   T->GetEntry(i); 
+//   pt = TMath::Sqrt(px*px+py*py); 
+//   bpt->Fill(); } 
+//   T->Print(); 
+//   T->Write(); 
+//   delete f; }
 
 
 // void SPE_and_timing::sel_pulses2(){
@@ -636,7 +636,7 @@ Tsel->ResetBranchAddresses();
   char *selBranch_array;
   selBranch_array = &selBr[0];
 
-  TH2F *h = new TH2F("h", Form("%s", filename_arr), 200, 450, 550, 50, -0.25, 0.1);
+  TH2F *h = new TH2F("h", Form("%s", filename_arr), 200, 520, 620, 50, -0.25, 0.1);
   Tsel->Draw(Form( "%s:time/(1e-9)>>h", selBranch_array ),"bvoltage_selected==1", "colz");
   h->SetStats(0);
   h->GetZaxis()->SetRangeUser(0., 500.);

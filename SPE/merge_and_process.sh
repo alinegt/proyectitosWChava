@@ -40,7 +40,7 @@ rm *.dat
 
 approx_pulse_width=60
 number_of_points=200
-number_of_waveforms=19980
+number_of_waveforms=18980
 delta_time=5e-10
 
 for file in *
