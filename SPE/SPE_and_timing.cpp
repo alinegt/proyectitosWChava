@@ -5,6 +5,17 @@ SPE_and_timing::SPE_and_timing() {}
 /// Destructor
 SPE_and_timing::~SPE_and_timing() {}
 
+/**
+ * @brief Get a Tree from a ROOT file containing the pulse waveforms
+ * and perform the SPE analysis.
+ *  
+ * @param argv1 Path to a root file
+ * @param argv2 Output text file name
+ * @param argv3 Value of the max index for noise calculations
+ * @param argv4 Output Root file name
+    
+ * @return int 
+ */
 int main(int argc, char **argv)
 {
   Double_t peak2valley, sigma_fit;
@@ -53,6 +64,13 @@ int main(int argc, char **argv)
   return 0;
 }
 
+
+/**
+ * @brief Get the name of a directory
+ * 
+ * @param path Path to the directory
+ * @return std::string 
+ */
 std::string SPE_and_timing::baseName(std::string const &path)
 {
   std::string base_filename = path.substr(path.find_last_of("/\\") + 1);
@@ -60,6 +78,14 @@ std::string SPE_and_timing::baseName(std::string const &path)
   return base_filename.substr(0, p);
 }
 
+
+/**
+ * @brief Get the name of output/input Root file
+ * 
+ * @param inputRootPath  Path to the input ROOT file
+ * @param outputRootPath Path to the ouput ROOT file
+ * @return std::string 
+ */
 std::string SPE_and_timing::rootFilename(char *inputRootPath, char *outputRootPath)
 {
 
@@ -75,6 +101,14 @@ std::string SPE_and_timing::rootFilename(char *inputRootPath, char *outputRootPa
 }
 
 // Function to load the histogram from dat file
+/**
+ * @brief Create an histogram from a branch in the input ROOT file
+ * 
+ * @param limInfBin Histogram parameter
+ * @param limSupBin Histogram parameter
+ * @param numberBin Histogram parameter
+ * @return TH1F* 
+ */
 TH1F *SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin)
 {
 
@@ -98,6 +132,7 @@ TH1F *SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, d
 
   return PeakToValleyFit;
 }
+
 /**
  * @brief Function to fit multi pe spectrum.
  * This is a static function, static declaration in header
@@ -106,7 +141,6 @@ TH1F *SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, d
  * @param par      Pointer to parameters for the fit
  * @return Double_t 
  */
-
 Double_t SPE_and_timing::fitf(Double_t *x, Double_t *par)
 {
   Double_t arg = 0;
@@ -381,79 +415,6 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   t2.Draw();
   t3.Draw();
 
-  ///////////////////////////////////////////////////////////////////////
-  ///// Residuals plot
-  ///////////////////////////////////////////////////////////////////////
-
-  // TPad *pad2 = new TPad("pad2", "pad2", 0, 0, 1, 0.3);
-  // pad2->Draw();
-  // pad2->cd();
-  // // TF1 *f_SPEGaus = (TF1*) h_spe-> GetListOfFunctions()->FindObject("gaus");
-  // TF1 *f_SPEGaus = (TF1 *)h_multiph->GetListOfFunctions()->FindObject("fitf");
-
-  // TH1F *h_residuals = new TH1F("Residuals Multi SPE Fit", "Residuals MultiSPE Fit", 18, -15, 21);
-  // //pad1->SetBottomMargin(0.01);
-  // //pad1->SetBorderMode(0);
-  // // pad1->SetLogy();
-  // pad2->SetTopMargin(0.00001);
-  // pad2->SetBottomMargin(0.25);
-  // pad2->SetBorderMode(0);
-  // // pad1->Draw();
-  // // pad2->Draw();
-  // pad1->cd();
-  // h_residuals->SetLineWidth(2);
-  // h_residuals->SetTitle(Form("SPE fit Residual; Charge [pC] ;Counts"));
-  // h_residuals->GetXaxis()->SetTitleSize(.11);
-  // h_residuals->GetYaxis()->SetTitleSize(.11);
-  // h_residuals->GetYaxis()->SetTitleOffset(0.3);
-  // h_residuals->GetXaxis()->SetTitleOffset(1);
-  // h_residuals->GetXaxis()->SetTicks("+-");
-  // h_residuals->GetXaxis()->SetLabelFont(63);
-  // h_residuals->GetXaxis()->SetLabelSize(16);
-  // h_residuals->GetYaxis()->SetLabelFont(63);
-  // h_residuals->GetYaxis()->SetLabelSize(16);
-  // h_residuals->GetYaxis()->SetRangeUser(0., 50.);
-  // pad2->SetGrid();
-  // pad2->cd();
-  // double_t res;
-  // Int_t binxSupGauss = xaxis->FindBin(3.4);
-  // Int_t binxInfFitf = xaxis->FindBin(limInfFitf);
-
-  // // std::cout << h_peakToValley->GetNbinsX()<< std::endl;
-  // // std::cout << binxInf<< std::endl;
-  // // std::cout << binxSupGauss<< std::endl;
-
-  // for (int i = 0; i < h_multiph->GetNbinsX(); i++)
-  // {
-
-  //   if (i >= binxInfFitf && i <= binxSupGauss)
-  //   {
-  //     res = h_multiph->GetBinContent(i) - f_SPEGaus->Eval(h_multiph->GetBinCenter(i));
-  //     h_residuals->Fill(res);
-  //   }
-  // }
-
-  // h_residuals->Draw();
-
-  // h_residuals->Fit("gaus", "Q", "sames", -17 + h_residuals->FindFirstBinAbove(0), h_residuals->FindLastBinAbove(0) + 3);
-  // // std::cout << h_residuals->FindFirstBinAbove(0) << std::endl;
-  // // std::cout << h_residuals->FindLastBinAbove(0) << std::endl;
-
-  c_hist->Update();
-
-  // TPaveStats *psRes = (TPaveStats *)h_residuals->GetListOfFunctions()->FindObject("stats");
-  // psRes->SetX1NDC(0.6);
-  // psRes->SetX2NDC(0.9);
-  // psRes->SetY1NDC(0.5);
-  // psRes->SetY2NDC(1);
-  // psRes->SetTextSize(.1);
-  // // psRes->SetTextColor(kBlack);
-  // psRes->SetOptStat(1000000001);
-  // psRes->SetOptFit(0001);
-  // psRes->Draw();
-  // // pad2->cd();30
-  // pad2->Modified();
-
   c_hist->Update();
   std::string outPath = "./data/plots/";
   c_hist->Print((outPath + inputRootFileName + ".png").c_str());
@@ -464,9 +425,6 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
 }
 /**
  * @brief Generate voltage vs time plots
- * 
- * @param TTree Tree object
- * @param argc Filepath to the root file
  */
 void SPE_and_timing::getTimePlot()
 {
@@ -511,27 +469,10 @@ void SPE_and_timing::getTimePlot()
   c->Close();
 }
 
-// void upd() { TFile *f = new TFile("hs.root","update");
-// TTree *T = (TTree*)f->Get("ntuple");
-// float px,py; float pt;
-// TBranch *bpt = T->Branch("pt",&pt,"pt/F");
-// T->SetBranchAddress("px",&px);
-// T->SetBranchAddress("py",&py);
-// Long64_t nentries = T->GetEntries();
-// for (Long64_t i=0;i<nentries;i++) {
-//   T->GetEntry(i);
-//   pt = TMath::Sqrt(px*px+py*py);
-//   bpt->Fill(); }
-//   T->Print();
-//   T->Write();
-//   delete f; }
-
-// void SPE_and_timing::sel_pulses2(){
-
-// }
-
-//Select pulses waveforms
-
+/**
+ * @brief Select waveforms
+ * 
+ */
 void SPE_and_timing::sel_pulses()
 {
 
@@ -629,7 +570,13 @@ void SPE_and_timing::sel_pulses()
   delete hfile;
 }
 
-// Return std of gaussian fit for a vector
+// 
+/**
+ * @brief Return std of gaussian fit for a vector
+ * 
+ * @param v_voltage Vector
+ * @return Float_t 
+ */
 Float_t SPE_and_timing::h_std(vector<float> *v_voltage)
 {
   TCanvas *c3 = new TCanvas("c3", "A3", 1000, 700);
@@ -668,6 +615,14 @@ Float_t SPE_and_timing::h_std(vector<float> *v_voltage)
   return noiseSigmaFit;
 }
 
+
+/**
+ * @brief Get rms noise with two different methods
+ * 
+ * @param std_noise Pointer to a double to be updated
+ * @param rms_noise Pointer to a double to be updated
+ * @return Double_t 
+ */
 Double_t SPE_and_timing::RMSnoise(Double_t *std_noise, Double_t *rms_noise)
 {
 
