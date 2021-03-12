@@ -1,53 +1,51 @@
 #include "SPE_and_timing.h"
 
 /// Constructor
-SPE_and_timing::SPE_and_timing()  {}
+SPE_and_timing::SPE_and_timing() {}
 /// Destructor
 SPE_and_timing::~SPE_and_timing() {}
-
 
 int main(int argc, char **argv)
 {
   Double_t peak2valley, sigma_fit;
-  std::string inFile = argv[1]; // Nombre del archivo
-  std::string outFile = argv[2]; // output text file
+  std::string inFile = argv[1];     // Nombre del archivo
+  std::string outFile = argv[2];    // output text file
   std::string outputRoot = argv[4]; // Output root file
   std::ofstream a_file;
   // TTree *Tsubset;
   SPE_and_timing getPlots;
   getPlots.noiseMaxIndex = std::stoi(argv[3]); // max index value for noise measurements
-  std::string  fileName;
-  fileName =getPlots.rootFilename(argv[1], argv[4]);
+  std::string fileName;
+  fileName = getPlots.rootFilename(argv[1], argv[4]);
   getPlots.inputPath = argv[1];
- std::cout<< "getPlots.inputPath" << std::endl;
+  std::cout << "getPlots.inputPath" << std::endl;
 
-  std::cout<< getPlots.inputPath << std::endl;
-  getPlots.outputPath= argv[4];
-  std::cout<< "getPlots.outputPath" << std::endl;
+  std::cout << getPlots.inputPath << std::endl;
+  getPlots.outputPath = argv[4];
+  std::cout << "getPlots.outputPath" << std::endl;
 
-  std::cout<< getPlots.outputPath << std::endl;
+  std::cout << getPlots.outputPath << std::endl;
 
-  getPlots.param_out_file= argv[2];
-  std::cout<< getPlots.param_out_file<<std::endl;
-  
+  getPlots.param_out_file = argv[2];
+  std::cout << getPlots.param_out_file << std::endl;
 
   // getPlots.getTimePlot();
 
   // getPlots.PulseThresOccupancy();
-   getPlots.sel_pulses();
+  getPlots.sel_pulses();
 
   Double_t rms_noise;
   Double_t std_noise;
 
- Double_t rms = getPlots.RMSnoise(&std_noise, &rms_noise);
+  Double_t rms = getPlots.RMSnoise(&std_noise, &rms_noise);
 
- getPlots.SPEhistAndPlots(&peak2valley, &sigma_fit);
+  getPlots.SPEhistAndPlots(&peak2valley, &sigma_fit);
   // getPlots.getTimePlot();
   // getPlots.noise();
   std::string outFilePath = ("/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + outFile + ".dat").c_str();
   a_file.open(outFilePath, std::ios::out | std::fstream::app);
   // a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
-  a_file << fileName << " " << rms_noise << " "  <<  std_noise  <<std::endl;
+  a_file << fileName << " " << rms_noise << " " << std_noise << std::endl;
 
   //a_file.close();
 
@@ -62,30 +60,25 @@ std::string SPE_and_timing::baseName(std::string const &path)
   return base_filename.substr(0, p);
 }
 
+std::string SPE_and_timing::rootFilename(char *inputRootPath, char *outputRootPath)
+{
 
-
-std::string SPE_and_timing::rootFilename(char *inputRootPath, char *outputRootPath){
-  
   inputRootFileName = baseName(inputRootPath);
-  outputRootFileName = baseName(outputRootPath);  
- 
+  outputRootFileName = baseName(outputRootPath);
+
   // TFile *f = new TFile(inputPath);
   // TTree *T = (TTree *)f->Get("T");
   // // T->Print();
   // delete T;
   // f->Close();
-   return inputRootFileName;
-
+  return inputRootFileName;
 }
 
-
-
-
 // Function to load the histogram from dat file
-TH1F*  SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin)
+TH1F *SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin)
 {
 
-TFile *f_loadhist = new TFile(inputPath);
+  TFile *f_loadhist = new TFile(inputPath);
   TTree *T = (TTree *)f_loadhist->Get("T");
   TTree *Tcharge = T;
 
@@ -95,11 +88,12 @@ TFile *f_loadhist = new TFile(inputPath);
 
   Tcharge->SetBranchAddress("charge", &charge_v);
 
-  for (ULong64_t j = 0; j < nentries; j++){
+  for (ULong64_t j = 0; j < nentries; j++)
+  {
     Tcharge->GetEntry(j);
     PeakToValleyFit->Fill(charge_v);
   }
-  
+
   Tcharge->ResetBranchAddresses();
 
   return PeakToValleyFit;
@@ -113,7 +107,7 @@ TFile *f_loadhist = new TFile(inputPath);
  * @return Double_t 
  */
 
-Double_t  SPE_and_timing::fitf(Double_t *x, Double_t *par)
+Double_t SPE_and_timing::fitf(Double_t *x, Double_t *par)
 {
   Double_t arg = 0;
   //   Double_t arg1 =0;
@@ -144,7 +138,6 @@ Double_t  SPE_and_timing::fitf(Double_t *x, Double_t *par)
   return fitval;
 }
 
-
 /**
  * @brief Main function to get the parameters and generate 
  * histograms
@@ -154,14 +147,12 @@ Double_t  SPE_and_timing::fitf(Double_t *x, Double_t *par)
  * @param sigma_fit       Pointer to the sigma value to get obtained from fit
  * @return Double_t 
  */
-Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit)
+Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit)
 {
   Double_t limInfBin = -1;
   Double_t limSupBin = 6;
   Double_t numberBin = 100;
   Double_t adcResolution = (limSupBin - limInfBin) / numberBin;
-
-
 
   TH1F *h_peakToValley = loadHistFromFile(limInfBin, limSupBin, numberBin);
   // h_peakToValley->SetMaximum(10e4);
@@ -169,7 +160,7 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
 
   //std::string filepath = argc;
   //std::string filename = baseName(filepath);
-  
+
   char *filename_arr = &inputRootFileName[0];
 
   TCanvas *c_hist = new TCanvas("c_hist", "A3", 1000, 700);
@@ -212,7 +203,7 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
   Double_t limInfFitf = 0.3;
   Double_t limSupFitf = 5;
   Double_t numberOfParams = 5;
-  TF1 *funcMulti = new TF1("fitf",SPE_and_timing::fitf, limInfFitf, limSupFitf, numberOfParams);
+  TF1 *funcMulti = new TF1("fitf", SPE_and_timing::fitf, limInfFitf, limSupFitf, numberOfParams);
   // set the parameters to the mean and RMS of the histogram
   funcMulti->SetParameters(445, 0, 3, 1, 1.8);
   // a
@@ -477,201 +468,178 @@ Double_t  SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma
  * @param TTree Tree object
  * @param argc Filepath to the root file
  */
-void  SPE_and_timing::getTimePlot()
+void SPE_and_timing::getTimePlot()
 {
- TFile *f = new TFile(inputPath);
+  TFile *f = new TFile(inputPath);
   TTree *T = (TTree *)f->Get("T");
   // T->Print();
-  
+
   std::string filename = inputRootFileName;
   char *filename_arr;
   filename_arr = &filename[0];
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
   c->Update();
 
-  std::string selBr="bvoltage_selected";
+  std::string selBr = "bvoltage_selected";
   char *selBranch_array;
   selBranch_array = &selBr[0];
 
   TH2F *h2 = new TH2F("h2", Form("%s", filename_arr), 200, 520, 620, 50, -0.4, 0.1);
-  T->Draw(Form( "%s:time/(1e-9)>>h2", selBranch_array ), Form("( ( ( Min$(%s) ) <-%g ) &&  ( ( Max$(%s) ) <%g ) )",selBranch_array ,0.03, selBranch_array,0.1), "colz");
+  T->Draw(Form("%s:time/(1e-9)>>h2", selBranch_array), Form("( ( ( Min$(%s) ) <-%g ) &&  ( ( Max$(%s) ) <%g ) )", selBranch_array, 0.03, selBranch_array, 0.1), "colz");
   h2->SetStats(0);
   h2->GetZaxis()->SetRangeUser(0., 500.);
   h2->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
   h2->GetXaxis()->SetNoExponent();
 
   gPad->Update();
-   TPaletteAxis *palette = (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
+  TPaletteAxis *palette = (TPaletteAxis *)h2->GetListOfFunctions()->FindObject("palette");
 
-// the following lines move the paletter. Choose the values you need for the position.
-   palette->SetX1NDC(0.9);
-   palette->SetX2NDC(0.95);
-   palette->SetY1NDC(0.2);
-   palette->SetY2NDC(0.8);
-   gPad->Modified();
-   gPad->Update();
+  // the following lines move the paletter. Choose the values you need for the position.
+  palette->SetX1NDC(0.9);
+  palette->SetX2NDC(0.95);
+  palette->SetY1NDC(0.2);
+  palette->SetY2NDC(0.8);
+  gPad->Modified();
+  gPad->Update();
 
   c->SetGrid();
   c->cd();
-  //std::string outPath = "./data/timePlots/"; 
+  //std::string outPath = "./data/timePlots/";
   //c->Print((outPath  + param_out_file +"/" + inputRootFileName + ".png").c_str());
   delete T;
   f->Close();
   c->Close();
 }
 
-
-// void upd() { TFile *f = new TFile("hs.root","update"); 
-// TTree *T = (TTree*)f->Get("ntuple"); 
-// float px,py; float pt; 
-// TBranch *bpt = T->Branch("pt",&pt,"pt/F"); 
-// T->SetBranchAddress("px",&px); 
-// T->SetBranchAddress("py",&py); 
-// Long64_t nentries = T->GetEntries(); 
-// for (Long64_t i=0;i<nentries;i++) { 
-//   T->GetEntry(i); 
-//   pt = TMath::Sqrt(px*px+py*py); 
-//   bpt->Fill(); } 
-//   T->Print(); 
-//   T->Write(); 
+// void upd() { TFile *f = new TFile("hs.root","update");
+// TTree *T = (TTree*)f->Get("ntuple");
+// float px,py; float pt;
+// TBranch *bpt = T->Branch("pt",&pt,"pt/F");
+// T->SetBranchAddress("px",&px);
+// T->SetBranchAddress("py",&py);
+// Long64_t nentries = T->GetEntries();
+// for (Long64_t i=0;i<nentries;i++) {
+//   T->GetEntry(i);
+//   pt = TMath::Sqrt(px*px+py*py);
+//   bpt->Fill(); }
+//   T->Print();
+//   T->Write();
 //   delete f; }
-
 
 // void SPE_and_timing::sel_pulses2(){
 
-
-
-
 // }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //Select pulses waveforms
 
-void SPE_and_timing::sel_pulses(){
+void SPE_and_timing::sel_pulses()
+{
 
+  std::string filename = outputRootFileName;
+  char *filename_arr;
+  filename_arr = &filename[0];
 
-std::string filename = outputRootFileName;
-char *filename_arr;
-filename_arr = &filename[0];
+  // Open input file containing a Tree
+  TFile *f = new TFile(inputPath);
+  TTree *T = (TTree *)f->Get("T");
 
-// Open input file containing a Tree
-TFile *f = new TFile(inputPath);
-TTree *T = (TTree *)f->Get("T");
+  // Create a new file and cloning the input Tree into the output Tree
+  TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr), "RECREATE");
+  TTree *Tsel = T->CloneTree();
 
-// Create a new file and cloning the input Tree into the output Tree
-TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr),"RECREATE");
-TTree *Tsel = T->CloneTree();
+  // Variable from the input Tree
+  std::vector<float> *v_voltage = 0;
+  // New Variable for the output Tree
+  Bool_t bol_voltage_selected;
+  Float_t f_rms;
+  Float_t f_std;
+  // Set branch Address for the input Tree variable
+  Tsel->SetBranchAddress("voltage", &v_voltage);
 
-// Variable from the input Tree
-std::vector<float> *v_voltage=0;
-// New Variable for the output Tree
-Bool_t bol_voltage_selected;
-Float_t f_rms;
-Float_t f_std;
-// Set branch Address for the input Tree variable
-Tsel->SetBranchAddress("voltage",&v_voltage); 
+  // Create new branch
+  TBranch *bvoltage_selected = Tsel->Branch("bvoltage_selected", &bol_voltage_selected);
+  TBranch *brms = Tsel->Branch("brms", &f_rms);
+  TBranch *bstd = Tsel->Branch("bstd", &f_std);
 
-// Create new branch
-TBranch *bvoltage_selected = Tsel->Branch("bvoltage_selected",&bol_voltage_selected); 
-TBranch *brms = Tsel->Branch("brms",&f_rms); 
-TBranch *bstd = Tsel->Branch("bstd",&f_std); 
+  // For loop to fill NEW BRANCH
+  Long64_t nentries = Tsel->GetEntries();
+  for (Long64_t i = 0; i < nentries; i++)
+  {
+    Tsel->GetEntry(i);
+    auto maxVoltage = std::max_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
 
-// For loop to fill NEW BRANCH
-Long64_t nentries = Tsel->GetEntries(); 
-for (Long64_t i=0;i<nentries;i++) { 
-Tsel->GetEntry(i); 
- auto maxVoltage = std::max_element(v_voltage->begin(),next(v_voltage->begin(), noiseMaxIndex) ); 
+    //auto minVoltageIndex = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ) - v_voltage->begin();
+    auto minVoltage = std::min_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
 
-//auto minVoltageIndex = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ) - v_voltage->begin(); 
- auto minVoltage = std::min_element(v_voltage->begin(),next(v_voltage->begin(), noiseMaxIndex) ); 
-    
-    if ( ( (float)*minVoltage > -0.05) & ((float)*maxVoltage < 0.04))  {
+    if (((float)*minVoltage > -0.05) & ((float)*maxVoltage < 0.04))
+    {
 
-    bol_voltage_selected = true;
-      f_std=h_std(v_voltage);
-
+      bol_voltage_selected = true;
+      f_std = h_std(v_voltage);
     }
-    else {
-    bol_voltage_selected=false;
-      f_std=0.0/0.0;
-
-
+    else
+    {
+      bol_voltage_selected = false;
+      f_std = 0.0 / 0.0;
     }
 
-	Float_t sum = 0;
-	for (int i = 0; i < noiseMaxIndex; i++){
-		sum += pow( v_voltage->at(i), 2);}
-	f_rms= sqrt(sum / noiseMaxIndex);
-  
-  // f_std=h_std(v_voltage);
-  //  std::cout<< f_std<<std::endl;
+    Float_t sum = 0;
+    for (int i = 0; i < noiseMaxIndex; i++)
+    {
+      sum += pow(v_voltage->at(i), 2);
+    }
+    f_rms = sqrt(sum / noiseMaxIndex);
 
+    // f_std=h_std(v_voltage);
+    //  std::cout<< f_std<<std::endl;
 
-
-bvoltage_selected->Fill(); // NOTE : Filling new branch
-brms->Fill();
-bstd->Fill();
-} 
-Tsel->ResetBranchAddresses();
-
-
-
+    bvoltage_selected->Fill(); // NOTE : Filling new branch
+    brms->Fill();
+    bstd->Fill();
+  }
+  Tsel->ResetBranchAddresses();
 
   TCanvas *c2 = new TCanvas("c2", "A3", 1000, 700);
   c2->Update();
 
-  std::string selBr="voltage";
+  std::string selBr = "voltage";
   char *selBranch_array;
   selBranch_array = &selBr[0];
 
   TH2F *h = new TH2F("h", Form("%s", filename_arr), 200, 520, 620, 50, -0.25, 0.1);
-  Tsel->Draw(Form( "%s:time/(1e-9)>>h", selBranch_array ),"bvoltage_selected==1", "colz");
+  Tsel->Draw(Form("%s:time/(1e-9)>>h", selBranch_array), "bvoltage_selected==1", "colz");
   h->SetStats(0);
   h->GetZaxis()->SetRangeUser(0., 500.);
   h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
   h->GetXaxis()->SetNoExponent();
   h->Write();
-    gPad->Update();
+  gPad->Update();
 
- c2->SetGrid();
+  c2->SetGrid();
   c2->cd();
   std::string outPath = "./data/timePlots/";
-  c2->Print((outPath  + param_out_file +"/" + outputRootFileName + ".png").c_str());
+  c2->Print((outPath + param_out_file + "/" + outputRootFileName + ".png").c_str());
 
   // c2->Print((outPath + outputRootFileName + ".png").c_str());
 
   c2->Close();
 
- hfile->Write();
- hfile->Close();
-   delete hfile;
-  
-
+  hfile->Write();
+  hfile->Close();
+  delete hfile;
 }
 
-
-// Return std of gaussian fit for a vector 
-Float_t SPE_and_timing::h_std(vector <float> *v_voltage){
- TCanvas *c3 = new TCanvas("c3", "A3", 1000, 700);
+// Return std of gaussian fit for a vector
+Float_t SPE_and_timing::h_std(vector<float> *v_voltage)
+{
+  TCanvas *c3 = new TCanvas("c3", "A3", 1000, 700);
   c3->Update();
 
   // auto numberBin=  noise.size();
   // auto limInfBin=  noise.begin();
   // auto limSupBin=  noise.end();
   TH1F *h_noiseFit = new TH1F("h_noiseFit", "Noise Hist", 25, -0.05, 0.05);
-  for (auto it = v_voltage->begin() ; it != v_voltage->begin()+noiseMaxIndex; ++it)
+  for (auto it = v_voltage->begin(); it != v_voltage->begin() + noiseMaxIndex; ++it)
   {
     h_noiseFit->Fill(*it);
   }
@@ -681,42 +649,39 @@ Float_t SPE_and_timing::h_std(vector <float> *v_voltage){
   h_noiseFit->GetFunction("gaus")->SetLineColor(kBlack);
   h_noiseFit->GetFunction("gaus")->SetLineWidth(2);
   TF1 *parGaus = (TF1 *)h_noiseFit->GetListOfFunctions()->FindObject("gaus");
-  
+
   Float_t noiseSigmaFit = 0;
   noiseSigmaFit = parGaus->GetParameter(2);
-  
+
   gPad->Update();
- c3->SetGrid();
+  c3->SetGrid();
   c3->cd();
   std::string outPath = "./data/NoiseFits/";
   int randomN;
-  randomN = rand() % 10
-   + 1;
+  randomN = rand() % 10 + 1;
   std::string randomNstring = std::to_string(randomN);
   // c3->Print((outPath + outputRootFileName + randomNstring +".png").c_str());
-  
-  
+
   delete c3;
   delete h_noiseFit;
-  
+
   return noiseSigmaFit;
 }
 
+Double_t SPE_and_timing::RMSnoise(Double_t *std_noise, Double_t *rms_noise)
+{
 
-Double_t SPE_and_timing::RMSnoise(Double_t *std_noise, Double_t *rms_noise){
-  
+  std::string filename = outputRootFileName;
+  char *filename_arr;
+  filename_arr = &filename[0];
 
-std::string filename = outputRootFileName;
-char *filename_arr;
-filename_arr = &filename[0];
+  TFile *f = new TFile(Form("./data/cutted/%s.root", filename_arr));
 
-TFile *f = new TFile(Form("./data/cutted/%s.root", filename_arr));
-
- // TFile *f = new TFile(outputPath);
+  // TFile *f = new TFile(outputPath);
   TTree *T = (TTree *)f->Get("T");
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
-  TH1F *h_noise_rms = new TH1F("h_noise_rms", "rms noise",50,0.00,0.01 );
- T->Draw("noise>>h_noise_rms","bvoltage_selected==1");
+  TH1F *h_noise_rms = new TH1F("h_noise_rms", "rms noise", 50, 0.00, 0.01);
+  T->Draw("noise>>h_noise_rms", "bvoltage_selected==1");
 
   h_noise_rms->Fit("gaus", "Q", "sames");
   h_noise_rms->GetFunction("gaus")->SetLineColor(kRed);
@@ -726,23 +691,21 @@ TFile *f = new TFile(Form("./data/cutted/%s.root", filename_arr));
   c->Update();
   Double_t noise_rms_mean = h_noise_rms->GetMean();
   std::cout << "noise_rms_mean" << std::endl;
-   h_noise_rms->SetLineColor(kRed);
+  h_noise_rms->SetLineColor(kRed);
 
   std::cout << noise_rms_mean << std::endl;
   //noise_mean = 0.03;
 
+  TH1F *h_noise_std = new TH1F("h_noise_std", "std_noise", 50, 0.0, 0.01);
+  h_noise_std->SetLineColor(kBlack);
 
-  TH1F *h_noise_std = new TH1F("h_noise_std", "std_noise",50,0.0,0.01 );
-   h_noise_std->SetLineColor(kBlack);
-
-  T->Draw("bstd>>h_noise_std","bvoltage_selected==1", "sames");
+  T->Draw("bstd>>h_noise_std", "bvoltage_selected==1", "sames");
 
   h_noise_std->Fit("gaus", "Q", "sames");
   h_noise_std->GetFunction("gaus")->SetLineColor(kBlack);
   h_noise_std->GetFunction("gaus")->SetLineWidth(2);
   gPad->Update();
   c->Update();
-  
 
   Double_t noise_std_mean = h_noise_std->GetMean();
   std::cout << "noise_std_mean" << std::endl;
@@ -750,15 +713,15 @@ TFile *f = new TFile(Form("./data/cutted/%s.root", filename_arr));
   std::cout << noise_std_mean << std::endl;
   *std_noise = noise_std_mean;
 
- TH1F *h_noise_rms_sel = new TH1F("h_noise_rms_sel", "rms sel",50,0.0,0.01 );
-  T->Draw("brms>>h_noise_rms_sel","bvoltage_selected==1", "sames");
-     h_noise_rms_sel->SetLineColor(kBlue);
-h_noise_rms_sel->Fit("gaus", "Q", "sames");
+  TH1F *h_noise_rms_sel = new TH1F("h_noise_rms_sel", "rms sel", 50, 0.0, 0.01);
+  T->Draw("brms>>h_noise_rms_sel", "bvoltage_selected==1", "sames");
+  h_noise_rms_sel->SetLineColor(kBlue);
+  h_noise_rms_sel->Fit("gaus", "Q", "sames");
   h_noise_rms_sel->GetFunction("gaus")->SetLineColor(kBlue);
   h_noise_rms_sel->GetFunction("gaus")->SetLineWidth(2);
   gPad->Update();
   c->Update();
-  
+
   Double_t noise_rms_sel_mean = h_noise_rms_sel->GetMean();
   std::cout << "noise_rms_sel_mean" << std::endl;
 
@@ -769,14 +732,13 @@ h_noise_rms_sel->Fit("gaus", "Q", "sames");
   int randomN;
   //randomN = rand() % 50000 + 1;
   std::string randomNstring = std::to_string(randomN);
-  c->Print((outPath + inputRootFileName +".png").c_str());
-  
+  c->Print((outPath + inputRootFileName + ".png").c_str());
+
   delete T;
   f->Close();
   // return noise_rms_mean;
   return noise_rms_sel_mean;
 }
-
 
 /**
  * @brief  Get the occupancy based on the number of pulses that exceeds
@@ -786,11 +748,11 @@ h_noise_rms_sel->Fit("gaus", "Q", "sames");
  * 
  * @sventurag 
  */
-void  SPE_and_timing::PulseThresOccupancy()
+void SPE_and_timing::PulseThresOccupancy()
 {
 
-TFile *f = new TFile(inputPath);
-// delete T;
+  TFile *f = new TFile(inputPath);
+  // delete T;
   TTree *T = (TTree *)f->Get("T");
   std::string filename = inputRootFileName;
   char *filename_arr;
@@ -803,27 +765,26 @@ TFile *f = new TFile(inputPath);
   // c->Update();
   // float noise_mean = h_noise->GetMean();
   std::cout << noise_mean << std::endl;
-// This part of the code is because when using gDirectory->Get... GenEntries is always zero,
-// and when using gPad->GetPrimitive, SetTitle does not work. So, I have to draw the tree twice
+  // This part of the code is because when using gDirectory->Get... GenEntries is always zero,
+  // and when using gPad->GetPrimitive, SetTitle does not work. So, I have to draw the tree twice
   T->Draw("voltage:Iteration$>>h_sel_entries", Form("(Min$(voltage)>-%g)", noise_mean));
- TH1F *h_sel_entries = (TH1F*)gDirectory->Get("h_sel_entries");               
-  auto h_entries= h_sel_entries->GetEntries();
+  TH1F *h_sel_entries = (TH1F *)gDirectory->Get("h_sel_entries");
+  auto h_entries = h_sel_entries->GetEntries();
 
   T->Draw("voltage:Iteration$>>Myhist", Form("(Min$(voltage)<-%g)", noise_mean));
- // TH1F *h_threshold = (TH1F*)gDirectory->Get("Myhist");
-  TH1F *h_threshold = (TH1F*)gPad->GetPrimitive("Myhist"); 
-//
+  // TH1F *h_threshold = (TH1F*)gDirectory->Get("Myhist");
+  TH1F *h_threshold = (TH1F *)gPad->GetPrimitive("Myhist");
+  //
   h_threshold->SetTitle(Form("%s; Time [s] ; Amplitude [V]", filename_arr));
 
-
   // h_threshold->Print();
-    std::cout <<  "No. Entries"  << std::endl;
+  std::cout << "No. Entries" << std::endl;
 
-  std::cout << nentries -h_entries/200  << std::endl;
+  std::cout << nentries - h_entries / 200 << std::endl;
 
   float NoiseWaveformCounts = 100 - (100 * h_entries) / (nentries * 200);
   std::cout << NoiseWaveformCounts << std::endl;
-   gPad->Update();
+  gPad->Update();
   c->Update();
   c->SetGrid();
   c->cd();
@@ -833,5 +794,3 @@ TFile *f = new TFile(inputPath);
   f->Close();
   c->Close();
 }
-
-
