@@ -39,18 +39,21 @@ int main(int argc, char **argv)
 
   getPlots.param_out_file = argv[2];
   std::cout << getPlots.param_out_file << std::endl;
-
+  getPlots.start_time=0;
+  getPlots.end_time=0;
   // getPlots.getTimePlot();
 
   // getPlots.PulseThresOccupancy();
-  getPlots.sel_pulses();
 
   Double_t rms_noise;
   Double_t std_noise;
 
-  Double_t rms = getPlots.RMSnoise(&std_noise, &rms_noise);
 
   getPlots.SPEhistAndPlots(&peak2valley, &sigma_fit);
+  getPlots.sel_pulses();
+  Double_t rms = getPlots.RMSnoise(&std_noise, &rms_noise);
+
+
   // getPlots.getTimePlot();
   // getPlots.noise();
   std::string outFilePath = ("/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + outFile + ".dat").c_str();
@@ -100,7 +103,7 @@ std::string SPE_and_timing::rootFilename(char *inputRootPath, char *outputRootPa
   return inputRootFileName;
 }
 
-// Function to load the histogram from dat file
+
 /**
  * @brief Create an histogram from a branch in the input ROOT file
  * 
@@ -118,14 +121,31 @@ TH1F *SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, d
 
   TH1F *PeakToValleyFit = new TH1F("PeakToValleyFit", "No Coil", numberBin, limInfBin, limSupBin);
   float charge_v;
+  // Double_t start_time;
+  // Double_t end_time;
+  std::vector<float> *time_v = 0;
+  
   ULong64_t nentries = (Int_t)Tcharge->GetEntries();
 
   Tcharge->SetBranchAddress("charge", &charge_v);
+  Tcharge->SetBranchAddress("time", &time_v);
 
   for (ULong64_t j = 0; j < nentries; j++)
   {
     Tcharge->GetEntry(j);
     PeakToValleyFit->Fill(charge_v);
+    
+    if (j==0){
+    
+    start_time = round(time_v->at(0)*1e9);
+    end_time = round(time_v->at( time_v->size()-1 )*1e9);
+    
+    // start_time_int = (  start_time*1e9 );
+    // end_time_int = ( end_time*1e9 );
+    std::cout<< start_time <<std::endl;
+    std::cout<< end_time <<std::endl;
+
+    }
   }
 
   Tcharge->ResetBranchAddresses();
@@ -137,7 +157,7 @@ TH1F *SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, d
  * @brief Function to fit multi pe spectrum.
  * This is a static function, static declaration in header
  * 
- * @param x 
+ * @param x Tcharge->SetBranchAddress("charge", &charge_v);
  * @param par      Pointer to parameters for the fit
  * @return Double_t 
  */
@@ -438,7 +458,7 @@ void SPE_and_timing::getTimePlot()
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
   c->Update();
 
-  std::string selBr = "bvoltage_selected";
+  std::string selBr = "BbaselineNoise";
   char *selBranch_array;
   selBranch_array = &selBr[0];
 
@@ -498,7 +518,7 @@ void SPE_and_timing::sel_pulses()
   Tsel->SetBranchAddress("voltage", &v_voltage);
 
   // Create new branch
-  TBranch *bvoltage_selected = Tsel->Branch("bvoltage_selected", &bol_voltage_selected);
+  TBranch *BbaselineNoise = Tsel->Branch("BbaselineNoise", &bol_voltage_selected);
   TBranch *brms = Tsel->Branch("brms", &f_rms);
   TBranch *bstd = Tsel->Branch("bstd", &f_std);
 
@@ -534,7 +554,7 @@ void SPE_and_timing::sel_pulses()
     // f_std=h_std(v_voltage);
     //  std::cout<< f_std<<std::endl;
 
-    bvoltage_selected->Fill(); // NOTE : Filling new branch
+    BbaselineNoise->Fill(); // NOTE : Filling new branch
     brms->Fill();
     bstd->Fill();
   }
@@ -546,11 +566,17 @@ void SPE_and_timing::sel_pulses()
   std::string selBr = "voltage";
   char *selBranch_array;
   selBranch_array = &selBr[0];
+  Double_t xnbins=100;
+  Double_t ynbins= 600;
 
-  TH2F *h = new TH2F("h", Form("%s", filename_arr), 200, 520, 620, 50, -0.25, 0.1);
-  Tsel->Draw(Form("%s:time/(1e-9)>>h", selBranch_array), "bvoltage_selected==1", "colz");
+  Double_t ylow = -0.4;
+  Double_t yhigh = 0.1;
+
+  
+  TH2F *h = new TH2F("h", Form("%s", filename_arr), xnbins , start_time, end_time, ynbins, ylow, yhigh);
+  Tsel->Draw(Form("%s:time/(1e-9)>>h", selBranch_array), "BbaselineNoise==1", "colz");
   h->SetStats(0);
-  h->GetZaxis()->SetRangeUser(0., 500.);
+  h->GetZaxis()->SetRangeUser(0., 50.);
   h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
   h->GetXaxis()->SetNoExponent();
   h->Write();
@@ -561,7 +587,6 @@ void SPE_and_timing::sel_pulses()
   std::string outPath = "./data/timePlots/";
   c2->Print((outPath + param_out_file + "/" + outputRootFileName + ".png").c_str());
 
-  // c2->Print((outPath + outputRootFileName + ".png").c_str());
 
   c2->Close();
 
@@ -636,7 +661,7 @@ Double_t SPE_and_timing::RMSnoise(Double_t *std_noise, Double_t *rms_noise)
   TTree *T = (TTree *)f->Get("T");
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
   TH1F *h_noise_rms = new TH1F("h_noise_rms", "rms noise", 50, 0.00, 0.01);
-  T->Draw("noise>>h_noise_rms", "bvoltage_selected==1");
+  T->Draw("noise>>h_noise_rms", "BbaselineNoise==1");
 
   h_noise_rms->Fit("gaus", "Q", "sames");
   h_noise_rms->GetFunction("gaus")->SetLineColor(kRed);
@@ -654,7 +679,7 @@ Double_t SPE_and_timing::RMSnoise(Double_t *std_noise, Double_t *rms_noise)
   TH1F *h_noise_std = new TH1F("h_noise_std", "std_noise", 50, 0.0, 0.01);
   h_noise_std->SetLineColor(kBlack);
 
-  T->Draw("bstd>>h_noise_std", "bvoltage_selected==1", "sames");
+  T->Draw("bstd>>h_noise_std", "BbaselineNoise==1", "sames");
 
   h_noise_std->Fit("gaus", "Q", "sames");
   h_noise_std->GetFunction("gaus")->SetLineColor(kBlack);
@@ -669,7 +694,7 @@ Double_t SPE_and_timing::RMSnoise(Double_t *std_noise, Double_t *rms_noise)
   *std_noise = noise_std_mean;
 
   TH1F *h_noise_rms_sel = new TH1F("h_noise_rms_sel", "rms sel", 50, 0.0, 0.01);
-  T->Draw("brms>>h_noise_rms_sel", "bvoltage_selected==1", "sames");
+  T->Draw("brms>>h_noise_rms_sel", "BbaselineNoise==1", "sames");
   h_noise_rms_sel->SetLineColor(kBlue);
   h_noise_rms_sel->Fit("gaus", "Q", "sames");
   h_noise_rms_sel->GetFunction("gaus")->SetLineColor(kBlue);

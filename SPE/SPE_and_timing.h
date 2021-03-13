@@ -52,19 +52,21 @@ Double_t SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit);
 void getTimePlot();
 void sel_pulses();
 void PulseThresOccupancy();
-
+// void getTimelimits();
 Float_t h_std(vector <float> *v_voltage);
 // TTree *T;
 int noiseMaxIndex;
  const char *inputPath;
  const char *outputPath;
  const char  *param_out_file;
-
+Double_t start_time;
+Double_t end_time;
 // void noise();
 //  protected:
 private:
 std::string  inputRootFileName;
 std::string outputRootFileName;  
+
 //  const char *path;
 
 // TTree *Tsubset;
