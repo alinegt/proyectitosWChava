@@ -78,3 +78,5 @@ SPE/.vscode/tasks.json
 
 timing/oldScripts
 SPE/.ipynb_checkpoints/PlotParams-checkpoint.ipynb
+SPE/.vscode/dryrun.log
+SPE/.vscode/targets.log
