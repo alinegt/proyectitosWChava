@@ -33,6 +33,7 @@
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TPaletteAxis.h"
+#include "TTreeReader.h"
 
 
 using namespace std;
@@ -52,6 +53,8 @@ Double_t SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit);
 void getTimePlot();
 void sel_pulses();
 void PulseThresOccupancy();
+void getXaxisTime();
+
 // void getTimelimits();
 Float_t h_std(vector <float> *v_voltage);
 // TTree *T;

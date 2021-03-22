@@ -19,49 +19,42 @@ SPE_and_timing::~SPE_and_timing() {}
 int main(int argc, char **argv)
 {
   Double_t peak2valley, sigma_fit;
-  std::string inFile = argv[1];     // Nombre del archivo
-  std::string outFile = argv[2];    // output text file
-  std::string outputRoot = argv[4]; // Output root file
   std::ofstream a_file;
-  // TTree *Tsubset;
-  SPE_and_timing getPlots;
-  getPlots.noiseMaxIndex = std::stoi(argv[3]); // max index value for noise measurements
-  std::string fileName;
-  fileName = getPlots.rootFilename(argv[1], argv[4]);
-  getPlots.inputPath = argv[1];
-  std::cout << "getPlots.inputPath" << std::endl;
-
-  std::cout << getPlots.inputPath << std::endl;
-  getPlots.outputPath = argv[4];
-  std::cout << "getPlots.outputPath" << std::endl;
-
-  std::cout << getPlots.outputPath << std::endl;
-
-  getPlots.param_out_file = argv[2];
-  std::cout << getPlots.param_out_file << std::endl;
-  getPlots.start_time=0;
-  getPlots.end_time=0;
-  // getPlots.getTimePlot();
-
-  // getPlots.PulseThresOccupancy();
-
   Double_t rms_noise;
   Double_t std_noise;
 
 
-  getPlots.SPEhistAndPlots(&peak2valley, &sigma_fit);
+  SPE_and_timing getPlots;
+
+  getPlots.inputPath = argv[1];
+  std::cout << "getPlots.inputPath" << std::endl;
+  getPlots.param_out_file= argv[2];
+  std::cout << getPlots.param_out_file << std::endl;
+  getPlots.noiseMaxIndex = std::stoi(argv[3]); // max index value for noise measurements
+  getPlots.outputPath = argv[4];
+  std::cout << "getPlots.outputPath" << std::endl;
+  std::cout << getPlots.outputPath << std::endl;
+  
+  // std::string fileName;
+  std::string fileName = getPlots.rootFilename(argv[1], argv[4]);
+  
+  
+  
+  getPlots.getXaxisTime();
+
+  getPlots.SPEhistAndPlots(&peak2valley, &sigma_fit);  
+
   getPlots.sel_pulses();
-  Double_t rms = getPlots.RMSnoise(&std_noise, &rms_noise);
 
+  getPlots.RMSnoise(&std_noise, &rms_noise);
 
-  // getPlots.getTimePlot();
-  // getPlots.noise();
-  std::string outFilePath = ("/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + outFile + ".dat").c_str();
+// Writting param to file
+  std::string outFilePath = ("/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + (std::string)getPlots.param_out_file + ".dat").c_str();
   a_file.open(outFilePath, std::ios::out | std::fstream::app);
   // a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
   a_file << fileName << " " << rms_noise << " " << std_noise << std::endl;
 
-  //a_file.close();
+  a_file.close();
 
   std::cout << "END" << std::endl;
   return 0;
@@ -103,12 +96,47 @@ std::string SPE_and_timing::rootFilename(char *inputRootPath, char *outputRootPa
   return inputRootFileName;
 }
 
+/**
+ * @brief Get the limits in the x axis from time values
+ * 
+ */
+void SPE_and_timing::getXaxisTime(){
+    // TFile *f0 = TFile::Open("noCoil2.root", "read");
+    TFile *f0 = TFile::Open(inputPath, "read");
+
+    TTreeReader aReader("T", f0);
+    TTreeReaderValue<std::vector<float>> timeRV(aReader, "time");
+    unsigned int it = 0;
+    while (aReader.Next())
+    {
+        for (auto &&value : *timeRV)
+        {
+            if (it == 0)
+            {
+                start_time= round(value*1e9);
+                cout << value << endl;
+            }
+
+            if (it == 199)
+            {
+              end_time= round(value*1e9);
+                cout << value << endl;
+                break;
+            }
+            it++;
+        }
+        it = 0;
+
+        break;
+    }
+    delete f0;
+}
 
 /**
  * @brief Create an histogram from a branch in the input ROOT file
  * 
  * @param limInfBin Histogram parameter
- * @param limSupBin Histogram parameter
+ * @param limSupBin Histogram parameter //used for occupancy estimation
  * @param numberBin Histogram parameter
  * @return TH1F* 
  */
@@ -135,17 +163,17 @@ TH1F *SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, d
     Tcharge->GetEntry(j);
     PeakToValleyFit->Fill(charge_v);
     
-    if (j==0){
+    // if (j==0){
     
-    start_time = round(time_v->at(0)*1e9);
-    end_time = round(time_v->at( time_v->size()-1 )*1e9);
+    // start_time = round(time_v->at(0)*1e9);
+    // end_time = round(time_v->at( time_v->size()-1 )*1e9);
     
-    // start_time_int = (  start_time*1e9 );
-    // end_time_int = ( end_time*1e9 );
-    std::cout<< start_time <<std::endl;
-    std::cout<< end_time <<std::endl;
+    // // start_time_int = (  start_time*1e9 );
+    // // end_time_int = ( end_time*1e9 );
+    // std::cout<< start_time <<std::endl;
+    // std::cout<< end_time <<std::endl;
 
-    }
+    // }
   }
 
   Tcharge->ResetBranchAddresses();
@@ -204,7 +232,7 @@ Double_t SPE_and_timing::fitf(Double_t *x, Double_t *par)
 Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit)
 {
   Double_t limInfBin = -1;
-  Double_t limSupBin = 6;
+  Double_t limSupBin = 8;
   Double_t numberBin = 100;
   Double_t adcResolution = (limSupBin - limInfBin) / numberBin;
 
@@ -514,6 +542,8 @@ void SPE_and_timing::sel_pulses()
   Bool_t bol_voltage_selected;
   Float_t f_rms;
   Float_t f_std;
+  Bool_t bol_sel_pulse;
+  
   // Set branch Address for the input Tree variable
   Tsel->SetBranchAddress("voltage", &v_voltage);
 
@@ -521,22 +551,36 @@ void SPE_and_timing::sel_pulses()
   TBranch *BbaselineNoise = Tsel->Branch("BbaselineNoise", &bol_voltage_selected);
   TBranch *brms = Tsel->Branch("brms", &f_rms);
   TBranch *bstd = Tsel->Branch("bstd", &f_std);
+  TBranch *pulses = Tsel->Branch("pulses", &bol_sel_pulse);
 
   // For loop to fill NEW BRANCH
   Long64_t nentries = Tsel->GetEntries();
   for (Long64_t i = 0; i < nentries; i++)
   {
     Tsel->GetEntry(i);
+    
+    //Base line noise
     auto maxVoltage = std::max_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
-
-    //auto minVoltageIndex = std::min_element(v_voltage->begin(),next(v_voltage->begin(), 90) ) - v_voltage->begin();
     auto minVoltage = std::min_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
+       
+  //Base line noise
+    // auto maxVoltagePulse = std::max_element(v_voltage->begin(), next(v_voltage->begin(), 199));
+    auto minVoltagePulse = std::min_element(v_voltage->begin(), next(v_voltage->begin(), 198));
+  
 
     if (((float)*minVoltage > -0.05) & ((float)*maxVoltage < 0.04))
     {
 
       bol_voltage_selected = true;
       f_std = h_std(v_voltage);
+
+      if ( (float)*minVoltagePulse < -0.02){
+      bol_sel_pulse = true;
+      }
+      else{
+      bol_sel_pulse = false;
+      }
+
     }
     else
     {
@@ -557,6 +601,7 @@ void SPE_and_timing::sel_pulses()
     BbaselineNoise->Fill(); // NOTE : Filling new branch
     brms->Fill();
     bstd->Fill();
+    pulses->Fill();
   }
   Tsel->ResetBranchAddresses();
 
@@ -574,12 +619,19 @@ void SPE_and_timing::sel_pulses()
 
   
   TH2F *h = new TH2F("h", Form("%s", filename_arr), xnbins , start_time, end_time, ynbins, ylow, yhigh);
-  Tsel->Draw(Form("%s:time/(1e-9)>>h", selBranch_array), "BbaselineNoise==1", "colz");
+  Tsel->Draw(Form("%s:time/(1e-9)>>h", selBranch_array), "pulses==1", "colz");
   h->SetStats(0);
   h->GetZaxis()->SetRangeUser(0., 50.);
   h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
   h->GetXaxis()->SetNoExponent();
   h->Write();
+  Int_t n = h->GetNbinsX();
+// for (Int_t i=1; i<=n; i++) {
+//    printf("%g %g\n",
+//           h->GetBinLowEdge(i)+h->GetBinWidth(i)/2,
+//           h->GetBinContent(i));
+  //  gInterpreter->ProcessLine(Form("((TH2F *)0x%lx)->Print(\"all\");", h));
+// }
   gPad->Update();
 
   c2->SetGrid();
@@ -594,6 +646,7 @@ void SPE_and_timing::sel_pulses()
   hfile->Close();
   delete hfile;
 }
+
 
 // 
 /**
