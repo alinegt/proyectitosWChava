@@ -22,18 +22,21 @@ int main(int argc, char **argv)
   std::ofstream a_file;
   Double_t rms_noise;
   Double_t std_noise;
-
+  
 
   SPE_and_timing getPlots;
-
+  
   getPlots.inputPath = argv[1];
   std::cout << "getPlots.inputPath" << std::endl;
   getPlots.param_out_file= argv[2];
   std::cout << getPlots.param_out_file << std::endl;
   getPlots.noiseMaxIndex = std::stoi(argv[3]); // max index value for noise measurements
   getPlots.outputPath = argv[4];
+  getPlots.sel_condition= argv[5];
+
   std::cout << "getPlots.outputPath" << std::endl;
   std::cout << getPlots.outputPath << std::endl;
+  
   
   // std::string fileName;
   std::string fileName = getPlots.rootFilename(argv[1], argv[4]);
@@ -560,21 +563,21 @@ void SPE_and_timing::sel_pulses()
     Tsel->GetEntry(i);
     
     //Base line noise
-    auto maxVoltage = std::max_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
-    auto minVoltage = std::min_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
+    auto maxVoltageNoise = std::max_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
+    auto minVoltageNoise = std::min_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
        
   //Base line noise
     // auto maxVoltagePulse = std::max_element(v_voltage->begin(), next(v_voltage->begin(), 199));
     auto minVoltagePulse = std::min_element(v_voltage->begin(), next(v_voltage->begin(), 198));
   
 
-    if (((float)*minVoltage > -0.05) & ((float)*maxVoltage < 0.04))
+    if (((float)*minVoltageNoise > -0.05) & ((float)*maxVoltageNoise < 0.04))
     {
 
       bol_voltage_selected = true;
       f_std = h_std(v_voltage);
 
-      if ( (float)*minVoltagePulse < -0.02){
+      if ( (float)*minVoltagePulse < -0.1){
       bol_sel_pulse = true;
       }
       else{
@@ -586,6 +589,7 @@ void SPE_and_timing::sel_pulses()
     {
       bol_voltage_selected = false;
       f_std = 0.0 / 0.0;
+       bol_sel_pulse = false;
     }
 
     Float_t sum = 0;
@@ -616,10 +620,22 @@ void SPE_and_timing::sel_pulses()
 
   Double_t ylow = -0.4;
   Double_t yhigh = 0.1;
-
   
+  //char const *selection="pulses==1";
+  char const *sel_cond;
+  TCut sel;
+  if (sel_condition == NULL){
+    sel= "";
+   
+
+  }
+  else{
+    sel= sel_condition;
+  }
+
+
   TH2F *h = new TH2F("h", Form("%s", filename_arr), xnbins , start_time, end_time, ynbins, ylow, yhigh);
-  Tsel->Draw(Form("%s:time/(1e-9)>>h", selBranch_array), "pulses==1", "colz");
+  Tsel->Draw(Form("%s:time/(1e-9)>>h", selBranch_array),sel, "colz");
   h->SetStats(0);
   h->GetZaxis()->SetRangeUser(0., 50.);
   h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));

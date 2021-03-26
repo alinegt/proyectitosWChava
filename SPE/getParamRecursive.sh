@@ -14,6 +14,7 @@ execPath=$localPath
 inputPath=$localPath/data/processed/
 outputFileName=$1
 noiseMaxIndex=$2
+sel_condition=$3
 echo outputFileName
 mergePath=$localPath/data/merge/
 outputRoot=$localPath/data/output/
@@ -34,7 +35,7 @@ outputRootPath="${outputRoot}""${file}"
 # echo $outputRootPath
 cd $execPath
 cp $processedPath $outputRoot
-./SPE_and_timing $processedPath $outputFileName $noiseMaxIndex $outputRootPath
+./SPE_and_timing $processedPath $outputFileName $noiseMaxIndex $outputRootPath $sel_condition
 cd $inputPath
 done
 

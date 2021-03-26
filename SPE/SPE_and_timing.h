@@ -34,7 +34,7 @@
 #include "TCanvas.h"
 #include "TPaletteAxis.h"
 #include "TTreeReader.h"
-
+#include "TCut.h"
 
 using namespace std;
 
@@ -61,7 +61,8 @@ Float_t h_std(vector <float> *v_voltage);
 int noiseMaxIndex;
  const char *inputPath;
  const char *outputPath;
- const char  *param_out_file;
+ const char *param_out_file;
+ const char *sel_condition;
 Double_t start_time;
 Double_t end_time;
 // void noise();
