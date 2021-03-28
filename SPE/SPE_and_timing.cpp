@@ -146,7 +146,13 @@ void SPE_and_timing::getXaxisTime(){
 TH1F *SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin)
 {
 
-  TFile *f_loadhist = new TFile(inputPath);
+  std::string filename = outputRootFileName;
+  char *filename_arr;
+  filename_arr = &filename[0];
+
+
+  TFile *f_loadhist = new TFile(Form("./data/cutted/%s.root", filename_arr), "read");
+ // TFile *f_loadhist = new TFile(inputPath);
   TTree *T = (TTree *)f_loadhist->Get("T");
   TTree *Tcharge = T;
 
