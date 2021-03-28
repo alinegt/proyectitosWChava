@@ -75,7 +75,7 @@ SPE/getTimeCFD
 data
 SPE/.vscode/launch.json
 SPE/.vscode/tasks.json
-
+SPE/scope
 timing/oldScripts
 SPE/.ipynb_checkpoints/PlotParams-checkpoint.ipynb
 SPE/.vscode/dryrun.log
