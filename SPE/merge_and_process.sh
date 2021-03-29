@@ -19,6 +19,9 @@ mergePath=$localPath/data/merge/
 processedPath=$localPath/data/processed/
 scriptsPath=$localPath/
 cuttedPath=$localPath/data/cutted/
+merge_datSufix="_merge.dat"
+processedSufix=".dat"
+out_routSufix =".root"
 
 # Deleting last run files
 rm $mergePath*.dat
@@ -26,40 +29,36 @@ rm $processedPath*.root
 rm $cuttedPath*.root
 make
 cd $dataPath
-for dir in */
-do
+
+
 dirName="${dir%/}"
-mergeName="${dirName}""_merge.dat"
-processedName="${dirName}"".dat"
-outRootFile="${dirName}"".root"
+
 echo $dirName
 echo $mergeName
 cd $dir
 
-rm *.dat
 
 approx_pulse_width=60
 number_of_points=200
-number_of_waveforms=18980
+number_of_waveforms=100000
 delta_time=5e-10
 
 for file in *
 do
+cp file $mergePath
+
 nameOnly="${file##*/}"
 nameOnly=${file%.*}
-dataFileName="$nameOnly.dat"
+mergeName=$nameOnly
+processedName=$nameOnly$processedSufix
+outRootFile=$nameOnly$out_routSufix
 
-tail -n 200 $file >> $dataFileName
-
-done 
- 
-cat *.dat > $mergePath$mergeName
 
 cd $scriptsPath
 
-./processWaveforms $mergePath$mergeName $noiseMaxIndex $approx_pulse_width $number_of_points $number_of_waveforms 5e-10 $processedPath$processedName $processedPath$outRootFile 1
+./processWaveforms $dataPath$mergeName $noiseMaxIndex $approx_pulse_width $number_of_points $number_of_waveforms 5e-10 $processedPath$processedName $processedPath$outRootFile 1
 
-cd $dataPath
+# cd $dataPath
 done
 
 exit
