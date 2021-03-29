@@ -45,9 +45,10 @@ int main(int argc, char **argv)
   
   getPlots.getXaxisTime();
 
-  getPlots.SPEhistAndPlots(&peak2valley, &sigma_fit);  
 
   getPlots.sel_pulses();
+
+  getPlots.SPEhistAndPlots(&peak2valley, &sigma_fit);  
 
   getPlots.RMSnoise(&std_noise, &rms_noise);
 
