@@ -2,7 +2,7 @@
 name=$1
 noiseMaxIndex=$2
 
-./merge_and_process.sh  /home/salvador/Documents/WPT/data_150/ $noiseMaxIndex   #data_200ns/second $noiseMaxIndex  #/home/salvador/Documents/WPT/data_feb8_2021/toPresent/Nocoil  # /home/salvador/Documents/WPT/noise
+./txt2TTree.sh  /home/salvador/Documents/WPT/data_150/ $noiseMaxIndex   #data_200ns/second $noiseMaxIndex  #/home/salvador/Documents/WPT/data_feb8_2021/toPresent/Nocoil  # /home/salvador/Documents/WPT/noise
 ./getParamRecursive.sh $name $noiseMaxIndex 
 
 
