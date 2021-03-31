@@ -61,7 +61,7 @@ echo $dataPath$mergeName$processedSufix
 
 cd $scriptsPath
 
-./txt2TTree $dataPath$mergeName $noiseMaxIndex $approx_pulse_width $number_of_points $number_of_waveforms 5e-10 $processedPath$processedName $processedPath$outRootFile 1
+./txt2TTree $dataPath$file $noiseMaxIndex $approx_pulse_width $number_of_points $number_of_waveforms 5e-10 $processedPath$processedName $processedPath$outRootFile 1
 
 # cd $dataPath
 done
