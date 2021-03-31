@@ -533,6 +533,9 @@ void SPE_and_timing::getTimePlot()
  */
 void SPE_and_timing::sel_pulses()
 {
+  int nthreads = 4;
+  ROOT::EnableImplicitMT(nthreads);
+
 
   std::string filename = outputRootFileName;
   char *filename_arr;
@@ -667,6 +670,8 @@ void SPE_and_timing::sel_pulses()
 
   hfile->Write();
   hfile->Close();
+  ROOT::DisableImplicitMT();
+
   delete hfile;
 }
 
