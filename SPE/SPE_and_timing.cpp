@@ -623,7 +623,7 @@ void SPE_and_timing::sel_pulses()
   char *selBranch_array;
   selBranch_array = &selBr[0];
   Double_t xnbins=100;
-  Double_t ynbins= 600;
+  Double_t ynbins= 100;
 
   Double_t ylow = -0.4;
   Double_t yhigh = 0.1;
@@ -644,7 +644,7 @@ void SPE_and_timing::sel_pulses()
   TH2F *h = new TH2F("h", Form("%s", filename_arr), xnbins , start_time, end_time, ynbins, ylow, yhigh);
   Tsel->Draw(Form("%s:time/(1e-9)>>h", selBranch_array),sel, "colz");
   h->SetStats(0);
-  h->GetZaxis()->SetRangeUser(0., 200.);
+  h->GetZaxis()->SetRangeUser(0., 500.);
   h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
   h->GetXaxis()->SetNoExponent();
   h->Write();
