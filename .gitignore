@@ -23,8 +23,7 @@ syntax: glob
 *.cmake
 *.gz
 *.csv
-
-
+*.sh.swn
 #data
 data/*
 
@@ -75,7 +74,11 @@ SPE/getTimeCFD
 data
 SPE/.vscode/launch.json
 SPE/.vscode/tasks.json
-SPE/scope
+SPE/scope/dataOutput
+SPE/scope/dataScope
+SPE/scope/images
+SPE/scope/.getScopeWaveforms.sh.swn
+SPE/scope/.getScopeWaveforms.sh.swo
 timing/oldScripts
 SPE/.ipynb_checkpoints/PlotParams-checkpoint.ipynb
 SPE/.vscode/dryrun.log
