@@ -45,9 +45,10 @@ int main(int argc, char **argv)
   
   getPlots.getXaxisTime();
 
-  getPlots.SPEhistAndPlots(&peak2valley, &sigma_fit);  
 
   getPlots.sel_pulses();
+
+  getPlots.SPEhistAndPlots(&peak2valley, &sigma_fit);  
 
   getPlots.RMSnoise(&std_noise, &rms_noise);
 
@@ -292,7 +293,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   // for the function.
   TH1F *h_multiph = (TH1F *)h_peakToValley->Clone("MultiPE Fit");
   Double_t limInfFitf = 0.3;
-  Double_t limSupFitf = 5;
+  Double_t limSupFitf = 6.5;
   Double_t numberOfParams = 5;
   TF1 *funcMulti = new TF1("fitf", SPE_and_timing::fitf, limInfFitf, limSupFitf, numberOfParams);
   // set the parameters to the mean and RMS of the histogram
@@ -643,7 +644,7 @@ void SPE_and_timing::sel_pulses()
   TH2F *h = new TH2F("h", Form("%s", filename_arr), xnbins , start_time, end_time, ynbins, ylow, yhigh);
   Tsel->Draw(Form("%s:time/(1e-9)>>h", selBranch_array),sel, "colz");
   h->SetStats(0);
-  h->GetZaxis()->SetRangeUser(0., 50.);
+  h->GetZaxis()->SetRangeUser(0., 200.);
   h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
   h->GetXaxis()->SetNoExponent();
   h->Write();
