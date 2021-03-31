@@ -20,8 +20,8 @@ processedPath=$localPath/data/processed/
 scriptsPath=$localPath/
 cuttedPath=$localPath/data/cutted/
 merge_datSufix="_merge.dat"
-processedSufix=".dat"
-out_routSufix =".root"
+dat=".dat"
+out_RootSufix=".root"
 
 # Deleting last run files
 rm $mergePath*.dat
@@ -34,8 +34,8 @@ cd $dataPath
 dirName="${dir%/}"
 
 echo $dirName
-echo $mergeName
-cd $dir
+echo $mergePath
+#cd $dir
 
 
 approx_pulse_width=60
@@ -45,13 +45,18 @@ delta_time=5e-10
 
 for file in *
 do
-cp file $mergePath
+echo "fileName"
+echo $file
+# cp $file $mergePath
 
 nameOnly="${file##*/}"
 nameOnly=${file%.*}
 mergeName=$nameOnly
-processedName=$nameOnly$processedSufix
-outRootFile=$nameOnly$out_routSufix
+processedName=$nameOnly$dat
+outRootFile=$nameOnly$out_RootSufix
+echo $mergeName
+
+echo $dataPath$mergeName$processedSufix
 
 
 cd $scriptsPath
