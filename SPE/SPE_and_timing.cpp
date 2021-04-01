@@ -241,8 +241,8 @@ Double_t SPE_and_timing::fitf(Double_t *x, Double_t *par)
  */
 Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit)
 {
-  Double_t limInfBin = -1;
-  Double_t limSupBin = 8;
+  Double_t limInfBin = -2;
+  Double_t limSupBin = 25;
   Double_t numberBin = 100;
   Double_t adcResolution = (limSupBin - limInfBin) / numberBin;
 
@@ -261,7 +261,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   pad1->SetGrid();
   pad1->Draw();
   pad1->cd();
-  Double_t xlimFitPed[2] = {-.1, .125};
+  Double_t xlimFitPed[2] = {-0.5, 0.5};
   //    Double_t xlimFitPeak2Valley[2]={0.1,2.5};
   h_peakToValley->Draw();
   h_peakToValley->SetLineWidth(2);
@@ -292,8 +292,8 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   // The last three parameters specify the number of parameters
   // for the function.
   TH1F *h_multiph = (TH1F *)h_peakToValley->Clone("MultiPE Fit");
-  Double_t limInfFitf = 0.3;
-  Double_t limSupFitf = 6.5;
+  Double_t limInfFitf = 0.8;
+  Double_t limSupFitf = 20;
   Double_t numberOfParams = 5;
   TF1 *funcMulti = new TF1("fitf", SPE_and_timing::fitf, limInfFitf, limSupFitf, numberOfParams);
   // set the parameters to the mean and RMS of the histogram
@@ -301,17 +301,17 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   // a
   funcMulti->SetParLimits(0, 10, 1000000);
   // b
-  funcMulti->SetParLimits(1, 0, 100);
+  funcMulti->SetParLimits(1, 0, 400);
   // Npe
-  funcMulti->SetParLimits(2, 0, 3);
+  funcMulti->SetParLimits(2, 0, 4);
   // Sigma
   funcMulti->SetParLimits(3, 0, 5);
   //C
-  funcMulti->SetParLimits(4, 1.2, 3);
+  funcMulti->SetParLimits(4, 1.2, 8);
   // give the parameters meaningful names
   funcMulti->SetParNames("a", "b", "Npe", "sigma", "C");
   // // call TH1::Fit with the name of the TF1 object
-  h_multiph->Fit("fitf", "BQr", "sames");
+  h_multiph->Fit("fitf", "Br", "sames");
   h_multiph->GetFunction("fitf")->SetLineColor(kBlack);
   h_multiph->GetFunction("fitf")->SetLineWidth(4);
 
@@ -360,7 +360,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   ///////////////////////////////////////////////////////////////////////
   TH1F *h_spe = (TH1F *)h_peakToValley->Clone("SPE 0 Fit");
   //      TF1 *funcMulti = new TF1("gaus",xx,25);
-  h_spe->Fit("gaus", "Qr", "sames", xx, 5);
+  h_spe->Fit("gaus", "Qr", "sames", xx, 20);
 
   ///////////////////////////////////////////////////////////////////////
   ////// Stats boxes
@@ -628,7 +628,7 @@ void SPE_and_timing::sel_pulses()
   Double_t xnbins=100;
   Double_t ynbins= 600;
 
-  Double_t ylow = -0.4;
+  Double_t ylow = -0.6;
   Double_t yhigh = 0.1;
   
   //char const *selection="pulses==1";
