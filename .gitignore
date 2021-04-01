@@ -83,3 +83,5 @@ timing/oldScripts
 SPE/.ipynb_checkpoints/PlotParams-checkpoint.ipynb
 SPE/.vscode/dryrun.log
 SPE/.vscode/targets.log
+timing/getTimeCFD
+SPE/SPE_and_timing
