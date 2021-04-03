@@ -76,11 +76,11 @@ void GetTimeCFD::loopOverEntries()
     for (int a_index0=0 ; a_index0<getNumberOfEntries() ; a_index0++)
     {
         m_inputTree->GetEntry(a_index0);
-        float noiseFromPlot=0.03;
-        auto minimum=std::min_element(  m_ch1->begin(), m_ch1->end() ) ;
+        // float noiseFromPlot=0.03;
+        // auto minimum=std::min_element(  m_ch1->begin(), m_ch1->end() ) ;
         //m_inputTree->GetEntry(0);
         //cout<<"time CFD: "<<getCFDtime(m_ch1)<<endl;
-        if (  *minimum  < noiseFromPlot*(-1)  )  {
+       if ( m_pulses_b==1 )  {
        // if (  *minimum  < noise_mean*(-1)  )  {
         m_timeCh1_cfd=getCFDtime(m_ch1, .5, -5);
         GetTimeLeadEdge(m_ch1); 
@@ -89,7 +89,7 @@ void GetTimeCFD::loopOverEntries()
         m_resultSignal_ch1.clear();
         m_delaySignal_ch1.clear();
 
-        }
+       }
     }
     m_outputFile->Write();
     // saveHistogram(h_timeDiff);
@@ -334,6 +334,8 @@ bool GetTimeCFD::loadDataFile(const std::string & a_inputFile)
     m_inputTree = (TTree*)f->Get("T");
     m_inputTree -> SetBranchAddress("voltage",&m_ch1);
     m_inputTree -> SetBranchAddress("time", &m_time );
+    m_inputTree -> SetBranchAddress("pulses", &m_pulses_b );
+
    // m_inputTree -> SetBranchAddress("ch2",&m_ch2);
     m_fileLoaded = true;
     return m_fileLoaded;
@@ -375,8 +377,6 @@ void GetTimeCFD::setOutFile(const std::string & a_outputFile){
     m_outputTree -> Branch("timech1_50",&m_timeCh1_50);
     m_outputTree -> Branch("timech1_90",&m_timeCh1_90);
     m_outputTree -> Branch("time", &m_time);
-
-
     return;
 }
 
@@ -394,15 +394,49 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
 //  hframe->GetYaxis()->SetRangeUser(0., 400.);
 // // hframe->GetXaxis()->SetRangeUser(0., 110.);  
 
- m_outputTree->Draw(Form( " %s >> h_%s(100,450,550)",branch.c_str(), a_outputFile.c_str()) ,""); 
+ m_outputTree->Draw(Form( " %s >> h_%s(240,520,640)",branch.c_str(), a_outputFile.c_str()) ,""); 
  TH1F *h_temp = (TH1F*)gPad->GetPrimitive(Form("h_%s", a_outputFile.c_str() ));
    h_temp->SetTitle(Form("%s; Time [ns] ; Counts", titleHist_arr));
-h_temp->GetXaxis()->SetNdivisions(200);
-h_temp->GetYaxis()->SetRangeUser(0., 300.);
+  h_temp->SetLineWidth(2);
+
+// h_temp->GetXaxis()->SetNdivisions(200);
+h_temp->GetYaxis()->SetRangeUser(0., 350.);
 
  h_temp->SetName(Form("h_%s",  a_outputFile.c_str()) ); 
  h_temp->SetTitle(Form("%s",  a_outputFile.c_str()) );
+
+
+ h_temp->Fit("gaus","","",550,580);
+   h_temp->GetFunction("gaus")->SetLineColor(kBlack);
+   
+
   c->Update();
+TPaveStats *ps2 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats");
+  ps2->SetOptFit(1110); 
+   ps2->SetTextColor(kBlack);
+    ps2->SetX1NDC(0.6);
+      ps2->SetX2NDC(0.85);
+      ps2->SetY1NDC(0.6);
+      ps2->SetY2NDC(0.95);
+  c->Update();
+
+TH1F *h_after = (TH1F *)h_temp->Clone("h_after");
+
+h_after->Fit("gaus","","sames",579,585);
+   h_after->GetFunction("gaus")->SetLineColor(kRed);
+
+TPaveStats *ps3 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats");
+  ps3->SetOptFit(1110); 
+   ps3->SetTextColor(kRed);
+    ps3->SetX1NDC(0.1);
+      ps3->SetX2NDC(0.35);
+      ps3->SetY1NDC(0.6);
+      ps3->SetY2NDC(0.95);
+  c->Update();
+
+  //h_temp->SetStats(0);
+
+//   gStyle->SetOptFit(1110); 
   c->SetGrid();
   c->cd();
    std::string outPath = "./data/plots/";

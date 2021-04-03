@@ -1,7 +1,7 @@
 #! /bin/bash
 
 execPath=/home/salvador/github/proyectitosWChava/timing
-inputPath=/home/salvador/github/proyectitosWChava/SPE/data/processed/
+inputPath=/home/salvador/github/proyectitosWChava/SPE/data/cutted/
 outputPath=/home/salvador/github/proyectitosWChava/timing/data/rootFiles/
 fileExt=".root"
 
@@ -26,7 +26,7 @@ cd $inputPath
 #outputPath=""
 done
 cd $execPath
-root -l 'printRootContent.C("./data/rootFiles/mergeRoot.root")'                                                                                                      ─╯
+#root -l 'printRootContent.C("./data/rootFiles/mergeRoot.root")'                                                                                                      ─╯
 # root -l plotStackLE2.C
 # root -l plotStackCFD2.C
 

@@ -24,7 +24,7 @@
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TLegend.h"
-
+#include "TPaveStats.h"
 using namespace std;
 // const float Xdiv = 0.5;
 #define NAME_OF( v ) #v
@@ -64,6 +64,7 @@ private:
     std::vector<float> m_resultSignal_ch1;
     std::vector<float> m_delaySignal_ch2;
     std::vector<float> m_resultSignal_ch2;
+    bool m_pulses_b;
     float m_timeCh1_cfd; 
     float m_timeCh2;
     int m_timeCh1_le;
