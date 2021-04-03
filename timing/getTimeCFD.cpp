@@ -394,7 +394,7 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
 //  hframe->GetYaxis()->SetRangeUser(0., 400.);
 // // hframe->GetXaxis()->SetRangeUser(0., 110.);  
 
- m_outputTree->Draw(Form( " %s >> h_%s(240,520,640)",branch.c_str(), a_outputFile.c_str()) ,""); 
+ m_outputTree->Draw(Form( " %s >> h_%s(240,460,580)",branch.c_str(), a_outputFile.c_str()) ,""); 
  TH1F *h_temp = (TH1F*)gPad->GetPrimitive(Form("h_%s", a_outputFile.c_str() ));
    h_temp->SetTitle(Form("%s; Time [ns] ; Counts", titleHist_arr));
   h_temp->SetLineWidth(2);
@@ -406,11 +406,20 @@ h_temp->GetYaxis()->SetRangeUser(0., 350.);
  h_temp->SetTitle(Form("%s",  a_outputFile.c_str()) );
 
 
- h_temp->Fit("gaus","","",550,580);
-   h_temp->GetFunction("gaus")->SetLineColor(kBlack);
-   
+ h_temp->Fit("gaus","0","",490,525);
+//    h_temp->GetFunction("gaus")->SetLineColor(kBlack);
+gPad->Update();
+TF1 *parGaus = (TF1 *)h_temp->GetListOfFunctions()->FindObject("gaus");
+
+   TF1 *f1 = new TF1("f1","gaus",500,540);
+// set initial parameters (not really needed for gaus)
+f1->SetParameters(parGaus->GetParameter(0), parGaus->GetParameter(1), parGaus->GetParameter(2) ); 
+ f1->Draw("sames");
+    f1->SetLineColor(kBlack);
+gPad->Update();
 
   c->Update();
+
 TPaveStats *ps2 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats");
   ps2->SetOptFit(1110); 
    ps2->SetTextColor(kBlack);
@@ -422,10 +431,11 @@ TPaveStats *ps2 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats"
 
 TH1F *h_after = (TH1F *)h_temp->Clone("h_after");
 
-h_after->Fit("gaus","","sames",579,585);
-   h_after->GetFunction("gaus")->SetLineColor(kRed);
+h_after->Fit("expo","","sames",525,570);
+   h_after->GetFunction("expo")->SetLineColor(kRed);
 
-TPaveStats *ps3 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats");
+
+TPaveStats *ps3 = (TPaveStats *)h_after->GetListOfFunctions()->FindObject("stats");
   ps3->SetOptFit(1110); 
    ps3->SetTextColor(kRed);
     ps3->SetX1NDC(0.1);
@@ -433,6 +443,7 @@ TPaveStats *ps3 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats"
       ps3->SetY1NDC(0.6);
       ps3->SetY2NDC(0.95);
   c->Update();
+gPad->Update();
 
   //h_temp->SetStats(0);
 
