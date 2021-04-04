@@ -180,7 +180,7 @@ WAVEFORM_SOURCE = 'CHANnel1'
 # Waveform options ############################################################
 # Number of waveform points to request (e.g. 1000 or 'ALL'):
 # NUMBER_POINTS = 'ALL'
-NUMBER_POINTS = 220
+NUMBER_POINTS = 320
 
 # Number of waveforms to acquire and transfer (one waveform per trigger):
 NUMBER_TRIGGERS = int(sys.argv[2])

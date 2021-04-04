@@ -38,10 +38,10 @@ echo $mergePath
 #cd $dir
 
 
-approx_pulse_width=60
-number_of_points=200
-number_of_waveforms=100000
-delta_time=5e-10
+approx_pulse_width=290
+number_of_points=320
+number_of_waveforms=200000
+delta_time=6.25e-10
 
 for file in *
 do
