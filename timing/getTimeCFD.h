@@ -25,6 +25,7 @@
 #include "TStyle.h"
 #include "TLegend.h"
 #include "TPaveStats.h"
+#include "TTreeReader.h"
 using namespace std;
 // const float Xdiv = 0.5;
 #define NAME_OF( v ) #v
@@ -46,12 +47,15 @@ public:
     void plotHist(const std::string & a_outputFile, const std::string & branch);
     void GetTimeLeadEdge(std::vector<float> *a_vector);
     float getTime(long unsigned int a_index2, std::vector<float> *a_vector2);
+    void getXaxisTime(const std::string & a_inputFile);
 
     // void plotHistLE(const std::string & a_outputFile);
     void closeFile();
 
     std::string baseName(std::string const &path);
-
+   Double_t start_time=0;
+    Double_t end_time=0;
+    int numberOfSamples=0;
 
 private:
     TTree* m_inputTree;
@@ -65,6 +69,7 @@ private:
     std::vector<float> m_delaySignal_ch2;
     std::vector<float> m_resultSignal_ch2;
     bool m_pulses_b;
+    bool m_noOutlier_b;
     float m_timeCh1_cfd; 
     float m_timeCh2;
     int m_timeCh1_le;
@@ -72,9 +77,10 @@ private:
     float m_timeCh1_50;
     float m_timeCh1_90;
     float m_timeCh2_le;
-    std::string Xdiv= "0.5";
+    std::string Xdiv= "0.4688";
     bool m_fileLoaded;
     float m_timeDifference;
+ 
     //parameters of the histogram must be changed in order to set a proper range
     TH1F *h_timeDiff = new TH1F("h_timeDiff", "h_timeDiff", 70, 20, 25);
 

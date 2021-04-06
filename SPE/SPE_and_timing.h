@@ -63,6 +63,7 @@ int noiseMaxIndex;
  const char *outputPath;
  const char *param_out_file;
  const char *sel_condition;
+int sampleNumber;
 Double_t start_time;
 Double_t end_time;
 // void noise();

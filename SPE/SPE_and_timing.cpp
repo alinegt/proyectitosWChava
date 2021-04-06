@@ -33,7 +33,7 @@ int main(int argc, char **argv)
   getPlots.noiseMaxIndex = std::stoi(argv[3]); // max index value for noise measurements
   getPlots.outputPath = argv[4];
   getPlots.sel_condition= argv[5];
-
+  getPlots.sampleNumber=std::stoi(argv[6]);
   std::cout << "getPlots.outputPath" << std::endl;
   std::cout << getPlots.outputPath << std::endl;
   
@@ -47,8 +47,10 @@ int main(int argc, char **argv)
 
   getPlots.RMSnoise(&rms_noise);
 
+  std::cout<< "selecting pulses" << std::endl;
   getPlots.sel_pulses(&rms_noise, &occupancy_bynoise);
 
+  std::cout<< "Plotting SPE" << std::endl;
 
   getPlots.SPEhistAndPlots(&peak2valley, &sigma_fit, &occupancy_bynoise);  
 
@@ -122,7 +124,7 @@ void SPE_and_timing::getXaxisTime(){
                 cout << value << endl;
             }
 
-            if (it ==319)
+            if (it ==(sampleNumber))
             {
               end_time= round(value*1e9);
                 cout << value << endl;
@@ -247,7 +249,7 @@ Double_t SPE_and_timing::fitf(Double_t *x, Double_t *par)
 Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit, double_t *occupancy_bynoise)
 {
   Double_t limInfBin = -2;
-  Double_t limSupBin = 15;
+  Double_t limSupBin = 12;
   Double_t numberBin = 100;
   Double_t adcResolution = (limSupBin - limInfBin) / numberBin;
 
@@ -298,7 +300,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   // for the function.
   TH1F *h_multiph = (TH1F *)h_peakToValley->Clone("MultiPE Fit");
   Double_t limInfFitf = 0.8;
-  Double_t limSupFitf = 13;
+  Double_t limSupFitf = 9;
   Double_t numberOfParams = 5;
   TF1 *funcMulti = new TF1("fitf", SPE_and_timing::fitf, limInfFitf, limSupFitf, numberOfParams);
   // set the parameters to the mean and RMS of the histogram
@@ -359,13 +361,13 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   Double_t peak = funcMulti->Eval(xx2);
   *peak2Valley = peak / valley;
   // std::cout << peak2Valley << std::endl;
-
+ std::cout<< "all OK" <<std::endl;
   ///////////////////////////////////////////////////////////////////////
   ////// FIT SPE 0
   ///////////////////////////////////////////////////////////////////////
   TH1F *h_spe = (TH1F *)h_peakToValley->Clone("SPE 0 Fit");
   //      TF1 *funcMulti = new TF1("gaus",xx,25);
-  h_spe->Fit("gaus", "Qr", "sames", xx, 20);
+  //h_spe->Fit("gaus", "Qr", "sames", xx, 20);
 
   ///////////////////////////////////////////////////////////////////////
   ////// Stats boxes
@@ -405,16 +407,16 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   ps3->SetOptFit(0001);
   ps3->Draw();
 
-  TPaveStats *ps4 = (TPaveStats *)h_spe->GetListOfFunctions()->FindObject("stats");
-  ps4->SetX1NDC(0.5);
-  ps4->SetX2NDC(0.9);
-  ps4->SetY1NDC(0.35);
-  ps4->SetY2NDC(0.55);
-  ps4->SetTextSize(.045);
-  ps4->SetTextColor(kBlack);
-  ps4->SetOptStat(1000000001);
-  ps4->SetOptFit(0001);
-  ps4->Draw();
+  // TPaveStats *ps4 = (TPaveStats *)h_spe->GetListOfFunctions()->FindObject("stats");
+  // ps4->SetX1NDC(0.5);
+  // ps4->SetX2NDC(0.9);
+  // ps4->SetY1NDC(0.35);
+  // ps4->SetY2NDC(0.55);
+  // ps4->SetTextSize(.045);
+  // ps4->SetTextColor(kBlack);
+  // ps4->SetOptStat(1000000001);
+  // ps4->SetOptFit(0001);
+  // ps4->Draw();
 
   pad1->Modified();
 
@@ -582,19 +584,19 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
     //Base line noise
     auto maxVoltageNoise = std::max_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
     auto minVoltageNoise = std::min_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
-       
+    int noiseFactor=9;
   //Base line noise
     // auto maxVoltagePulse = std::max_element(v_voltage->begin(), next(v_voltage->begin(), 199));
-    auto minVoltagePulse = std::min_element(v_voltage->begin(), next(v_voltage->begin(), 319));
+    auto minVoltagePulse = std::min_element(v_voltage->begin(), next(v_voltage->begin(), (sampleNumber)));
   
 
-    if (((float)*minVoltageNoise > *rms_noise*(-4) ) & ((float)*maxVoltageNoise < *rms_noise*4))
+    if (((float)*minVoltageNoise > *rms_noise*(noiseFactor*(-1)) ) & ((float)*maxVoltageNoise < *rms_noise*noiseFactor))
     {
 
       bol_voltage_selected = true;
       f_std = h_std(v_voltage);
 
-      if ( (float)*minVoltagePulse < *rms_noise*(-4)){
+      if ( (float)*minVoltagePulse < *rms_noise*(noiseFactor*(-1))){
       bol_sel_pulse = true;
       }
       else{
@@ -633,7 +635,7 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
   char *selBranch_array;
   selBranch_array = &selBr[0];
   Double_t xnbins=100;
-  Double_t ynbins= 600;
+  Double_t ynbins= 500;
 
   Double_t ylow = -0.5;
   Double_t yhigh = 0.1;
@@ -649,6 +651,7 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
     sel= sel_condition;
   }
 
+  std::cout<< "Time plots" << endl;
 
   TH2F *h = new TH2F("h", Form("%s", filename_arr), xnbins , start_time, end_time, ynbins, ylow, yhigh);
   Tsel->Draw(Form("%s:time/(1e-9)>>h", selBranch_array),sel, "colz");
@@ -664,7 +667,7 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
   std::cout << NnoOutliers << endl;
   *occupancy_bynoise = (Double_t)Npulses/(Double_t)NnoOutliers;
   
-  std::cout<< occupancy_bynoise << endl;
+  std::cout<< *occupancy_bynoise << endl;
 
   // Int_t n = h->GetNbinsX();
 // for (Int_t i=1; i<=n; i++) {

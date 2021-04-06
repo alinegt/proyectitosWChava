@@ -4,7 +4,7 @@ execPath=/home/salvador/github/proyectitosWChava/timing
 inputPath=/home/salvador/github/proyectitosWChava/SPE/data/cutted/
 outputPath=/home/salvador/github/proyectitosWChava/timing/data/rootFiles/
 fileExt=".root"
-
+numberOfSamples=$1
 make -B
 cd $inputPath
 
@@ -20,7 +20,7 @@ outputPath="${outputPath}""${nameOnly}""${fileExt}"
 echo $processedPath
 echo $outputPath
 cd $execPath
-./getTimeCFD $processedPath $outputPath 
+./getTimeCFD $processedPath $outputPath $numberOfSamples
 cd $inputPath
 #processedPath=""
 #outputPath=""

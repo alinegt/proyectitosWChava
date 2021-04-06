@@ -11,7 +11,12 @@ int main(int argc, char **argv) {
 std::string inputFile = argv[1];
 std::string outputFile = argv[2];
 
+
 GetTimeCFD time;
+time.numberOfSamples = std::stoi(argv[3]);
+time.start_time=0;
+time.end_time=0;
+time.getXaxisTime(inputFile);
 time.loadDataFile(inputFile);
 cout<<"The tree has: "<<time.getNumberOfEntries()<<" events"<<endl;
 time.setOutFile(outputFile);
@@ -77,11 +82,11 @@ void GetTimeCFD::loopOverEntries()
     {
         m_inputTree->GetEntry(a_index0);
         // float noiseFromPlot=0.03;
-        // auto minimum=std::min_element(  m_ch1->begin(), m_ch1->end() ) ;
+        auto minimum=std::min_element(  m_ch1->begin(), m_ch1->end() ) ;
         //m_inputTree->GetEntry(0);
         //cout<<"time CFD: "<<getCFDtime(m_ch1)<<endl;
        if ( m_pulses_b==1 )  {
-       // if (  *minimum  < noise_mean*(-1)  )  {
+       // if (  *minimum  < noise_mean*(-4)  )  {
         m_timeCh1_cfd=getCFDtime(m_ch1, .5, -5);
         GetTimeLeadEdge(m_ch1); 
         
@@ -335,6 +340,7 @@ bool GetTimeCFD::loadDataFile(const std::string & a_inputFile)
     m_inputTree -> SetBranchAddress("voltage",&m_ch1);
     m_inputTree -> SetBranchAddress("time", &m_time );
     m_inputTree -> SetBranchAddress("pulses", &m_pulses_b );
+    m_inputTree -> SetBranchAddress("noOutlier", &m_noOutlier_b );
 
    // m_inputTree -> SetBranchAddress("ch2",&m_ch2);
     m_fileLoaded = true;
@@ -394,24 +400,24 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
 //  hframe->GetYaxis()->SetRangeUser(0., 400.);
 // // hframe->GetXaxis()->SetRangeUser(0., 110.);  
 
- m_outputTree->Draw(Form( " %s >> h_%s(240,460,580)",branch.c_str(), a_outputFile.c_str()) ,""); 
+ m_outputTree->Draw(Form( " %s >> h_%s(75,%f,%f)",branch.c_str(), a_outputFile.c_str(), start_time, end_time) ,""); 
  TH1F *h_temp = (TH1F*)gPad->GetPrimitive(Form("h_%s", a_outputFile.c_str() ));
    h_temp->SetTitle(Form("%s; Time [ns] ; Counts", titleHist_arr));
   h_temp->SetLineWidth(2);
 
 // h_temp->GetXaxis()->SetNdivisions(200);
-h_temp->GetYaxis()->SetRangeUser(0., 350.);
+h_temp->GetYaxis()->SetRangeUser(0., 700.);
 
  h_temp->SetName(Form("h_%s",  a_outputFile.c_str()) ); 
  h_temp->SetTitle(Form("%s",  a_outputFile.c_str()) );
 
 
- h_temp->Fit("gaus","0","",490,525);
+ h_temp->Fit("gaus","0","",start_time+20,start_time+50);
 //    h_temp->GetFunction("gaus")->SetLineColor(kBlack);
 gPad->Update();
 TF1 *parGaus = (TF1 *)h_temp->GetListOfFunctions()->FindObject("gaus");
 
-   TF1 *f1 = new TF1("f1","gaus",500,540);
+   TF1 *f1 = new TF1("f1","gaus",start_time+20,start_time+60);
 // set initial parameters (not really needed for gaus)
 f1->SetParameters(parGaus->GetParameter(0), parGaus->GetParameter(1), parGaus->GetParameter(2) ); 
  f1->Draw("sames");
@@ -431,7 +437,7 @@ TPaveStats *ps2 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats"
 
 TH1F *h_after = (TH1F *)h_temp->Clone("h_after");
 
-h_after->Fit("expo","","sames",525,570);
+h_after->Fit("expo","","sames",start_time+50,start_time+50+30);
    h_after->GetFunction("expo")->SetLineColor(kRed);
 
 
@@ -471,4 +477,42 @@ std::string GetTimeCFD::baseName(std::string const &path)
   std::string base_filename = path.substr(path.find_last_of("/\\") + 1);
   std::string::size_type const p(base_filename.find_last_of('.'));
   return base_filename.substr(0, p);
+}
+
+
+/**
+ * @brief Get the limits in the x axis from time values
+ * 
+ */
+void GetTimeCFD::getXaxisTime(const std::string & a_inputFile){
+    // TFile *f0 = TFile::Open("noCoil2.root", "read");
+    // TFile *f0 = TFile::Open(inputPath, "read");
+    string inFile = a_inputFile;
+    auto f = new TFile(inFile.c_str(),"READONLY");
+    TTreeReader aReader("T",f);
+    TTreeReaderValue<std::vector<float>> timeRV(aReader, "time");
+    unsigned int it = 0;
+    while (aReader.Next())
+    {
+        for (auto &&value : *timeRV)
+        {
+            if (it == 0)
+            {
+                start_time= round(value*1e9);
+                cout << value << endl;
+            }
+
+            if (it ==(numberOfSamples))
+            {
+              end_time= round(value*1e9);
+                cout << value << endl;
+                break;
+            }
+            it++;
+        }
+        it = 0;
+
+        break;
+    }
+    // delete f0;
 }
