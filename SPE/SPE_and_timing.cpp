@@ -168,7 +168,7 @@ TH1F *SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, d
 
   TH1F *PeakToValleyFit = new TH1F("PeakToValleyFit", "No Coil", numberBin, limInfBin, limSupBin);
   float charge_v;
-  Bool_t noOutlier_b;
+  //Bool_t noOutlier_b;
   // Double_t start_time;
   // Double_t end_time;
   std::vector<float> *time_v = 0;
@@ -177,14 +177,14 @@ TH1F *SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, d
 
   Tcharge->SetBranchAddress("charge", &charge_v);
   Tcharge->SetBranchAddress("time", &time_v);
-  Tcharge->SetBranchAddress("noOutlier",&noOutlier_b);
+  //Tcharge->SetBranchAddress("noOutlier",&noOutlier_b);
 
   for (ULong64_t j = 0; j < nentries; j++)
   {
     Tcharge->GetEntry(j);
-    if (noOutlier_b==1){
+ //   if (noOutlier_b==1){
     PeakToValleyFit->Fill(charge_v);      
-    }
+  //  }
     
     // if (j==0){
     
@@ -496,51 +496,6 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
 
   return 0;
 }
-/**
- * @brief Generate voltage vs time plots
- */
-void SPE_and_timing::getTimePlot()
-{
-  TFile *f = new TFile(inputPath);
-  TTree *T = (TTree *)f->Get("T");
-  // T->Print();
-
-  std::string filename = inputRootFileName;
-  char *filename_arr;
-  filename_arr = &filename[0];
-  TCanvas *c = new TCanvas("c", "A3", 1000, 700);
-  c->Update();
-
-  std::string selBr = "noOutlier";
-  char *selBranch_array;
-  selBranch_array = &selBr[0];
-
-  TH2F *h2 = new TH2F("h2", Form("%s", filename_arr), 200, 520, 620, 50, -0.4, 0.1);
-  T->Draw(Form("%s:time/(1e-9)>>h2", selBranch_array), Form("( ( ( Min$(%s) ) <-%g ) &&  ( ( Max$(%s) ) <%g ) )", selBranch_array, 0.03, selBranch_array, 0.1), "colz");
-  h2->SetStats(0);
-  h2->GetZaxis()->SetRangeUser(0., 500.);
-  h2->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
-  h2->GetXaxis()->SetNoExponent();
-
-  gPad->Update();
-  TPaletteAxis *palette = (TPaletteAxis *)h2->GetListOfFunctions()->FindObject("palette");
-
-  // the following lines move the paletter. Choose the values you need for the position.
-  palette->SetX1NDC(0.9);
-  palette->SetX2NDC(0.95);
-  palette->SetY1NDC(0.2);
-  palette->SetY2NDC(0.8);
-  gPad->Modified();
-  gPad->Update();
-
-  c->SetGrid();
-  c->cd();
-  //std::string outPath = "./data/timePlots/";
-  //c->Print((outPath  + param_out_file +"/" + inputRootFileName + ".png").c_str());
-  delete T;
-  f->Close();
-  c->Close();
-}
 
 /**
  * @brief Select waveforms
@@ -576,9 +531,9 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
   Tsel->SetBranchAddress("voltage", &v_voltage);
 
   // Create new branch
-  TBranch *noOutlier = Tsel->Branch("noOutlier", &bol_voltage_selected);
+  // TBranch *noOutlier = Tsel->Branch("noOutlier", &bol_voltage_selected);
   TBranch *brms = Tsel->Branch("brms", &f_rms);
-  TBranch *bstd = Tsel->Branch("bstd", &f_std);
+  // TBranch *bstd = Tsel->Branch("bstd", &f_std);
   TBranch *pulses = Tsel->Branch("pulses", &bol_sel_pulse);
   int noiseFactor=9;
 
@@ -587,28 +542,21 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
   for (Long64_t i = 0; i < nentries; i++)
   {
     Tsel->GetEntry(i);
-    
+ /*   
     //Base line noise
     auto maxVoltageNoise = std::max_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
     auto minVoltageNoise = std::min_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
-   
+ */  
   //Base line noise
     // auto maxVoltagePulse = std::max_element(v_voltage->begin(), next(v_voltage->begin(), 199));
     auto minVoltagePulse = std::min_element(v_voltage->begin(), next(v_voltage->begin(), (noMuestras)));
   
-
+/*
     if (((float)*minVoltageNoise > *rms_noise*(noiseFactor*(-1)) ) & ((float)*maxVoltageNoise < *rms_noise*noiseFactor))
     {
 
       bol_voltage_selected = true;
   //    f_std = h_std(v_voltage);
-
-      if ( (float)*minVoltagePulse < *rms_noise*(noiseFactor*(-1))){
-      bol_sel_pulse = true;
-      }
-      else{
-      bol_sel_pulse = false;
-      }
 
     }
     else
@@ -617,7 +565,15 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
     //  f_std = 0.0 / 0.0;
        bol_sel_pulse = false;
     }
+*/
 
+      if ( (float)*minVoltagePulse < *rms_noise*(noiseFactor*(-1))){
+      bol_sel_pulse = true;
+      }
+      else{
+      bol_sel_pulse = false;
+      }
+      
     Float_t sum = 0;
     for (int i = 0; i < noiseMaxIndex; i++)
     {
@@ -628,7 +584,7 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
     // f_std=h_std(v_voltage);
     //  std::cout<< f_std<<std::endl;
 
-    noOutlier->Fill(); // NOTE : Filling new branch
+ //   noOutlier->Fill(); // NOTE : Filling new branch
     brms->Fill();
     //bstd->Fill();
     pulses->Fill();
@@ -671,20 +627,15 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
   std::cout<< "Getting occupancy" << endl;
 
   int Npulses = Tsel->Draw("pulses>>histPulses","pulses==1","goff");
-  int NnoOutliers = Tsel->Draw("noOutlier>>histPulses","noOutlier==1","goff");
+  // int NnoOutliers = Tsel->Draw("noOutlier>>histPulses","noOutlier==1","goff");
+  
   std::cout << Npulses << endl;
   std::cout << NnoOutliers << endl;
-  *occupancy_bynoise = (Double_t)Npulses/(Double_t)NnoOutliers;
+  *occupancy_bynoise = (Double_t)Npulses/(Double_t)noWaveforms;
   
   std::cout<< *occupancy_bynoise << endl;
 
-  // Int_t n = h->GetNbinsX();
-// for (Int_t i=1; i<=n; i++) {
-//    printf("%g %g\n",
-//           h->GetBinLowEdge(i)+h->GetBinWidth(i)/2,
-//           h->GetBinContent(i));
-  //  gInterpreter->ProcessLine(Form("((TH2F *)0x%lx)->Print(\"all\");", h));
-// }
+
   gPad->Update();
 
   c2->SetGrid();

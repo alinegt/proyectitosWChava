@@ -51,7 +51,6 @@ TH1F *loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBi
 std::string rootFilename(char *inputRootFilePath, char* outputRootPath);
 static Double_t fitf(Double_t *x, Double_t *par);
 Double_t SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit, double_t *occupancy_bynoise);
-void getTimePlot();
 void sel_pulses(Double_t * rms_noise, Double_t *occupancy_bynoise);
 void PulseThresOccupancy();
 void getXaxisTime();
