@@ -35,6 +35,7 @@
 #include "TPaletteAxis.h"
 #include "TTreeReader.h"
 #include "TCut.h"
+#include "TVectorD.h"
 
 using namespace std;
 
@@ -63,9 +64,13 @@ int noiseMaxIndex;
  const char *outputPath;
  const char *param_out_file;
  const char *sel_condition;
-int sampleNumber;
+// int sampleNumber;
 Double_t start_time;
 Double_t end_time;
+Double_t noMuestras;
+Double_t noWaveforms;
+Double_t deltaTime;
+
 // void noise();
 //  protected:
 private:

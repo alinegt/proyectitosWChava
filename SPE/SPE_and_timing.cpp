@@ -33,7 +33,7 @@ int main(int argc, char **argv)
   getPlots.noiseMaxIndex = std::stoi(argv[3]); // max index value for noise measurements
   getPlots.outputPath = argv[4];
   getPlots.sel_condition= argv[5];
-  getPlots.sampleNumber=std::stoi(argv[6]);
+  //getPlots.sampleNumber=std::stoi(argv[6]);
   std::cout << "getPlots.outputPath" << std::endl;
   std::cout << getPlots.outputPath << std::endl;
   
@@ -110,6 +110,12 @@ std::string SPE_and_timing::rootFilename(char *inputRootPath, char *outputRootPa
 void SPE_and_timing::getXaxisTime(){
     // TFile *f0 = TFile::Open("noCoil2.root", "read");
     TFile *f0 = TFile::Open(inputPath, "read");
+      TTree *T = (TTree *)f0->Get("T");
+
+    TVectorD *dataParams = (TVectorD *) T->GetUserInfo()->At(0);
+    noMuestras= dataParams[0][0]-1;
+    noWaveforms= dataParams[0][1];
+    deltaTime=dataParams[0][2];
 
     TTreeReader aReader("T", f0);
     TTreeReaderValue<std::vector<float>> timeRV(aReader, "time");
@@ -124,7 +130,7 @@ void SPE_and_timing::getXaxisTime(){
                 cout << value << endl;
             }
 
-            if (it ==(sampleNumber))
+            if (it ==(noMuestras))
             {
               end_time= round(value*1e9);
                 cout << value << endl;
@@ -574,6 +580,7 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
   TBranch *brms = Tsel->Branch("brms", &f_rms);
   TBranch *bstd = Tsel->Branch("bstd", &f_std);
   TBranch *pulses = Tsel->Branch("pulses", &bol_sel_pulse);
+  int noiseFactor=9;
 
   // For loop to fill NEW BRANCH
   Long64_t nentries = Tsel->GetEntries();
@@ -584,17 +591,17 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
     //Base line noise
     auto maxVoltageNoise = std::max_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
     auto minVoltageNoise = std::min_element(v_voltage->begin(), next(v_voltage->begin(), noiseMaxIndex));
-    int noiseFactor=9;
+   
   //Base line noise
     // auto maxVoltagePulse = std::max_element(v_voltage->begin(), next(v_voltage->begin(), 199));
-    auto minVoltagePulse = std::min_element(v_voltage->begin(), next(v_voltage->begin(), (sampleNumber)));
+    auto minVoltagePulse = std::min_element(v_voltage->begin(), next(v_voltage->begin(), (noMuestras)));
   
 
     if (((float)*minVoltageNoise > *rms_noise*(noiseFactor*(-1)) ) & ((float)*maxVoltageNoise < *rms_noise*noiseFactor))
     {
 
       bol_voltage_selected = true;
-      f_std = h_std(v_voltage);
+  //    f_std = h_std(v_voltage);
 
       if ( (float)*minVoltagePulse < *rms_noise*(noiseFactor*(-1))){
       bol_sel_pulse = true;
@@ -607,7 +614,7 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
     else
     {
       bol_voltage_selected = false;
-      f_std = 0.0 / 0.0;
+    //  f_std = 0.0 / 0.0;
        bol_sel_pulse = false;
     }
 
@@ -623,7 +630,7 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
 
     noOutlier->Fill(); // NOTE : Filling new branch
     brms->Fill();
-    bstd->Fill();
+    //bstd->Fill();
     pulses->Fill();
   }
   Tsel->ResetBranchAddresses();
@@ -634,7 +641,7 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
   std::string selBr = "voltage";
   char *selBranch_array;
   selBranch_array = &selBr[0];
-  Double_t xnbins=100;
+  Double_t xnbins=noMuestras;
   Double_t ynbins= 500;
 
   Double_t ylow = -0.5;
@@ -660,6 +667,8 @@ void SPE_and_timing::sel_pulses(Double_t* rms_noise, Double_t *occupancy_bynoise
   h->SetTitle(Form("%s; Time [ns] ; Amplitude [V]", filename_arr));
   h->GetXaxis()->SetNoExponent();
   h->Write();
+
+  std::cout<< "Getting occupancy" << endl;
 
   int Npulses = Tsel->Draw("pulses>>histPulses","pulses==1","goff");
   int NnoOutliers = Tsel->Draw("noOutlier>>histPulses","noOutlier==1","goff");
@@ -743,7 +752,6 @@ Float_t SPE_and_timing::h_std(vector<float> *v_voltage)
 /**
  * @brief Get rms noise with two different methods
  * 
- * @param std_noise Pointer to a double to be updated
  * @param rms_noise Pointer to a double to be updated
  * @return Double_t 
  */
@@ -771,44 +779,8 @@ Double_t SPE_and_timing::RMSnoise(Double_t *rms_noise)
   *rms_noise = noise_rms_mean;
 
   std::cout << noise_rms_mean << std::endl;
-  //noise_mean = 0.03;
-/*
-  TH1F *h_noise_std = new TH1F("h_noise_std", "std_noise", 50, 0.0, 0.01);
-  h_noise_std->SetLineColor(kBlack);
-
-  T->Draw("bstd>>h_noise_std", "noOutlier==1", "sames");
-
-  h_noise_std->Fit("gaus", "Q", "sames");
-  h_noise_std->GetFunction("gaus")->SetLineColor(kBlack);
-  h_noise_std->GetFunction("gaus")->SetLineWidth(2);
-  gPad->Update();
-  c->Update();
-
-  Double_t noise_std_mean = h_noise_std->GetMean();
-  std::cout << "noise_std_mean" << std::endl;
-
-  std::cout << noise_std_mean << std::endl;
-  *std_noise = noise_std_mean;
-
-  TH1F *h_noise_rms_sel = new TH1F("h_noise_rms_sel", "rms sel", 50, 0.0, 0.01);
-  T->Draw("brms>>h_noise_rms_sel", "noOutlier==1", "sames");
-  h_noise_rms_sel->SetLineColor(kBlue);
-  h_noise_rms_sel->Fit("gaus", "Q", "sames");
-  h_noise_rms_sel->GetFunction("gaus")->SetLineColor(kBlue);
-  h_noise_rms_sel->GetFunction("gaus")->SetLineWidth(2);
-  gPad->Update();
-  c->Update();
-
-  Double_t noise_rms_sel_mean = h_noise_rms_sel->GetMean();
-  std::cout << "noise_rms_sel_mean" << std::endl;
-
-  std::cout << noise_rms_sel_mean << std::endl;
-
-  *rms_noise = noise_rms_sel_mean;
- */ 
   std::string outPath = "./data/NoisePlots/";
-  int randomN;
-  //randomN = rand() % 50000 + 1;
+
   std::string randomNstring = std::to_string(randomN);
   c->Print((outPath + inputRootFileName + ".png").c_str());
 

@@ -26,6 +26,7 @@
 #include "TLegend.h"
 #include "TPaveStats.h"
 #include "TTreeReader.h"
+#include "TVectorD.h"
 using namespace std;
 // const float Xdiv = 0.5;
 #define NAME_OF( v ) #v
@@ -77,10 +78,12 @@ private:
     float m_timeCh1_50;
     float m_timeCh1_90;
     float m_timeCh2_le;
-    std::string Xdiv= "0.4688";
+    //std::string Xdiv= "0.4688";
     bool m_fileLoaded;
     float m_timeDifference;
- 
+    float nofSamples;
+    float nofWaveforms;
+    float deltaTime;
     //parameters of the histogram must be changed in order to set a proper range
     TH1F *h_timeDiff = new TH1F("h_timeDiff", "h_timeDiff", 70, 20, 25);
 

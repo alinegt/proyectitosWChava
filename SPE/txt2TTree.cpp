@@ -14,7 +14,7 @@
 #include "TH1F.h"
 #include "TH2D.h"
 #include "TFile.h"
-
+#include "TVectorD.h"
 using namespace std;
 
 int string_to_int(string _string){
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
    std::string deltaTiempo = argv[6]; // delta tiempo en s 
    std::string outDatFile = argv[7]; //
    std::string outRootFile = argv[8]; //
-   std::string rmsFactor = argv[9]; //
+ //  std::string rmsFactor = argv[9]; //
    
 /************************************************************************************************/
 /****************************************VARIABLES MENU******************************************/
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
    float No_muestras= std::stof(noMuestras);       
    float No_eventos= std::stof(noEventos);      
    float delta_t= std::stof(deltaTiempo) ;
-   float rms_factor= std::stof(rmsFactor) ;
+//   float rms_factor= std::stof(rmsFactor) ;
    float R=50.0; // Resistencia en Ohms
 /************************************************************************************************//************************************************************************************************/
 
@@ -92,6 +92,12 @@ int main(int argc, char **argv)
    /// TREE for charge
    TFile *f = new TFile(Form("%s",argv[8]),"RECREATE");
    TTree* T = new TTree("T","Main tree for data and results");
+   TVectorD dataParams(3);
+   dataParams[0]= No_muestras;
+   dataParams[1]= No_eventos;
+   dataParams[2] = delta_t;
+   
+   T->GetUserInfo()->Add(&dataParams);
    T->Branch("index",&i2,"index/I");
    T->Branch("charge",&carga,"charge/F");
 
@@ -152,7 +158,7 @@ int main(int argc, char **argv)
   avg_ruido1= (1/amplifGain) *(sum_ruido1)/(bin_inicial-1);
   // avg_ruido2=(1/amplifGain) *(sum_ruido2)/(No_muestras-bin_inicial-ancho+1);
   sum_volt=sum_volt*(1/amplifGain);
-  noise_rms= rms_factor*rms(v_noise);
+  noise_rms= rms(v_noise);
 
   // ct10=carga*0.1;
   // ct50=carga*0.5;

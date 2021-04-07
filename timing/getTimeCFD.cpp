@@ -13,16 +13,17 @@ std::string outputFile = argv[2];
 
 
 GetTimeCFD time;
-time.numberOfSamples = std::stoi(argv[3]);
+//time.nofSamples = std::stoi(argv[3]);
 time.start_time=0;
 time.end_time=0;
-time.getXaxisTime(inputFile);
 time.loadDataFile(inputFile);
+time.getXaxisTime(inputFile);
+
 cout<<"The tree has: "<<time.getNumberOfEntries()<<" events"<<endl;
 time.setOutFile(outputFile);
 //time.loopOverEntriesTimingRes();
 time.loopOverEntries();
-std:: string  branch1 = "timech1_90";
+std:: string  branch1 = "timech1_50";
 std::string   branch2 = "timech1_cfd";
 std::string  base_outputFile = time.baseName(outputFile);
 
@@ -337,6 +338,12 @@ bool GetTimeCFD::loadDataFile(const std::string & a_inputFile)
     string inFile = a_inputFile;
     auto f = new TFile(inFile.c_str(),"READONLY");
     m_inputTree = (TTree*)f->Get("T");
+    TVectorD *dataParams = (TVectorD *)m_inputTree->GetUserInfo()->At(0);
+    nofSamples= dataParams[0][0]-1;
+    std::cout<< dataParams[0][0]-1<<std::endl;
+    nofWaveforms= dataParams[0][1];
+    deltaTime=dataParams[0][2];
+
     m_inputTree -> SetBranchAddress("voltage",&m_ch1);
     m_inputTree -> SetBranchAddress("time", &m_time );
     m_inputTree -> SetBranchAddress("pulses", &m_pulses_b );
@@ -406,23 +413,27 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
   h_temp->SetLineWidth(2);
 
 // h_temp->GetXaxis()->SetNdivisions(200);
-h_temp->GetYaxis()->SetRangeUser(0., 700.);
+//h_temp->GetYaxis()->SetRangeUser(0., 2000.);
 
  h_temp->SetName(Form("h_%s",  a_outputFile.c_str()) ); 
  h_temp->SetTitle(Form("%s",  a_outputFile.c_str()) );
 
 
- h_temp->Fit("gaus","0","",start_time+20,start_time+50);
+// h_temp->Fit("gaus","0","",start_time+45,start_time+75);
+h_temp->Fit("gaus","0","",start_time+45,start_time+90);
+// h_temp->GetFunction("gaus")->SetLineColor(kBlack);
+
 //    h_temp->GetFunction("gaus")->SetLineColor(kBlack);
 gPad->Update();
 TF1 *parGaus = (TF1 *)h_temp->GetListOfFunctions()->FindObject("gaus");
 
-   TF1 *f1 = new TF1("f1","gaus",start_time+20,start_time+60);
-// set initial parameters (not really needed for gaus)
+   TF1 *f1 = new TF1("f1","gaus",start_time+45,start_time+105);
+// // set initial parameters (not really needed for gaus)
 f1->SetParameters(parGaus->GetParameter(0), parGaus->GetParameter(1), parGaus->GetParameter(2) ); 
  f1->Draw("sames");
     f1->SetLineColor(kBlack);
 gPad->Update();
+
 
   c->Update();
 
@@ -437,7 +448,7 @@ TPaveStats *ps2 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats"
 
 TH1F *h_after = (TH1F *)h_temp->Clone("h_after");
 
-h_after->Fit("expo","","sames",start_time+50,start_time+50+30);
+h_after->Fit("expo","","sames",start_time+90,start_time+90+15);
    h_after->GetFunction("expo")->SetLineColor(kRed);
 
 
@@ -449,11 +460,31 @@ TPaveStats *ps3 = (TPaveStats *)h_after->GetListOfFunctions()->FindObject("stats
       ps3->SetY1NDC(0.6);
       ps3->SetY2NDC(0.95);
   c->Update();
+
+// TH1F *h_landau = (TH1F *)h_temp->Clone("h_landau");
+
+// h_landau->Fit("landau","","sames",start_time+35,start_time+110);
+//    h_landau->GetFunction("landau")->SetLineColor(kPink);
+
+
+// TPaveStats *ps4 = (TPaveStats *)h_landau->GetListOfFunctions()->FindObject("stats");
+//   ps4->SetOptFit(1110); 
+//    ps4->SetTextColor(kPink);
+//     ps4->SetX1NDC(0.6);
+//       ps4->SetX2NDC(0.85);
+//       ps4->SetY1NDC(0.3);
+//       ps4->SetY2NDC(0.6);
+
+
+  c->Update();
+
+
 gPad->Update();
 
   //h_temp->SetStats(0);
 
 //   gStyle->SetOptFit(1110); 
+  gPad->SetLogy();
   c->SetGrid();
   c->cd();
    std::string outPath = "./data/plots/";
@@ -502,7 +533,7 @@ void GetTimeCFD::getXaxisTime(const std::string & a_inputFile){
                 cout << value << endl;
             }
 
-            if (it ==(numberOfSamples))
+            if (it ==(nofSamples))
             {
               end_time= round(value*1e9);
                 cout << value << endl;

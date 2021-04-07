@@ -13,7 +13,7 @@
 # processWaveforms  (executable)
 
 dataPath=$1
-noiseMaxIndex=$2
+noiseMaxIndex=$3
 localPath=$PWD
 mergePath=$localPath/data/merge/
 processedPath=$localPath/data/processed/
@@ -39,16 +39,28 @@ echo $mergePath
 
 
 approx_pulse_width=120  #290
-number_of_points=213  #320
-number_of_waveforms=100000
-delta_time=4.688e-10  #6.25e-10
+number_of_waveforms=$2
+# delta_time=4.688e-10  #6.25e-10
 
 for file in *
 do
 echo "fileName"
 echo $file
+echo $PWD
 # cp $file $mergePath
-
+# Getting number of points in waveform 
+numberOfLinesTotal=$(wc -l < $file)
+echo $numberOfLinesTotal
+let numberOfpoints=$numberOfLinesTotal/$number_of_waveforms
+echo $numberOfpoints
+#Get delta time
+first_number=$(awk -F',' -M 'NR==50 {printf "%.16f", $1+0; exit}' $file)
+second_number=$(awk -F',' -M 'NR==51 {printf "%.16f", $1+0; exit}' $file)
+echo $first_number
+echo $second_number
+delta_time=$(awk '{print $1-$2}' <<< "$second_number $first_number")
+echo $delta_time
+# Names
 nameOnly="${file##*/}"
 nameOnly=${file%.*}
 mergeName=$nameOnly
@@ -56,14 +68,14 @@ processedName=$nameOnly$dat
 outRootFile=$nameOnly$out_RootSufix
 echo $mergeName
 
-echo $dataPath$mergeName$processedSufix
+# echo $dataPath$mergeName$processedSufix
 
 
 cd $scriptsPath
 
-./txt2TTree $dataPath$file $noiseMaxIndex $approx_pulse_width $number_of_points $number_of_waveforms 5e-10 $processedPath$processedName $processedPath$outRootFile 1
+./txt2TTree $dataPath$file $noiseMaxIndex $approx_pulse_width $numberOfpoints $number_of_waveforms $delta_time $processedPath$processedName $processedPath$outRootFile
 
-# cd $dataPath
+cd $dataPath
 done
 
 exit
