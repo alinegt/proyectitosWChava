@@ -41,13 +41,13 @@ public:
     void loopOverEntriesTimingRes();
     void loopOverEntries();
     float getCFDtimeTimingRes(std::vector<float> *a_signal, float a_fraction, float a_delay, int ch);
-    float getCFDtime(std::vector<float> *a_signal, float a_fraction, float a_delay);
+    float getCFDtime(std::vector<float> *a_signal, std::vector<float> *a_time, float a_fraction, float a_delay);
     float getInterpolationX(float a_x1, float a_x2, float a_y1, float a_y2);
     void saveHistogram(TH1F *a_histogram);
     void setOutFile(const std::string & a_outputFile);
     void plotHist(const std::string & a_outputFile, const std::string & branch);
-    void GetTimeLeadEdge(std::vector<float> *a_vector);
-    float getTime(long unsigned int a_index2, std::vector<float> *a_vector2);
+    void GetTimeLeadEdge(std::vector<float> *a_vector, std::vector<float> *a_time);
+    float getTime(long unsigned int a_index2, std::vector<float> *a_vector2, std::vector<float> *a_time);
     void getXaxisTime(const std::string & a_inputFile);
 
     // void plotHistLE(const std::string & a_outputFile);
@@ -84,6 +84,7 @@ private:
     float nofSamples;
     float nofWaveforms;
     float deltaTime;
+    float noise_mean;
     //parameters of the histogram must be changed in order to set a proper range
     TH1F *h_timeDiff = new TH1F("h_timeDiff", "h_timeDiff", 70, 20, 25);
 
