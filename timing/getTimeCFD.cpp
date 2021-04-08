@@ -23,7 +23,7 @@ cout<<"The tree has: "<<time.getNumberOfEntries()<<" events"<<endl;
 time.setOutFile(outputFile);
 //time.loopOverEntriesTimingRes();
 time.loopOverEntries();
-std:: string  branch1 = "timech1_50";
+std:: string  branch1 = "timech1_90";
 std::string   branch2 = "timech1_cfd";
 std::string  base_outputFile = time.baseName(outputFile);
 
@@ -75,7 +75,7 @@ void GetTimeCFD::loopOverEntries()
     
     m_inputTree->Draw("noise>>h_noise", "", "goff");
     TH1F *h_noise = (TH1F *)gDirectory->Get("h_noise");
-    float noise_mean = h_noise->GetMean();
+    noise_mean = h_noise->GetMean();
     cout<<"noise_mean= "<< noise_mean<<endl;
 
 
@@ -88,8 +88,8 @@ void GetTimeCFD::loopOverEntries()
         //cout<<"time CFD: "<<getCFDtime(m_ch1)<<endl;
        if ( m_pulses_b==1 )  {
        // if (  *minimum  < noise_mean*(-4)  )  {
-        m_timeCh1_cfd=getCFDtime(m_ch1, .5, -5);
-        GetTimeLeadEdge(m_ch1); 
+        m_timeCh1_cfd=getCFDtime(m_ch1,m_time, .75, -3 );
+        GetTimeLeadEdge(m_ch1, m_time); 
         
         m_outputTree->Fill();
         m_resultSignal_ch1.clear();
@@ -105,7 +105,7 @@ void GetTimeCFD::loopOverEntries()
 
 }
 
-void GetTimeCFD::GetTimeLeadEdge(std::vector<float> *a_vector){
+void GetTimeCFD::GetTimeLeadEdge(std::vector<float> *a_vector, std::vector<float> *a_time){
     auto peak= *min_element( a_vector->begin(), a_vector->end() );
     bool flag10= false;
     bool flag50= false;
@@ -122,43 +122,43 @@ void GetTimeCFD::GetTimeLeadEdge(std::vector<float> *a_vector){
         {
             // cout<<"time10"<<endl;
 
-            m_timeCh1_10 = getTime(a_index1, a_vector);
+            m_timeCh1_10 = getTime(a_index1, a_vector, a_time);
             
             flag10= true;
         }
 
          if ((a_vector->at(a_index1) < 0.5*(double)peak )  && (flag50==false) ) 
         {
-            m_timeCh1_50 = getTime(a_index1, a_vector);
+            m_timeCh1_50 = getTime(a_index1, a_vector,a_time);
             flag50= true;
                         // cout<<"time50"<<endl;
 
         }
           if ( (a_vector->at(a_index1) < 0.9*(double)peak  ) && (flag90==false) )
         {
-            m_timeCh1_90 = getTime(a_index1, a_vector);
+            m_timeCh1_90 = getTime(a_index1, a_vector,a_time);
             flag90=true;
                         // cout<<"time90"<<endl;
 
         }
     }
 }
-float GetTimeCFD::getTime(long unsigned int a_index2, std::vector<float> *a_vector2){
+float GetTimeCFD::getTime(long unsigned int a_index2, std::vector<float> *a_vector2, std::vector<float> *a_time){
 
                    
-               float a_time;
+            float cfdTime;
             float a_x1,a_x2,a_y1,a_y2=0;
 
-               a_x1 = m_time-> at (a_index2-1);
-                a_x2 = m_time-> at (a_index2);
+               a_x1 = a_time-> at (a_index2-1);
+                a_x2 = a_time-> at (a_index2);
 
                 a_y1 = a_vector2->at(a_index2-1);
 
                 a_y2 = a_vector2->at(a_index2);
 
-                a_time = getInterpolationX(a_x1,a_x2,a_y1,a_y2);
+                cfdTime = getInterpolationX(a_x1,a_x2,a_y1,a_y2);
                 
-                return a_time;
+                return cfdTime;
 }
 
 ///======================================
@@ -266,7 +266,7 @@ float GetTimeCFD::getCFDtimeTimingRes(std::vector<float> *a_signal, float a_frac
     return a_timeCFD;
 }
 ///======================================
-float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, float a_delay){
+float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, std::vector<float> *a_time, float a_fraction, float a_delay){
     std::vector <float> a_delaySignal;
     std::vector <float> a_resultSignal;    
     bool a_flag = false;
@@ -296,7 +296,7 @@ float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, flo
 
     for(long unsigned int a_index=0 ; a_index<a_resultSignal.size();a_index++)
     {
-        if ((a_resultSignal.at(a_index)<-0.02)&&(a_flag==false))
+        if ((a_resultSignal.at(a_index)< noise_mean*(-10))&&(a_flag==false))
         {a_flag = true;}
         if ((a_resultSignal.at(a_index)>0.00)&&(a_flag==true)){
             //cout<<a_index<<" "<<a_resultSignal.at(a_index)<<endl;
@@ -307,7 +307,7 @@ float GetTimeCFD::getCFDtime(std::vector<float> *a_signal, float a_fraction, flo
                 // a_y1 = a_resultSignal.at(a_index-1);
                 // a_y2 = a_resultSignal.at(a_index);
 
-                a_timeCFD = getTime(a_index,&m_resultSignal_ch1);
+                a_timeCFD = getTime(a_index,&m_resultSignal_ch1, a_time);
                 a_flag = false;
 
                 //cout<<a_x1<<" "<<a_x2<<" "<<a_y1<<" "<<a_y2<<endl;
@@ -347,7 +347,7 @@ bool GetTimeCFD::loadDataFile(const std::string & a_inputFile)
     m_inputTree -> SetBranchAddress("voltage",&m_ch1);
     m_inputTree -> SetBranchAddress("time", &m_time );
     m_inputTree -> SetBranchAddress("pulses", &m_pulses_b );
-    m_inputTree -> SetBranchAddress("noOutlier", &m_noOutlier_b );
+    m_inputTree -> SetBranchAddress("noOutliers", &m_noOutlier_b );
 
    // m_inputTree -> SetBranchAddress("ch2",&m_ch2);
     m_fileLoaded = true;
@@ -407,31 +407,35 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
 //  hframe->GetYaxis()->SetRangeUser(0., 400.);
 // // hframe->GetXaxis()->SetRangeUser(0., 110.);  
 
- m_outputTree->Draw(Form( " %s >> h_%s(75,%f,%f)",branch.c_str(), a_outputFile.c_str(), start_time, end_time) ,""); 
+ m_outputTree->Draw(Form( " %s >> h_%s(100,%f,%f)",branch.c_str(), a_outputFile.c_str(), start_time, end_time) ,""); 
  TH1F *h_temp = (TH1F*)gPad->GetPrimitive(Form("h_%s", a_outputFile.c_str() ));
    h_temp->SetTitle(Form("%s; Time [ns] ; Counts", titleHist_arr));
   h_temp->SetLineWidth(2);
 
-// h_temp->GetXaxis()->SetNdivisions(200);
-//h_temp->GetYaxis()->SetRangeUser(0., 2000.);
+ //h_temp->GetXaxis()->SetNdivisions(200);
+//  h_temp->SetMinimum(0.1);
+//  h_temp->SetMaximum(10000);
+ h_temp->GetYaxis()->SetRangeUser(0.1,1e4);
 
  h_temp->SetName(Form("h_%s",  a_outputFile.c_str()) ); 
  h_temp->SetTitle(Form("%s",  a_outputFile.c_str()) );
 
 
 // h_temp->Fit("gaus","0","",start_time+45,start_time+75);
-h_temp->Fit("gaus","0","",start_time+45,start_time+90);
+h_temp->Fit("gaus","0","",start_time+80,start_time+100);
 // h_temp->GetFunction("gaus")->SetLineColor(kBlack);
 
 //    h_temp->GetFunction("gaus")->SetLineColor(kBlack);
 gPad->Update();
+
 TF1 *parGaus = (TF1 *)h_temp->GetListOfFunctions()->FindObject("gaus");
 
-   TF1 *f1 = new TF1("f1","gaus",start_time+45,start_time+105);
+   TF1 *f1 = new TF1("f1","gaus",start_time+80,start_time+100);
 // // set initial parameters (not really needed for gaus)
 f1->SetParameters(parGaus->GetParameter(0), parGaus->GetParameter(1), parGaus->GetParameter(2) ); 
  f1->Draw("sames");
     f1->SetLineColor(kBlack);
+
 gPad->Update();
 
 
@@ -448,15 +452,15 @@ TPaveStats *ps2 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats"
 
 TH1F *h_after = (TH1F *)h_temp->Clone("h_after");
 
-h_after->Fit("expo","","sames",start_time+90,start_time+90+15);
+h_after->Fit("expo","","sames",start_time+100,start_time+115);
    h_after->GetFunction("expo")->SetLineColor(kRed);
 
 
 TPaveStats *ps3 = (TPaveStats *)h_after->GetListOfFunctions()->FindObject("stats");
   ps3->SetOptFit(1110); 
    ps3->SetTextColor(kRed);
-    ps3->SetX1NDC(0.1);
-      ps3->SetX2NDC(0.35);
+    ps3->SetX1NDC(0.2);
+      ps3->SetX2NDC(0.4);
       ps3->SetY1NDC(0.6);
       ps3->SetY2NDC(0.95);
   c->Update();
@@ -485,6 +489,7 @@ gPad->Update();
 
 //   gStyle->SetOptFit(1110); 
   gPad->SetLogy();
+  
   c->SetGrid();
   c->cd();
    std::string outPath = "./data/plots/";
