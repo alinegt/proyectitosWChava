@@ -313,7 +313,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   // Sigma
   funcMulti->SetParLimits(3, 0, 5);
   //C
-  funcMulti->SetParLimits(4, 1.2, 3);
+  funcMulti->SetParLimits(4, 1.2, 6);
   // give the parameters meaningful names
   funcMulti->SetParNames("a", "b", "Npe", "sigma", "C");
   // // call TH1::Fit with the name of the TF1 object

@@ -422,7 +422,7 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
 
 
 // h_temp->Fit("gaus","0","",start_time+45,start_time+75);
-h_temp->Fit("gaus","0","",start_time+80,start_time+100);
+h_temp->Fit("gaus","0","",start_time+60,start_time+85);
 // h_temp->GetFunction("gaus")->SetLineColor(kBlack);
 
 //    h_temp->GetFunction("gaus")->SetLineColor(kBlack);
@@ -430,7 +430,7 @@ gPad->Update();
 
 TF1 *parGaus = (TF1 *)h_temp->GetListOfFunctions()->FindObject("gaus");
 
-   TF1 *f1 = new TF1("f1","gaus",start_time+80,start_time+100);
+   TF1 *f1 = new TF1("f1","gaus",start_time+55,start_time+100);
 // // set initial parameters (not really needed for gaus)
 f1->SetParameters(parGaus->GetParameter(0), parGaus->GetParameter(1), parGaus->GetParameter(2) ); 
  f1->Draw("sames");
@@ -444,25 +444,27 @@ gPad->Update();
 TPaveStats *ps2 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats");
   ps2->SetOptFit(1110); 
    ps2->SetTextColor(kBlack);
-    ps2->SetX1NDC(0.6);
-      ps2->SetX2NDC(0.85);
+    ps2->SetX1NDC(0.5);
+      ps2->SetX2NDC(0.75);
       ps2->SetY1NDC(0.6);
       ps2->SetY2NDC(0.95);
   c->Update();
 
 TH1F *h_after = (TH1F *)h_temp->Clone("h_after");
 
-h_after->Fit("expo","","sames",start_time+100,start_time+115);
+h_after->Fit("expo","","sames",start_time+90,end_time+110);
    h_after->GetFunction("expo")->SetLineColor(kRed);
 
 
 TPaveStats *ps3 = (TPaveStats *)h_after->GetListOfFunctions()->FindObject("stats");
   ps3->SetOptFit(1110); 
    ps3->SetTextColor(kRed);
-    ps3->SetX1NDC(0.2);
-      ps3->SetX2NDC(0.4);
+    ps3->SetX1NDC(0.8);
+      ps3->SetX2NDC(0.9);
       ps3->SetY1NDC(0.6);
       ps3->SetY2NDC(0.95);
+      ps3->SetOptStat(1000);
+
   c->Update();
 
 // TH1F *h_landau = (TH1F *)h_temp->Clone("h_landau");
