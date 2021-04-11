@@ -51,9 +51,9 @@ int main(int argc, char **argv)
   getPlots.SPEhistAndPlots(&peak2valley, &sigma_fit, &occupancy_bynoise);
 
   // Writting param to file
-  std::string outFilePath = ("/home/salvador/github/proyectitosWChava/SPE/data/SPEparam/" + (std::string)getPlots.param_out_file + ".dat").c_str();
+  std::string outFilePath = ("/home/idlab-52/github/proyectitosWChava/SPE/data/SPEparam/" + (std::string)getPlots.param_out_file + ".dat").c_str();
   a_file.open(outFilePath, std::ios::out | std::fstream::app);
-  // a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
+ // a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
   a_file << fileName << " " << rms_noise << std::endl;
 
   a_file.close();
@@ -249,11 +249,11 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
 {
   Double_t limInfBin = -2;
   Double_t limSupBin = 12;
-  Double_t numberBin = 100;
+  Double_t numberBin = 200;
   Double_t adcResolution = (limSupBin - limInfBin) / numberBin;
 
   TH1F *h_peakToValley = loadHistFromFile(limInfBin, limSupBin, numberBin);
-  // h_peakToValley->SetMaximum(10e4);
+   h_peakToValley->SetMaximum(10e5);
   //h_peakToValley->SetMinimum(0.0);
 
   //std::string filepath = argc;
@@ -267,7 +267,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   pad1->SetGrid();
   pad1->Draw();
   pad1->cd();
-  Double_t xlimFitPed[2] = {-0.5, 0.5};
+  Double_t xlimFitPed[2] = {-0.2, 0.2};
   //    Double_t xlimFitPeak2Valley[2]={0.1,2.5};
   h_peakToValley->Draw();
   h_peakToValley->SetLineWidth(2);
@@ -298,28 +298,28 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   // The last three parameters specify the number of parameters
   // for the function.
   TH1F *h_multiph = (TH1F *)h_peakToValley->Clone("MultiPE Fit");
-  Double_t limInfFitf = 0.45;
-  Double_t limSupFitf = 10;
+  Double_t limInfFitf = 0.3;
+  Double_t limSupFitf = 12;
   Double_t numberOfParams = 5;
   TF1 *funcMulti = new TF1("fitf", SPE_and_timing::fitf, limInfFitf, limSupFitf, numberOfParams);
   // set the parameters to the mean and RMS of the histogram
   funcMulti->SetParameters(445, 0, 3, 1, 1.8);
   // a
-  funcMulti->SetParLimits(0, 0, 10000000);
+  funcMulti->SetParLimits(0, -100, 10000000);
   // b
   funcMulti->SetParLimits(1, 0, 300);
   // Npe
-  funcMulti->SetParLimits(2, 0, 4);
+  funcMulti->SetParLimits(2, 0, 5);
   // Sigma
   funcMulti->SetParLimits(3, 0, 5);
   //C
-  funcMulti->SetParLimits(4, 1.2, 3);
+  funcMulti->SetParLimits(4, 1.2, 4);
   // give the parameters meaningful names
   funcMulti->SetParNames("a", "b", "Npe", "sigma", "C");
   // // call TH1::Fit with the name of the TF1 object
-  h_multiph->Fit("fitf", "Br", "sames");
-  h_multiph->GetFunction("fitf")->SetLineColor(kBlack);
-  h_multiph->GetFunction("fitf")->SetLineWidth(4);
+  h_multiph->Fit("fitf", "Br0", "sames");
+  // h_multiph->GetFunction("fitf")->SetLineColor(kBlack);
+  // h_multiph->GetFunction("fitf")->SetLineWidth(4);
 
   ///////////////////////////////////////////////////////////////////////
   //get Peak and valley values
@@ -366,18 +366,18 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   ///////////////////////////////////////////////////////////////////////
   TH1F *h_spe = (TH1F *)h_peakToValley->Clone("SPE 0 Fit");
     //    TF1 *funcMulti = new TF1("gaus",xx,25);
-    h_spe->Fit("gaus", "Qr", "sames", xx, 20);
+    h_spe->Fit("gaus", "Qr", "sames", xx+0.3, 6);
 
   ///////////////////////////////////////////////////////////////////////
   ////// Stats boxes
   ///////////////////////////////////////////////////////////////////////
   c_hist->Update();
   TPaveStats *ps1 = (TPaveStats *)h_peakToValley->GetListOfFunctions()->FindObject("stats");
-  ps1->SetX1NDC(0.5);
+  ps1->SetX1NDC(0.6);
   ps1->SetX2NDC(0.9);
   ps1->SetY1NDC(0.75);
   ps1->SetY2NDC(0.8);
-  ps1->SetTextSize(.04);
+  ps1->SetTextSize(.025);
   ps1->SetTextColor(kBlue);
   //ps1->SetOptStat(110);
   ps1->SetOptFit(100);
@@ -385,33 +385,33 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   ps1->Draw();
   pad1->Modified();
   TPaveStats *ps2 = (TPaveStats *)h_pedestalFit->GetListOfFunctions()->FindObject("stats");
-  ps2->SetX1NDC(0.5);
+  ps2->SetX1NDC(0.6);
   ps2->SetX2NDC(0.9);
-  ps2->SetY1NDC(0.75);
-  ps2->SetY2NDC(0.8);
-  ps2->SetTextSize(.04);
+  ps2->SetY1NDC(0.65);
+  ps2->SetY2NDC(0.9);
+  ps2->SetTextSize(.025);
   ps2->SetTextColor(kBlack);
   ps2->SetOptStat(1000000001);
   ps2->SetOptFit(0001);
   ps2->Draw();
 
-  TPaveStats *ps3 = (TPaveStats *)h_multiph->GetListOfFunctions()->FindObject("stats");
-  ps3->SetX1NDC(0.5);
-  ps3->SetX2NDC(0.9);
-  ps3->SetY1NDC(0.55);
-  ps3->SetY2NDC(0.9);
-  ps3->SetTextSize(.045);
-  ps3->SetTextColor(kBlack);
-  ps3->SetOptStat(1000000011);
-  ps3->SetOptFit(0001);
-  ps3->Draw();
+  // TPaveStats *ps3 = (TPaveStats *)h_multiph->GetListOfFunctions()->FindObject("stats");
+  // ps3->SetX1NDC(0.6);
+  // ps3->SetX2NDC(0.9);
+  // ps3->SetY1NDC(0.55);
+  // ps3->SetY2NDC(0.9);
+  // ps3->SetTextSize(.045);
+  // ps3->SetTextColor(kBlack);
+  // ps3->SetOptStat(1000000011);
+  // ps3->SetOptFit(0001);
+ // ps3->Draw();
 
   TPaveStats *ps4 = (TPaveStats *)h_spe->GetListOfFunctions()->FindObject("stats");
-  ps4->SetX1NDC(0.5);
+  ps4->SetX1NDC(0.6);
   ps4->SetX2NDC(0.9);
-  ps4->SetY1NDC(0.35);
-  ps4->SetY2NDC(0.55);
-  ps4->SetTextSize(.045);
+  ps4->SetY1NDC(0.45);
+  ps4->SetY2NDC(0.65);
+  ps4->SetTextSize(.025);
   ps4->SetTextColor(kBlack);
   ps4->SetOptStat(1000000001);
   ps4->SetOptFit(0001);
@@ -473,7 +473,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   TLatex t2(0.15, 0.85, Form("Resolution:%g pC/bin", adcResolution));
   t2.SetTextSize(0.05);
   // TLatex t3(0.15, 0.8, Form("Occupancy:%g%%", occupancy)); // THIS APPROACH IS BASED ON SPE plot, not very accurate
-  TLatex t3(0.15, 0.8, Form("Occupancy:%g%%", *occupancy_bynoise)); //THIS APPROACH IS BASED ON noise level thresholds
+  TLatex t3(0.15, 0.8, Form("Occupancy:%g%%", *occupancy_bynoise*100)); //THIS APPROACH IS BASED ON noise level thresholds
 
   t3.SetTextSize(0.05);
 

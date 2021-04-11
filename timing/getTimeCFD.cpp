@@ -23,7 +23,7 @@ cout<<"The tree has: "<<time.getNumberOfEntries()<<" events"<<endl;
 time.setOutFile(outputFile);
 //time.loopOverEntriesTimingRes();
 time.loopOverEntries();
-std:: string  branch1 = "timech1_90";
+std:: string  branch1 = "timech1_50";
 std::string   branch2 = "timech1_cfd";
 std::string  base_outputFile = time.baseName(outputFile);
 
@@ -407,7 +407,7 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
 //  hframe->GetYaxis()->SetRangeUser(0., 400.);
 // // hframe->GetXaxis()->SetRangeUser(0., 110.);  
 
- m_outputTree->Draw(Form( " %s >> h_%s(100,%f,%f)",branch.c_str(), a_outputFile.c_str(), start_time, end_time) ,""); 
+ m_outputTree->Draw(Form( " %s >> h_%s(640,%f,%f)",branch.c_str(), a_outputFile.c_str(), start_time, end_time) ,""); 
  TH1F *h_temp = (TH1F*)gPad->GetPrimitive(Form("h_%s", a_outputFile.c_str() ));
    h_temp->SetTitle(Form("%s; Time [ns] ; Counts", titleHist_arr));
   h_temp->SetLineWidth(2);
@@ -415,19 +415,20 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
  //h_temp->GetXaxis()->SetNdivisions(200);
 //  h_temp->SetMinimum(0.1);
 //  h_temp->SetMaximum(10000);
- h_temp->GetYaxis()->SetRangeUser(0.1,1e4);
+ h_temp->GetYaxis()->SetRangeUser(0.1,1e3);
 
  h_temp->SetName(Form("h_%s",  a_outputFile.c_str()) ); 
  h_temp->SetTitle(Form("%s",  a_outputFile.c_str()) );
 
 
 // h_temp->Fit("gaus","0","",start_time+45,start_time+75);
-h_temp->Fit("gaus","0","",start_time+80,start_time+100);
+h_temp->Fit("gaus","","",start_time+225,start_time+238);
 // h_temp->GetFunction("gaus")->SetLineColor(kBlack);
 
 //    h_temp->GetFunction("gaus")->SetLineColor(kBlack);
 gPad->Update();
 
+/*
 TF1 *parGaus = (TF1 *)h_temp->GetListOfFunctions()->FindObject("gaus");
 
    TF1 *f1 = new TF1("f1","gaus",start_time+80,start_time+100);
@@ -440,7 +441,7 @@ gPad->Update();
 
 
   c->Update();
-
+*/
 TPaveStats *ps2 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats");
   ps2->SetOptFit(1110); 
    ps2->SetTextColor(kBlack);
@@ -449,7 +450,7 @@ TPaveStats *ps2 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats"
       ps2->SetY1NDC(0.6);
       ps2->SetY2NDC(0.95);
   c->Update();
-
+/*
 TH1F *h_after = (TH1F *)h_temp->Clone("h_after");
 
 h_after->Fit("expo","","sames",start_time+100,start_time+115);
@@ -488,8 +489,9 @@ gPad->Update();
   //h_temp->SetStats(0);
 
 //   gStyle->SetOptFit(1110); 
+ */
   gPad->SetLogy();
-  
+ 
   c->SetGrid();
   c->cd();
    std::string outPath = "./data/plots/";
