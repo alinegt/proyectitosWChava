@@ -117,7 +117,7 @@ import os
 # SCOPE_VISA_ADDRESS = 'TCPIP0::192.168.1.110::hislip0::INSTR'  # MSOX3104T
 # SCOPE_VISA_ADDRESS = 'TCPIP0::192.168.1.111::hislip0::INSTR'  # MSOX3054A
 # SCOPE_VISA_ADDRESS = 'TCPIP0::10.81.216.134::inst0::INSTR'  # MSOX6004A
-SCOPE_VISA_ADDRESS = 'TCPIP0::192.168.153.178::inst0::INSTR'  # MSOX6004A
+SCOPE_VISA_ADDRESS = 'USB0::2391::6038::MY53280216::INSTR'  # MSOX6004A
 
 # Example VISA address for a USB connection:
 # SCOPE_VISA_ADDRESS = 'USB0::0x2A8D::0x1770::MY56311141::0::INSTR' # MSOX3104T
@@ -206,7 +206,7 @@ OPEN_CSV_FILE = False
 
 # Other options ###############################################################
 # Report status details and throughput measurements:
-VERBOSE_MODE = True
+VERBOSE_MODE = False
 # VERBOSE_MODE = False
 
 # =============================================================================
@@ -299,9 +299,9 @@ def error_check():
 
 def safe_exit_custom_message(message):
     # Safe exit function
-    scope.clear()
+    #scope.clear()
     scope.query(':STOP;*OPC?')
-    scope.clear()
+    #scope.clear()
     scope.close()
     sys.exit(message)
 
@@ -328,7 +328,7 @@ except Exception:
 scope.timeout = GENERAL_TIMEOUT
 
 # Clear the remote interface:
-scope.clear()
+#scope.clear()
 error_check()
 
 idn = str(scope.query('*IDN?'))
@@ -402,8 +402,8 @@ scope.write(':WAVeform:POINts MAX')
 # Capture and import waveform(s)
 # =============================================================================
 
-if VERBOSE_MODE:
-    print(('Capturing {:,} {}waveform{}...\n'
+# if VERBOSE_MODE:
+print(('Capturing {:,} {}waveform{}...\n'
           .format(NUMBER_TRIGGERS, acq_mode, s_if_plural)))
 
 start_time = time.time()  # Time acquiring waveforms and importing the data
@@ -424,8 +424,8 @@ scope.timeout = GENERAL_TIMEOUT
 acquisition_time = time.time() - start_time
 acquisition_rate = NUMBER_TRIGGERS/acquisition_time
 
-if VERBOSE_MODE:
-    print(('Done capturing and importing {:,} '.format(NUMBER_TRIGGERS)
+#if VERBOSE_MODE:
+print(('Done capturing and importing {:,} '.format(NUMBER_TRIGGERS)
           + '{:,}-point {}waveform{}.\n'
           .format(num_points, acq_mode, s_if_plural)
           + 'This took {:.3f} seconds '.format(acquisition_time)
@@ -581,7 +581,7 @@ else:
 # =============================================================================
 
 error_check()
-scope.clear()
+#scope.clear()
 scope.close()
 
 print('Done.')
