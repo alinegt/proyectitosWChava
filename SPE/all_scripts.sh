@@ -1,9 +1,11 @@
 #! /bin/bash
-name=$1
+nofWaveforms=$1
 noiseMaxIndex=$2
+name=$3
 
-./txt2TTree.sh  /home/salvador/Documents/WPT/data_150/ $noiseMaxIndex   #data_200ns/second $noiseMaxIndex  #/home/salvador/Documents/WPT/data_feb8_2021/toPresent/Nocoil  # /home/salvador/Documents/WPT/noise
-./getParamRecursive.sh $name $noiseMaxIndex 
+
+./txt2TTreeRecursive.sh /home/idlab-52/github/proyectitosWChava/SPE/scope/dataOutput/500ns/ $nofWaveforms  $noiseMaxIndex   #data_200ns/second $noiseMaxIndex  #/home/salvador/Documents/WPT/data_feb8_2021/toPresent/Nocoil  # /home/salvador/Documents/WPT/noise
+./getParamRecursive.sh $name $noiseMaxIndex "noOutliers==1"
 
 
 # name2=$3

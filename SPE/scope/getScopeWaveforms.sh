@@ -21,7 +21,7 @@ awk -v n=$nbrWaveforms '{s = s $1 ORS} END{for (i=1;i<=n;i++) printf "%s", s}' $
 
 paste $filename$time$compTime$csv   $filename$csv > ../dataOutput/$filename$out$dat
 
-
+rm $filename$time$compTime$csv 
 cd ../
 echo $PWD
 python3 saveFigScope.py $filename$out
