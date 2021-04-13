@@ -4,7 +4,7 @@ noiseMaxIndex=$2
 name=$3
 
 
-./txt2TTreeRecursive.sh /home/idlab-52/github/proyectitosWChava/SPE/scope/dataOutput/500ns/ $nofWaveforms  $noiseMaxIndex   #data_200ns/second $noiseMaxIndex  #/home/salvador/Documents/WPT/data_feb8_2021/toPresent/Nocoil  # /home/salvador/Documents/WPT/noise
+./txt2TTreeRecursive.sh /home/idlab-52/github/proyectitosWChava/SPE/scope/dataOutput/coilTest2/ $nofWaveforms  $noiseMaxIndex   #data_200ns/second $noiseMaxIndex  #/home/salvador/Documents/WPT/data_feb8_2021/toPresent/Nocoil  # /home/salvador/Documents/WPT/noise
 ./getParamRecursive.sh $name $noiseMaxIndex "noOutliers==1"
 
 

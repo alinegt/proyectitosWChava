@@ -377,7 +377,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   ps1->SetX2NDC(0.9);
   ps1->SetY1NDC(0.75);
   ps1->SetY2NDC(0.8);
-  ps1->SetTextSize(.025);
+  ps1->SetTextSize(.03);
   ps1->SetTextColor(kBlue);
   //ps1->SetOptStat(110);
   ps1->SetOptFit(100);
@@ -389,7 +389,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   ps2->SetX2NDC(0.9);
   ps2->SetY1NDC(0.65);
   ps2->SetY2NDC(0.9);
-  ps2->SetTextSize(.025);
+  ps2->SetTextSize(.03);
   ps2->SetTextColor(kBlack);
   ps2->SetOptStat(1000000001);
   ps2->SetOptFit(0001);
@@ -411,7 +411,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   ps4->SetX2NDC(0.9);
   ps4->SetY1NDC(0.45);
   ps4->SetY2NDC(0.65);
-  ps4->SetTextSize(.025);
+  ps4->SetTextSize(.03);
   ps4->SetTextColor(kBlack);
   ps4->SetOptStat(1000000001);
   ps4->SetOptFit(0001);

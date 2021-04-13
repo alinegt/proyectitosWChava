@@ -24,7 +24,10 @@ cd $inputPath
 #processedPath=""
 #outputPath=""
 done
-cd $execPath
+
+montage -geometry 1000x1000+2+2  *.png SPEmontage.png
+
+# cd $execPath
 #root -l 'printRootContent.C("./data/rootFiles/mergeRoot.root")'                                                                                                      ─╯
 # root -l plotStackLE2.C
 # root -l plotStackCFD2.C
@@ -34,4 +37,3 @@ cd $execPath
 #cd ${outputPath}
 
 # rm SPEmontage.png
-# montage -geometry 1000x1000+2+2  *.png SPEmontage.png

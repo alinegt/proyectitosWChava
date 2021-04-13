@@ -422,7 +422,7 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
 
 
 // h_temp->Fit("gaus","0","",start_time+45,start_time+75);
-h_temp->Fit("gaus","","",start_time+225,start_time+238);
+h_temp->Fit("gaus","","",start_time+224,start_time+235);
 // h_temp->GetFunction("gaus")->SetLineColor(kBlack);
 
 //    h_temp->GetFunction("gaus")->SetLineColor(kBlack);
@@ -445,8 +445,8 @@ gPad->Update();
 TPaveStats *ps2 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats");
   ps2->SetOptFit(1110); 
    ps2->SetTextColor(kBlack);
-    ps2->SetX1NDC(0.5);
-      ps2->SetX2NDC(0.75);
+    ps2->SetX1NDC(0.75);
+      ps2->SetX2NDC(0.95);
       ps2->SetY1NDC(0.6);
       ps2->SetY2NDC(0.95);
   c->Update();

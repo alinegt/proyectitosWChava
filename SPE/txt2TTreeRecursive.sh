@@ -38,7 +38,7 @@ echo $mergePath
 #cd $dir
 
 
-approx_pulse_width=120  #290
+approx_pulse_width=200  #290
 number_of_waveforms=$2
 # delta_time=4.688e-10  #6.25e-10
 
