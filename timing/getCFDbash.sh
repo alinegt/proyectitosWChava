@@ -1,7 +1,7 @@
 #! /bin/bash
-
+runName=$1
 execPath=/home/idlab-52/github/proyectitosWChava/timing
-inputPath=/home/idlab-52/github/proyectitosWChava/SPE/data/cutted/
+inputPath=/home/idlab-52/github/proyectitosWChava/SPE/data/cutRootFiles/$runName/
 outputPath=/home/idlab-52/github/proyectitosWChava/timing/data/rootFiles/
 fileExt=".root"
 make -B

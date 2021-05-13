@@ -11,22 +11,22 @@
 make -B
 localPath=$PWD
 execPath=$localPath
-inputPath=$localPath/data/processed/
+inputPath=$localPath/data/inputFiles/
 outputFileName=$1
 noiseMaxIndex=$2
 sel_condition=$3
 
 echo outputFileName
 mergePath=$localPath/data/merge/
-outputRoot=$localPath/data/output/
+outputRoot=$localPath/data/output/$1/
 
-rm $localPath/data/occupancy/*.png
-rm $localPath/data/plots/*.png
-rm $localPath/data/timePlots/noCoil/*.png
+# rm $localPath/data/occupancy/*.png
+# rm $localPath/data/plots/*.png
+# rm $localPath/data/timePlots/noCoil/*.png
 rm $localPath/data/SPEparam/SPEparams.dat
-rm $localPath/data/NoisePlots/*png
+# rm $localPath/data/NoisePlots/*png
 rm $localPath/data/SPEparam/$1".dat"
-rm $localPath/data/output/*.root
+rm $localPath/data/output/$1/*.root
 cd $inputPath
 for file in *
 do
@@ -40,8 +40,8 @@ cp $processedPath $outputRoot
 cd $inputPath
 done
 
-cd $localPath/data/plots/
+cd $localPath/data/SPEplots/$1/
 montage -geometry 1000x1000+2+2  *.png SPEmontage.png
 
-cd $localPath/data/timePlots/noCoil/
+cd $localPath/data/timePlots/$1/
 montage -geometry 1000x1000+2+2 *.png Timemontage.png

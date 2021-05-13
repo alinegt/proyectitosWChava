@@ -14,7 +14,7 @@
 
 dataPath=$1
 noiseMaxIndex=$3
-localPath=$PWD
+localPath="/home/idlab-52/github/proyectitosWChava/SPE"
 mergePath=$localPath/data/merge/
 processedPath=$localPath/data/processed/
 scriptsPath=$localPath/
@@ -38,7 +38,7 @@ echo $mergePath
 #cd $dir
 
 
-approx_pulse_width=200  #290
+approx_pulse_width=128  #290
 number_of_waveforms=$2
 # delta_time=4.688e-10  #6.25e-10
 

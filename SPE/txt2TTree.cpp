@@ -44,8 +44,8 @@ int main(int argc, char **argv)
    std::string noMuestras =  argv[4]; // No. puntos en el pulso
    std::string noEventos =   argv[5]; // No. de eventos
    std::string deltaTiempo = argv[6]; // delta tiempo en s 
-   std::string outDatFile = argv[7]; //
-   std::string outRootFile = argv[8]; //
+  //  std::string outDatFile = argv[7]; //
+   std::string outRootFile = argv[7]; //
  //  std::string rmsFactor = argv[9]; //
    
 /************************************************************************************************/
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
    float noise_rms;
    // std::fstream outputFile;
    /// TREE for charge
-   TFile *f = new TFile(Form("%s",argv[8]),"RECREATE");
+   TFile *f = new TFile(Form("%s",argv[7]),"RECREATE");
    TTree* T = new TTree("T","Main tree for data and results");
    TVectorD dataParams(3);
    dataParams[0]= No_muestras;

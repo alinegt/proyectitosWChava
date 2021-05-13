@@ -154,7 +154,7 @@ TH1F *SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, d
   char *filename_arr;
   filename_arr = &filename[0];
 
-  TFile *f_loadhist = new TFile(Form("./data/cutted/%s.root", filename_arr), "read");
+  TFile *f_loadhist = new TFile(Form("./data/cutRootFiles/%s/%s.root",param_out_file, filename_arr), "read");
   // TFile *f_loadhist = new TFile(inputPath);
   TTree *T = (TTree *)f_loadhist->Get("T");
   TTree *Tcharge = T;
@@ -248,7 +248,7 @@ Double_t SPE_and_timing::fitf(Double_t *x, Double_t *par)
 Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit, double_t *occupancy_bynoise)
 {
   Double_t limInfBin = -2;
-  Double_t limSupBin = 12;
+  Double_t limSupBin = 10;
   Double_t numberBin = 200;
   Double_t adcResolution = (limSupBin - limInfBin) / numberBin;
 
@@ -284,7 +284,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   ///////////////////////////////////////////////////////////////////////
 
   // TF1 *f1 = new TF1("f1", "gaus", -0.3, .2);
-  TH1F *h_pedestalFit = (TH1F *)h_peakToValley->Clone("h_pedestalFit");
+  TH1F *h_pedestalFit = (TH1F *)h_peakToValley->Clone("Pedestal fit");
   h_pedestalFit->Fit("gaus", "Q", "sames", xlimFitPed[0], xlimFitPed[1]);
   h_pedestalFit->GetFunction("gaus")->SetLineColor(kBlack);
   h_pedestalFit->GetFunction("gaus")->SetLineWidth(2);
@@ -299,7 +299,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   // for the function.
   TH1F *h_multiph = (TH1F *)h_peakToValley->Clone("MultiPE Fit");
   Double_t limInfFitf = 0.3;
-  Double_t limSupFitf = 12;
+  Double_t limSupFitf = 10;
   Double_t numberOfParams = 5;
   TF1 *funcMulti = new TF1("fitf", SPE_and_timing::fitf, limInfFitf, limSupFitf, numberOfParams);
   // set the parameters to the mean and RMS of the histogram
@@ -366,7 +366,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   ///////////////////////////////////////////////////////////////////////
   TH1F *h_spe = (TH1F *)h_peakToValley->Clone("SPE 0 Fit");
     //    TF1 *funcMulti = new TF1("gaus",xx,25);
-    h_spe->Fit("gaus", "Qr", "sames", xx+0.3, 6);
+    h_spe->Fit("gaus", "Qr", "sames", xx+0.3, 5);
 
   ///////////////////////////////////////////////////////////////////////
   ////// Stats boxes
@@ -377,22 +377,29 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   ps1->SetX2NDC(0.9);
   ps1->SetY1NDC(0.75);
   ps1->SetY2NDC(0.8);
-  ps1->SetTextSize(.03);
+  ps1->SetTextSize(.025);
   ps1->SetTextColor(kBlue);
-  //ps1->SetOptStat(110);
-  ps1->SetOptFit(100);
+  ps1->SetOptStat(11);
+  ps1->SetOptFit(111);
 
   ps1->Draw();
   pad1->Modified();
   TPaveStats *ps2 = (TPaveStats *)h_pedestalFit->GetListOfFunctions()->FindObject("stats");
   ps2->SetX1NDC(0.6);
   ps2->SetX2NDC(0.9);
-  ps2->SetY1NDC(0.65);
+  ps2->SetY1NDC(0.75);
   ps2->SetY2NDC(0.9);
-  ps2->SetTextSize(.03);
+  ps2->SetTextSize(.025);
   ps2->SetTextColor(kBlack);
   ps2->SetOptStat(1000000001);
-  ps2->SetOptFit(0001);
+  ps2->SetOptFit(110);
+  TList *listOfLines = ps2->GetListOfLines();
+  listOfLines->Print();
+   // Remove the RMS line
+   TText *tconst = ps2->GetLineWith("ENTRIES");
+   listOfLines->Remove(tconst);
+
+
   ps2->Draw();
 
   // TPaveStats *ps3 = (TPaveStats *)h_multiph->GetListOfFunctions()->FindObject("stats");
@@ -409,12 +416,12 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   TPaveStats *ps4 = (TPaveStats *)h_spe->GetListOfFunctions()->FindObject("stats");
   ps4->SetX1NDC(0.6);
   ps4->SetX2NDC(0.9);
-  ps4->SetY1NDC(0.45);
-  ps4->SetY2NDC(0.65);
-  ps4->SetTextSize(.03);
-  ps4->SetTextColor(kBlack);
+  ps4->SetY1NDC(0.6);
+  ps4->SetY2NDC(0.75);
+  ps4->SetTextSize(.025);
+  ps4->SetTextColor(kRed);
   ps4->SetOptStat(1000000001);
-  ps4->SetOptFit(0001);
+  ps4->SetOptFit(112);
   ps4->Draw();
 
   pad1->Modified();
@@ -468,22 +475,22 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   ///////////////////////////////////////////////////////////////////////
   ///// Text box
   ///////////////////////////////////////////////////////////////////////
-  TLatex t(0.15, 0.9, Form("Peak/valley:%g", *peak2Valley));
-  t.SetTextSize(0.05);
-  TLatex t2(0.15, 0.85, Form("Resolution:%g pC/bin", adcResolution));
+  TLatex t(0.15, 0.8, Form("Peak/valley:%g", *peak2Valley));
+  t.SetTextSize(0.03);
+  TLatex t2(0.15, 0.75, Form("Resolution:%g pC/bin", adcResolution));
   t2.SetTextSize(0.05);
   // TLatex t3(0.15, 0.8, Form("Occupancy:%g%%", occupancy)); // THIS APPROACH IS BASED ON SPE plot, not very accurate
-  TLatex t3(0.15, 0.8, Form("Occupancy:%g%%", *occupancy_bynoise*100)); //THIS APPROACH IS BASED ON noise level thresholds
+  TLatex t3(0.15, 0.7, Form("Occupancy:%g%%", *occupancy_bynoise*100)); //THIS APPROACH IS BASED ON noise level thresholds
 
   t3.SetTextSize(0.05);
 
   t.Draw();
-  t2.Draw();
-  t3.Draw();
+  // t2.Draw();
+  // t3.Draw();
 
   c_hist->Update();
-  std::string outPath = "./data/plots/";
-  c_hist->Print((outPath + inputRootFileName + ".png").c_str());
+  std::string outPath = "./data/SPEplots/";
+  c_hist->Print((outPath + param_out_file + "/" + outputRootFileName + ".png").c_str());
   c_hist->Close();
   std::cout << inputRootFileName << std::endl;
 
@@ -508,7 +515,7 @@ void SPE_and_timing::sel_pulses(Double_t *rms_noise, Double_t *occupancy_bynoise
   TTree *T = (TTree *)f->Get("T");
 
   // Create a new file and cloning the input Tree into the output Tree
-  TFile *hfile = new TFile(Form("./data/cutted/%s.root", filename_arr), "RECREATE");
+  TFile *hfile = new TFile(Form("./data/cutRootFiles/%s/%s.root", param_out_file ,filename_arr), "RECREATE");
   TTree *Tsel = T->CloneTree();
 
   // Variable from the input Tree
@@ -529,8 +536,8 @@ void SPE_and_timing::sel_pulses(Double_t *rms_noise, Double_t *occupancy_bynoise
   TBranch *brms = Tsel->Branch("brms", &f_rms);
   TBranch *noise_sel = Tsel->Branch("noise_sel", &bol_noise_sel);
   TBranch *pulses = Tsel->Branch("pulses", &bol_sel_pulse);
-  int noiseFactorOutliers = 12;
-  int noiseFactorPulse = 9;
+  int noiseFactorOutliers = 10;
+  int noiseFactorPulse = 10;
 
   // For loop to fill NEW BRANCH
   Long64_t nentries = Tsel->GetEntries();
@@ -727,8 +734,8 @@ Double_t SPE_and_timing::RMSnoise(Double_t *rms_noise)
 
   std::cout << noise_rms_mean << std::endl;
   std::string outPath = "./data/NoisePlots/";
+  c->Print((outPath + param_out_file + "/" + outputRootFileName + ".png").c_str());
 
-  c->Print((outPath + inputRootFileName + ".png").c_str());
 
   delete T;
   f->Close();

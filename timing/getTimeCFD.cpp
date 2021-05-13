@@ -407,7 +407,7 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
 //  hframe->GetYaxis()->SetRangeUser(0., 400.);
 // // hframe->GetXaxis()->SetRangeUser(0., 110.);  
 
- m_outputTree->Draw(Form( " %s >> h_%s(640,%f,%f)",branch.c_str(), a_outputFile.c_str(), start_time, end_time) ,""); 
+ m_outputTree->Draw(Form( " %s >> h_%s(120,%f,%f)",branch.c_str(), a_outputFile.c_str(), start_time+20, end_time-60) ,""); 
  TH1F *h_temp = (TH1F*)gPad->GetPrimitive(Form("h_%s", a_outputFile.c_str() ));
    h_temp->SetTitle(Form("%s; Time [ns] ; Counts", titleHist_arr));
   h_temp->SetLineWidth(2);
@@ -415,15 +415,20 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
  //h_temp->GetXaxis()->SetNdivisions(200);
 //  h_temp->SetMinimum(0.1);
 //  h_temp->SetMaximum(10000);
- h_temp->GetYaxis()->SetRangeUser(0.1,1e3);
+ h_temp->GetYaxis()->SetRangeUser(0.1,5e3);
 
  h_temp->SetName(Form("h_%s",  a_outputFile.c_str()) ); 
+
  h_temp->SetTitle(Form("%s",  a_outputFile.c_str()) );
 
 
 // h_temp->Fit("gaus","0","",start_time+45,start_time+75);
-h_temp->Fit("gaus","","",start_time+224,start_time+235);
+h_temp->Fit("gaus","","",start_time+55,start_time+60);
 // h_temp->GetFunction("gaus")->SetLineColor(kBlack);
+
+
+gStyle->SetOptStat(1000000010);
+gStyle->SetOptFit(111);
 
 //    h_temp->GetFunction("gaus")->SetLineColor(kBlack);
 gPad->Update();
@@ -443,12 +448,14 @@ gPad->Update();
   c->Update();
 */
 TPaveStats *ps2 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats");
-  ps2->SetOptFit(1110); 
+//   ps2->SetOptFit(1110); 
    ps2->SetTextColor(kBlack);
-    ps2->SetX1NDC(0.75);
-      ps2->SetX2NDC(0.95);
-      ps2->SetY1NDC(0.6);
-      ps2->SetY2NDC(0.95);
+    ps2->SetX1NDC(0.6);
+      ps2->SetX2NDC(0.9);
+      ps2->SetY1NDC(0.75);
+      ps2->SetY2NDC(0.9);
+  ps2->SetTextSize(.025);
+
   c->Update();
 /*
 TH1F *h_after = (TH1F *)h_temp->Clone("h_after");

@@ -7,6 +7,7 @@ out="_out"
 time="_time"
 compTime="_xtimes"
 
+
 start_=$(date)
 echo $start_
 python3 Get_InfiniiVisionX_Waveforms.py $filename $nbrWaveforms
@@ -15,43 +16,46 @@ echo $end_
 
 cd dataScope
 
-#gawk '{a[NR]=$1}END{for(i=1;i<=$nbrWaveforms;i++)for(j=1;j<=NR;j++)print a[j]}' $filename$time$csv >  $filename$time$compTime$csv 
 
 awk -v n=$nbrWaveforms '{s = s $1 ORS} END{for (i=1;i<=n;i++) printf "%s", s}' $filename$time$csv >  $filename$time$compTime$csv 
 
 paste $filename$time$compTime$csv   $filename$csv > ../dataOutput/$filename$out$dat
 
 rm $filename$time$compTime$csv 
+
 cd ../
 echo $PWD
 python3 saveFigScope.py $filename$out
 
-sed -i 's/\t/,/g' ./dataOutput/$filename$out$dat                                   
+datFileName=$filename$out$dat
+sed -i 's/\t/,/g' ./dataOutput/$datFileName                                   
 
-#sed 's/,/ /g' ./dataScope/$filename$csv > $filename$dat                                   
-#for i in {2..$nbrWaveforms}
-#do
-#    awk'{print $i}' $filename$dat> voltage.dat
-#done
-#awk 'BEGIN{ ORS="" } { for ( i=2; i<= NF ; i++){ dict[i]=dict[i]$i"\n"  }  } END { for (key in dict) { print dict[key] }  }'  $filename$dat> voltage.dat
-#awk 'BEGIN{ ORS="" } { for ( i=2; i<= NF ; i++){ dict[i]=dict[i]$1"\n"  }  } END { for (key in dict) { print dict[key] }  }'  $filename$dat> time.dat 
+cd dataOutput
 
-#awk 'BEGIN{ ORS="" } { for ( i=2; i<= NF ; i++){ print $i"\n"  }  }' $filename$dat> voltage.dat 
-#awk 'BEGIN{ ORS="" } { for ( i=2; i<= NF ; i++){ print $1"\n"  }  }' $filename$dat> time.dat 
-#awk '{for(i=2;i<=NF;i++){ print $i}}' $filename$dat> voltage.dat 
-#awk '{for(i=2;i<=NF;i++){ print $1}}' $filename$dat> time.dat 
+dataPath=$PWD/
+echo $dataPath$datFileName
+noiseMaxIndex=160
+approx_pulse_width=128
+numberOfLinesTotal=$(wc -l < $datFileName)
+echo $numberOfLinesTotal
+let numberOfpoints=$numberOfLinesTotal/$nbrWaveforms
+#Get delta time
+first_number=$(awk -F',' -M 'NR==50 {printf "%.16f", $1+0; exit}' $datFileName)
+second_number=$(awk -F',' -M 'NR==51 {printf "%.16f", $1+0; exit}' $datFileName)
+echo $first_number
+echo $second_number
+delta_time=$(awk '{print $1-$2}' <<< "$second_number $first_number")
+echo $delta_time
 
+out_RootSufix=".root"
+outRootFile=$filename$out_RootSufix
+processedPath=$HOME/github/proyectitosWChava/SPE/scope/rootFiles/
+echo $processedPath$outRootFile
+echo txt2ttree
+txt2TTree $dataPath$datFileName $noiseMaxIndex $approx_pulse_width $numberOfpoints $nbrWaveforms $delta_time $processedPath$outRootFile
 
-#paste time.dat voltage.dat > $filename$stacked$dat
+syncRootFiles 
 
-
-
-
-#rm voltage.dat
-#rm time.dat
-#rm $filename$dat
-#rm  $filename$stacked$dat
-#python3 stackColumns.py  $filename $nbrWaveforms
 end_=$(date)
 echo $end_
 

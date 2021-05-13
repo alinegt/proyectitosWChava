@@ -13,7 +13,7 @@ columns=['time','voltage']
 #nmbrOfWaveforms= int(sys.argv[2])
 df=pd.read_csv("./dataOutput/"+filename+".dat", header=None, delimiter="\t", names=columns)
 print(df)
-fig=df.plot(x='time',y='voltage',legend=False,marker='o', ms=1 ).get_figure()
+fig=df.plot(x='time',y='voltage',legend=False,marker='o', ms=1, grid=True ).get_figure()
 fig.savefig("./images/"+filename+'.png')
 
 

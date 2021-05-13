@@ -75,6 +75,7 @@ data
 SPE/.vscode/launch.json
 SPE/.vscode/tasks.json
 SPE/scope/dataOutput
+SPE/scope/dataOutput_bkup
 SPE/scope/dataScope
 SPE/scope/images
 SPE/scope/.getScopeWaveforms.sh.swn
@@ -86,3 +87,4 @@ SPE/.vscode/targets.log
 timing/getTimeCFD
 SPE/SPE_and_timing
 SPE/txt2TTree
+
