@@ -1,5 +1,5 @@
-#ifndef _SPE_AND_TIMING_H
-#define _SPE_AND_TIMING_H
+#ifndef _SPE_analysis_H
+#define _SPE_analysis_H
 
 
 
@@ -40,17 +40,17 @@
 using namespace std;
 
 
-class SPE_and_timing{
+class SPE_analysis{
   public:
-SPE_and_timing();
-~SPE_and_timing();
+SPE_analysis();
+~SPE_analysis();
 
-Double_t RMSnoise(Double_t *rms_noise);
+Double_t RMSnoise(Double_t *rms_noise, Double_t*rms_noise_sigma);
 std::string baseName(std::string const &path);
 TH1F *loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin);
 std::string rootFilename(char *inputRootFilePath, char* outputRootPath);
 static Double_t fitf(Double_t *x, Double_t *par);
-Double_t SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit, double_t *occupancy_bynoise);
+Double_t SPEhistAndPlots(double_t *peak2Valley, double_t *mean_fit_ped ,double_t *sigma_fit_ped ,double_t *mean_fit_spe, double_t *sigma_fit_spe, double_t *occupancy_bynoise);
 void sel_pulses(Double_t * rms_noise, Double_t *occupancy_bynoise);
 void PulseThresOccupancy();
 void getXaxisTime();

@@ -10,7 +10,7 @@ CXXFLAGS   += $(ROOTCFLAGS)
 LIBS        = $(ROOTLIBS) $(SYSLIBS)
 
 ### Targets
-TARGS = txt2TTree  SPE_and_timing #createTree getTimeCFD
+TARGS = txt2TTree  SPE_analysis #createTree getTimeCFD
 
 all: $(TARGS)
 

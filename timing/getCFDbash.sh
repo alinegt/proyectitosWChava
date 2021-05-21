@@ -5,6 +5,9 @@ inputPath=/home/idlab-52/github/proyectitosWChava/SPE/data/cutRootFiles/$runName
 outputPath=/home/idlab-52/github/proyectitosWChava/timing/data/rootFiles/
 fileExt=".root"
 make -B
+cd "$execPath""/data""/plots/"
+rm *
+
 cd $inputPath
 
 for file in *
@@ -24,8 +27,8 @@ cd $inputPath
 #processedPath=""
 #outputPath=""
 done
-
-montage -geometry 1000x1000+2+2  *.png SPEmontage.png
+cd "$execPath""/data""/plots/"
+montage -geometry +2+2  *.png "$1""montage.png"
 
 # cd $execPath
 #root -l 'printRootContent.C("./data/rootFiles/mergeRoot.root")'                                                                                                      ─╯

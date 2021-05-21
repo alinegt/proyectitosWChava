@@ -1,9 +1,9 @@
-#include "SPE_and_timing.h"
+#include "SPE_analysis.h"
 
 /// Constructor
-SPE_and_timing::SPE_and_timing() {}
+SPE_analysis::SPE_analysis() {}
 /// Destructor
-SPE_and_timing::~SPE_and_timing() {}
+SPE_analysis::~SPE_analysis() {}
 
 /**
  * @brief Get a Tree from a ROOT file containing the pulse waveforms
@@ -18,12 +18,12 @@ SPE_and_timing::~SPE_and_timing() {}
  */
 int main(int argc, char **argv)
 {
-  Double_t peak2valley, sigma_fit;
+  Double_t peak2valley, mean_fit_ped ,sigma_fit_ped, mean_fit_spe ,sigma_fit_spe;
   std::ofstream a_file;
-  Double_t rms_noise, occupancy_bynoise;
+  Double_t rms_noise, occupancy_bynoise, rms_noise_sigma;
   // Double_t std_noise;
 
-  SPE_and_timing getPlots;
+  SPE_analysis getPlots;
 
   getPlots.inputPath = argv[1];
   std::cout << "getPlots.inputPath" << std::endl;
@@ -41,20 +41,21 @@ int main(int argc, char **argv)
 
   getPlots.getXaxisTime();
 
-  getPlots.RMSnoise(&rms_noise);
+  getPlots.RMSnoise(&rms_noise, &rms_noise_sigma);
 
   std::cout << "selecting pulses" << std::endl;
   getPlots.sel_pulses(&rms_noise, &occupancy_bynoise);
 
   std::cout << "Plotting SPE" << std::endl;
 
-  getPlots.SPEhistAndPlots(&peak2valley, &sigma_fit, &occupancy_bynoise);
+  getPlots.SPEhistAndPlots(&peak2valley, &mean_fit_ped , &sigma_fit_ped, &mean_fit_spe ,&sigma_fit_spe, &occupancy_bynoise);
+
 
   // Writting param to file
   std::string outFilePath = ("/home/idlab-52/github/proyectitosWChava/SPE/data/SPEparam/" + (std::string)getPlots.param_out_file + ".dat").c_str();
   a_file.open(outFilePath, std::ios::out | std::fstream::app);
  // a_file << fileName << " " << peaktovalley << " " << sigma_fit << " " << std::endl;
-  a_file << fileName << " " << rms_noise << std::endl;
+  a_file << fileName << " " << rms_noise << " " << rms_noise_sigma << " " <<mean_fit_ped << " " <<sigma_fit_ped << " "<< mean_fit_spe << " " <<sigma_fit_spe << " " <<occupancy_bynoise <<std::endl;
 
   a_file.close();
 
@@ -68,7 +69,7 @@ int main(int argc, char **argv)
  * @param path Path to the directory
  * @return std::string 
  */
-std::string SPE_and_timing::baseName(std::string const &path)
+std::string SPE_analysis::baseName(std::string const &path)
 {
   std::string base_filename = path.substr(path.find_last_of("/\\") + 1);
   std::string::size_type const p(base_filename.find_last_of('.'));
@@ -82,7 +83,7 @@ std::string SPE_and_timing::baseName(std::string const &path)
  * @param outputRootPath Path to the ouput ROOT file
  * @return std::string 
  */
-std::string SPE_and_timing::rootFilename(char *inputRootPath, char *outputRootPath)
+std::string SPE_analysis::rootFilename(char *inputRootPath, char *outputRootPath)
 {
 
   inputRootFileName = baseName(inputRootPath);
@@ -100,7 +101,7 @@ std::string SPE_and_timing::rootFilename(char *inputRootPath, char *outputRootPa
  * @brief Get the limits in the x axis from time values
  * 
  */
-void SPE_and_timing::getXaxisTime()
+void SPE_analysis::getXaxisTime()
 {
   // TFile *f0 = TFile::Open("noCoil2.root", "read");
   TFile *f0 = TFile::Open(inputPath, "read");
@@ -147,7 +148,7 @@ void SPE_and_timing::getXaxisTime()
  * @param numberBin Histogram parameter
  * @return TH1F* 
  */
-TH1F *SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin)
+TH1F *SPE_analysis::loadHistFromFile(double_t limInfBin, double_t limSupBin, double_t numberBin)
 {
 
   std::string filename = outputRootFileName;
@@ -205,7 +206,7 @@ TH1F *SPE_and_timing::loadHistFromFile(double_t limInfBin, double_t limSupBin, d
  * @param par      Pointer to parameters for the fit
  * @return Double_t 
  */
-Double_t SPE_and_timing::fitf(Double_t *x, Double_t *par)
+Double_t SPE_analysis::fitf(Double_t *x, Double_t *par)
 {
   Double_t arg = 0;
   //   Double_t arg1 =0;
@@ -245,7 +246,7 @@ Double_t SPE_and_timing::fitf(Double_t *x, Double_t *par)
  * @param sigma_fit       Pointer to the sigma value to get obtained from fit
  * @return Double_t 
  */
-Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_fit, double_t *occupancy_bynoise)
+Double_t SPE_analysis::SPEhistAndPlots(double_t *peak2Valley, double_t *mean_fit_ped ,double_t *sigma_fit_ped ,double_t *mean_fit_spe, double_t *sigma_fit_spe, double_t *occupancy_bynoise)
 {
   Double_t limInfBin = -2;
   Double_t limSupBin = 10;
@@ -288,9 +289,10 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   h_pedestalFit->Fit("gaus", "Q", "sames", xlimFitPed[0], xlimFitPed[1]);
   h_pedestalFit->GetFunction("gaus")->SetLineColor(kBlack);
   h_pedestalFit->GetFunction("gaus")->SetLineWidth(2);
-  TF1 *parGaus = (TF1 *)h_pedestalFit->GetListOfFunctions()->FindObject("gaus");
-
-  *sigma_fit = parGaus->GetParameter(2);
+  TF1 *parGaus_ped = (TF1 *)h_pedestalFit->GetListOfFunctions()->FindObject("gaus");
+  *mean_fit_ped =  parGaus_ped->GetParameter(1);
+  *sigma_fit_ped = parGaus_ped->GetParameter(2);
+  
   ///////////////////////////////////////////////////////////////////////
   ////// FIT multiphotoelectron
   ///////////////////////////////////////////////////////////////////////
@@ -301,7 +303,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   Double_t limInfFitf = 0.3;
   Double_t limSupFitf = 10;
   Double_t numberOfParams = 5;
-  TF1 *funcMulti = new TF1("fitf", SPE_and_timing::fitf, limInfFitf, limSupFitf, numberOfParams);
+  TF1 *funcMulti = new TF1("fitf", SPE_analysis::fitf, limInfFitf, limSupFitf, numberOfParams);
   // set the parameters to the mean and RMS of the histogram
   funcMulti->SetParameters(445, 0, 3, 1, 1.8);
   // a
@@ -317,7 +319,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   // give the parameters meaningful names
   funcMulti->SetParNames("a", "b", "Npe", "sigma", "C");
   // // call TH1::Fit with the name of the TF1 object
-  h_multiph->Fit("fitf", "Br0", "sames");
+  h_multiph->Fit("fitf", "BQr0", "sames");
   // h_multiph->GetFunction("fitf")->SetLineColor(kBlack);
   // h_multiph->GetFunction("fitf")->SetLineWidth(4);
 
@@ -367,6 +369,10 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   TH1F *h_spe = (TH1F *)h_peakToValley->Clone("SPE 0 Fit");
     //    TF1 *funcMulti = new TF1("gaus",xx,25);
     h_spe->Fit("gaus", "Qr", "sames", xx+0.3, 5);
+  TF1 *parGaus_spe = (TF1 *)h_spe->GetListOfFunctions()->FindObject("gaus");
+  
+  *mean_fit_spe =  parGaus_spe->GetParameter(1);
+  *sigma_fit_spe =  parGaus_spe->GetParameter(2);
 
   ///////////////////////////////////////////////////////////////////////
   ////// Stats boxes
@@ -394,7 +400,6 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   ps2->SetOptStat(1000000001);
   ps2->SetOptFit(110);
   TList *listOfLines = ps2->GetListOfLines();
-  listOfLines->Print();
    // Remove the RMS line
    TText *tconst = ps2->GetLineWith("ENTRIES");
    listOfLines->Remove(tconst);
@@ -480,13 +485,13 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
   TLatex t2(0.15, 0.75, Form("Resolution:%g pC/bin", adcResolution));
   t2.SetTextSize(0.05);
   // TLatex t3(0.15, 0.8, Form("Occupancy:%g%%", occupancy)); // THIS APPROACH IS BASED ON SPE plot, not very accurate
-  TLatex t3(0.15, 0.7, Form("Occupancy:%g%%", *occupancy_bynoise*100)); //THIS APPROACH IS BASED ON noise level thresholds
+  TLatex t3(0.15, 0.75, Form("Occupancy:%g%%", *occupancy_bynoise*100)); //THIS APPROACH IS BASED ON noise level thresholds
 
-  t3.SetTextSize(0.05);
+  t3.SetTextSize(0.03);
 
   t.Draw();
   // t2.Draw();
-  // t3.Draw();
+   t3.Draw();
 
   c_hist->Update();
   std::string outPath = "./data/SPEplots/";
@@ -501,7 +506,7 @@ Double_t SPE_and_timing::SPEhistAndPlots(double_t *peak2Valley, double_t *sigma_
  * @brief Select waveforms
  * 
  */
-void SPE_and_timing::sel_pulses(Double_t *rms_noise, Double_t *occupancy_bynoise)
+void SPE_analysis::sel_pulses(Double_t *rms_noise, Double_t *occupancy_bynoise)
 {
   int nthreads = 4;
   ROOT::EnableImplicitMT(nthreads);
@@ -536,7 +541,7 @@ void SPE_and_timing::sel_pulses(Double_t *rms_noise, Double_t *occupancy_bynoise
   TBranch *brms = Tsel->Branch("brms", &f_rms);
   TBranch *noise_sel = Tsel->Branch("noise_sel", &bol_noise_sel);
   TBranch *pulses = Tsel->Branch("pulses", &bol_sel_pulse);
-  int noiseFactorOutliers = 10;
+  int noiseFactorOutliers = 12;
   int noiseFactorPulse = 10;
 
   // For loop to fill NEW BRANCH
@@ -639,12 +644,15 @@ void SPE_and_timing::sel_pulses(Double_t *rms_noise, Double_t *occupancy_bynoise
 
   std::cout << Npulses << endl;
   *occupancy_bynoise = (Double_t)Npulses / (Double_t)noWaveforms;
+  
+  std::cout << "occupancy by noise" << endl;
 
   std::cout << *occupancy_bynoise << endl;
 
   gPad->Update();
 
   c2->SetGrid();
+  gStyle->SetGridWidth(3);
   c2->cd();
   std::string outPath = "./data/timePlots/";
   c2->Print((outPath + param_out_file + "/" + outputRootFileName + ".png").c_str());
@@ -665,7 +673,7 @@ void SPE_and_timing::sel_pulses(Double_t *rms_noise, Double_t *occupancy_bynoise
  * @param v_voltage Vector
  * @return Float_t 
  */
-Float_t SPE_and_timing::h_std(vector<float> *v_voltage)
+Float_t SPE_analysis::h_std(vector<float> *v_voltage)
 {
   TCanvas *c3 = new TCanvas("c3", "A3", 1000, 700);
   c3->Update();
@@ -709,29 +717,55 @@ Float_t SPE_and_timing::h_std(vector<float> *v_voltage)
  * @param rms_noise Pointer to a double to be updated
  * @return Double_t 
  */
-Double_t SPE_and_timing::RMSnoise(Double_t *rms_noise)
+Double_t SPE_analysis::RMSnoise(Double_t *rms_noise, Double_t *rms_noise_sigma)
 {
 
   // Open input file containing a Tree
   TFile *f = new TFile(inputPath, "read");
   TTree *T = (TTree *)f->Get("T");
+  char *filename_arr = &inputRootFileName[0];
 
   TCanvas *c = new TCanvas("c", "A3", 1000, 700);
-  TH1F *h_noise_rms = new TH1F("h_noise_rms", "rms noise", 50, 0.00, 0.01);
+  TH1F *h_noise_rms = new TH1F("h_noise_rms", "rms noise", 300, 0., 0.01);
   T->Draw("noise>>h_noise_rms");
+  h_noise_rms->SetTitle(Form("%s; RMS noise ;Counts", filename_arr));
 
-  h_noise_rms->Fit("gaus", "Q", "sames");
+  h_noise_rms->Fit("gaus", "Q", "sames", 0.0024, 0.0041);
   h_noise_rms->GetFunction("gaus")->SetLineColor(kRed);
   h_noise_rms->GetFunction("gaus")->SetLineWidth(2);
   // TH1F *h_noise = (TH1F *)gDirectory->Get("h_noise");
   gPad->Update();
   c->Update();
-  Double_t noise_rms_mean = h_noise_rms->GetMean();
+  // Double_t noise_rms_mean = h_noise_rms->GetMean();
+  Double_t noise_rms_mean = h_noise_rms->GetFunction("gaus")->GetParameter(1);
+  Double_t noise_rms_sigma = h_noise_rms->GetFunction("gaus")->GetParameter(2);
+
+  TPaveStats *ps = (TPaveStats *)h_noise_rms->GetListOfFunctions()->FindObject("stats");
+  ps->SetX1NDC(0.5);
+  ps->SetX2NDC(0.9);
+  ps->SetY1NDC(0.6);
+  ps->SetY2NDC(0.9);
+
+  ps->SetTextSize(.035);
+  ps->SetOptStat(1000000011);
+  // ps->SetOptStat(11);
+  // ps->SetTextColor(kBlue);
+  ps->SetOptFit(1111);
+  h_noise_rms->GetYaxis()->SetRangeUser(0., 6000.);
+
+  
+
+  c->SetGrid();
+  c->Update();
+  gPad->Update();
+  
+
   std::cout << "noise_rms_mean" << std::endl;
-  h_noise_rms->SetLineColor(kRed);
+  // h_noise_rms->SetLineColor(kRed);
 
   *rms_noise = noise_rms_mean;
-
+  *rms_noise_sigma = noise_rms_sigma;
+  
   std::cout << noise_rms_mean << std::endl;
   std::string outPath = "./data/NoisePlots/";
   c->Print((outPath + param_out_file + "/" + outputRootFileName + ".png").c_str());

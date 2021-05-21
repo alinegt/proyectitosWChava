@@ -36,12 +36,15 @@ outputRootPath="${outputRoot}""${file}"
 # echo $outputRootPath
 cd $execPath
 cp $processedPath $outputRoot
-./SPE_and_timing $processedPath $outputFileName $noiseMaxIndex $outputRootPath $sel_condition
+./SPE_analysis $processedPath $outputFileName $noiseMaxIndex $outputRootPath $sel_condition
 cd $inputPath
 done
 
 cd $localPath/data/SPEplots/$1/
-montage -geometry 1000x1000+2+2  *.png SPEmontage.png
+montage -geometry +2+2  *.png SPEmontage.png
 
 cd $localPath/data/timePlots/$1/
-montage -geometry 1000x1000+2+2 *.png Timemontage.png
+montage -geometry +2+2 *.png Timemontage.png
+
+cd $localPath/data/NoisePlots/$1/
+montage -geometry +2+2 *.png Noisemontage.png

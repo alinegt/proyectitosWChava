@@ -28,7 +28,7 @@ std::string   branch2 = "timech1_cfd";
 std::string  base_outputFile = time.baseName(outputFile);
 
 time.plotHist( (base_outputFile + "_LE").c_str(), branch1);
-time.plotHist( (base_outputFile + "_CFD").c_str(), branch2);
+// time.plotHist( (base_outputFile + "_CFD").c_str(), branch2);
 time.closeFile();
 
 }
@@ -407,7 +407,7 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
 //  hframe->GetYaxis()->SetRangeUser(0., 400.);
 // // hframe->GetXaxis()->SetRangeUser(0., 110.);  
 
- m_outputTree->Draw(Form( " %s >> h_%s(120,%f,%f)",branch.c_str(), a_outputFile.c_str(), start_time+20, end_time-60) ,""); 
+ m_outputTree->Draw(Form( " %s >> h_%s(200,%f,%f)",branch.c_str(), a_outputFile.c_str(), start_time, end_time) ,""); 
  TH1F *h_temp = (TH1F*)gPad->GetPrimitive(Form("h_%s", a_outputFile.c_str() ));
    h_temp->SetTitle(Form("%s; Time [ns] ; Counts", titleHist_arr));
   h_temp->SetLineWidth(2);
@@ -423,7 +423,7 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
 
 
 // h_temp->Fit("gaus","0","",start_time+45,start_time+75);
-h_temp->Fit("gaus","","",start_time+55,start_time+60);
+h_temp->Fit("gaus","","", 476,480);
 // h_temp->GetFunction("gaus")->SetLineColor(kBlack);
 
 
@@ -452,9 +452,9 @@ TPaveStats *ps2 = (TPaveStats *)h_temp->GetListOfFunctions()->FindObject("stats"
    ps2->SetTextColor(kBlack);
     ps2->SetX1NDC(0.6);
       ps2->SetX2NDC(0.9);
-      ps2->SetY1NDC(0.75);
+      ps2->SetY1NDC(0.6);
       ps2->SetY2NDC(0.9);
-  ps2->SetTextSize(.025);
+  ps2->SetTextSize(.035);
 
   c->Update();
 /*
