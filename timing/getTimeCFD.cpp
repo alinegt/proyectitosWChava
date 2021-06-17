@@ -10,7 +10,7 @@ GetTimeCFD::~GetTimeCFD() {}
 int main(int argc, char **argv) {
 std::string inputFile = argv[1];
 std::string outputFile = argv[2];
-
+std::string dirName = argv[3];
 
 GetTimeCFD time;
 //time.nofSamples = std::stoi(argv[3]);
@@ -27,7 +27,7 @@ std:: string  branch1 = "timech1_50";
 std::string   branch2 = "timech1_cfd";
 std::string  base_outputFile = time.baseName(outputFile);
 
-time.plotHist( (base_outputFile + "_LE").c_str(), branch1);
+time.plotHist( (dirName + "/" + base_outputFile + "_LE").c_str(), branch1);
 // time.plotHist( (base_outputFile + "_CFD").c_str(), branch2);
 time.closeFile();
 
@@ -394,7 +394,7 @@ void GetTimeCFD::setOutFile(const std::string & a_outputFile){
 }
 
 void GetTimeCFD::plotHist(const std::string & a_outputFile, const std::string & branch){
-TCanvas *c = new TCanvas("c", "A3", 1000, 700);
+TCanvas *c = new TCanvas("c", "A1", 1000, 700);
 // m_outputTree->Print("timech1_cfd");
 // int xmin= 40;
 // int xmax= 70;
@@ -420,6 +420,13 @@ TCanvas *c = new TCanvas("c", "A3", 1000, 700);
  h_temp->SetName(Form("h_%s",  a_outputFile.c_str()) ); 
 
  h_temp->SetTitle(Form("%s",  a_outputFile.c_str()) );
+ h_temp->SetLineWidth(2);
+  h_temp->GetXaxis()->SetTitleSize(.05);
+  h_temp->GetYaxis()->SetTitleSize(.05);
+  h_temp->GetYaxis()->SetTitleOffset(0.7);
+  h_temp->GetXaxis()->SetTitleOffset(1);
+  h_temp->GetXaxis()->SetTicks("+-");
+
 
 
 // h_temp->Fit("gaus","0","",start_time+45,start_time+75);
