@@ -391,11 +391,11 @@ Double_t SPE_analysis::SPEhistAndPlots(double_t *peak2Valley, double_t *mean_fit
   ps1->Draw();
   pad1->Modified();
   TPaveStats *ps2 = (TPaveStats *)h_pedestalFit->GetListOfFunctions()->FindObject("stats");
-  ps2->SetX1NDC(0.6);
+  ps2->SetX1NDC(0.55);
   ps2->SetX2NDC(0.9);
-  ps2->SetY1NDC(0.75);
+  ps2->SetY1NDC(0.65);
   ps2->SetY2NDC(0.9);
-  ps2->SetTextSize(.025);
+  ps2->SetTextSize(.03);
   ps2->SetTextColor(kBlack);
   ps2->SetOptStat(1000000001);
   ps2->SetOptFit(110);
@@ -419,11 +419,11 @@ Double_t SPE_analysis::SPEhistAndPlots(double_t *peak2Valley, double_t *mean_fit
  // ps3->Draw();
 
   TPaveStats *ps4 = (TPaveStats *)h_spe->GetListOfFunctions()->FindObject("stats");
-  ps4->SetX1NDC(0.6);
+  ps4->SetX1NDC(0.55);
   ps4->SetX2NDC(0.9);
-  ps4->SetY1NDC(0.6);
-  ps4->SetY2NDC(0.75);
-  ps4->SetTextSize(.025);
+  ps4->SetY1NDC(0.45);
+  ps4->SetY2NDC(0.65);
+  ps4->SetTextSize(.03);
   ps4->SetTextColor(kRed);
   ps4->SetOptStat(1000000001);
   ps4->SetOptFit(112);
