@@ -430,7 +430,7 @@ TCanvas *c = new TCanvas("c", "A1", 1000, 700);
 
 
 // h_temp->Fit("gaus","0","",start_time+45,start_time+75);
-h_temp->Fit("gaus","","", 476,480);
+h_temp->Fit("gaus","","", 479,483);
 // h_temp->GetFunction("gaus")->SetLineColor(kBlack);
 
 
